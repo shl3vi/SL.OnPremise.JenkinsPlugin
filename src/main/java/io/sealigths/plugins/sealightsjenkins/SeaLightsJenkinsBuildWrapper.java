@@ -8,6 +8,7 @@ import hudson.model.BuildListener;
 import hudson.model.Descriptor;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
+import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -25,13 +26,35 @@ import java.io.IOException;
  */
 public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
 
+
+    private final boolean enable;
+    private final String projectName;
+    private final String projectType;
+
+
     @DataBoundConstructor
-    public SeaLightsJenkinsBuildWrapper() {
+    public SeaLightsJenkinsBuildWrapper(boolean enable, String projectName, String projectType) {
+        this.enable = enable;
+        this.projectName = projectName;
+        this.projectType = projectType;
     }
 
     @Override
     public Environment setUp(AbstractBuild build, Launcher launcher,
                              BuildListener listener) throws IOException, InterruptedException {
+
+        listener.getLogger().println("customerid: ");
+        listener.getLogger().println(getDescriptor().getCustomerId());
+
+        listener.getLogger().println("url: ");
+        listener.getLogger().println(getDescriptor().getUrl());
+
+        listener.getLogger().println("enable: ");
+        listener.getLogger().println(enable);
+        listener.getLogger().println("project name: ");
+        listener.getLogger().println(projectName);
+        listener.getLogger().println("project type: ");
+        listener.getLogger().println(projectType);
 
 //        final EnvVars buildEnv = build.getEnvironment(listener);
 //        final Node node = build.getBuiltOn();
@@ -136,6 +159,16 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
 
         public void setProxy(String proxy) {
             this.proxy = proxy;
+        }
+
+        public ListBoxModel doFillProjectTypesItems() {
+            ListBoxModel items = new ListBoxModel();
+            items.add("Maven");
+            items.add("Gradle");
+            items.add("Ant");
+            items.add("Ruby");
+            items.add("NodeJs");
+            return items;
         }
     }
 }
