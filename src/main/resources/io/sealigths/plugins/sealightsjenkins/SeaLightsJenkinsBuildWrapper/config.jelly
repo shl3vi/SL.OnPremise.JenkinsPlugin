@@ -1,5 +1,21 @@
-<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
-    <f:entry title="The koko" field="koko">
-      <f:textbox/>
-    </f:entry>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
+         xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <f:section title="SeaLights Continues Testing">
+
+      <f:entry title="Enable SeaLights Integration" field="enable">
+        <f:checkbox/>
+      </f:entry>
+      <f:entry title="Project Name" field="projectName">
+        <f:textbox value="${projectName}"/>
+      </f:entry>
+
+      <f:entry title= field="projectType">
+        <f:textbox value="${projectType}"/>
+      </f:entry>
+
+      <f:entry field="projectTypes" title="Project Type">
+         <f:select />
+      </f:entry>
+
+  </f:section>
 </j:jelly>
