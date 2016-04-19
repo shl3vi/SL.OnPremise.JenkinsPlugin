@@ -8,8 +8,12 @@ import hudson.model.BuildListener;
 import hudson.model.Descriptor;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
+import jenkins.model.Jenkins;
+import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.StaplerRequest;
 
+import javax.management.DescriptorKey;
 import java.io.IOException;
 
 /**
@@ -21,19 +25,14 @@ import java.io.IOException;
  */
 public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
 
-
-    private final String koko;
-
     @DataBoundConstructor
-    public SeaLightsJenkinsBuildWrapper(String koko) {
-        this.koko = koko;
+    public SeaLightsJenkinsBuildWrapper() {
     }
 
     @Override
     public Environment setUp(AbstractBuild build, Launcher launcher,
                              BuildListener listener) throws IOException, InterruptedException {
 
-        DESCRIPTOR.getCustonmerId()
 //        final EnvVars buildEnv = build.getEnvironment(listener);
 //        final Node node = build.getBuiltOn();
 //
@@ -54,28 +53,32 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
 //            }
 //        };
 
-    return null;
+        return null;
     }
 
-    @Override
-    public Descriptor<BuildWrapper> getDescriptor() {
-        return DESCRIPTOR;
+
+
+    public DescriptorImpl getDescriptor() {
+        Jenkins jenkinsInstance = Jenkins.getInstance();
+        if (jenkinsInstance != null){
+            Descriptor desc = jenkinsInstance.getDescriptorOrDie(getClass());
+            if (desc != null){
+                return (DescriptorImpl)desc;
+            }
+        }
+        return new DescriptorImpl();
     }
 
-    public String getKoko() {
-        return koko;
-    }
 
+    //    public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
     @Extension
-    public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
-
     public static final class DescriptorImpl extends BuildWrapperDescriptor {
 
-        private String custonmerId;
+        private String customerId;
         private String url;
+        private String proxy;
         private boolean enable;
 
-        @DataBoundConstructor
         public DescriptorImpl() {
             super(SeaLightsJenkinsBuildWrapper.class);
             load();
@@ -83,7 +86,7 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
 
         @Override
         public String getDisplayName() {
-            return "chipopo lamoral!!";//Messages.Descriptor_DisplayName();
+            return "Sealights properties";//Messages.Descriptor_DisplayName();
         }
 
         @Override
@@ -91,16 +94,48 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
             return true;
         }
 
+        @Override
+        public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
+            enable = json.getBoolean("enable");
+            customerId = json.getString("customerId");
+            url = json.getString("url");
+            proxy = json.getString("proxy");
+            save();
+            return super.configure(req, json);
+        }
+
+
         public boolean isEnable(){
             return enable;
         }
 
-        public String getCustonmerId() {
-            return custonmerId;
-        }
 
         public String getUrl() {
             return url;
+        }
+
+        public String getCustomerId() {
+            return customerId;
+        }
+
+        public void setCustomerId(String customerId) {
+            this.customerId = customerId;
+        }
+
+        public void setUrl(String url) {
+            this.url = url;
+        }
+
+        public void setEnable(boolean enable) {
+            this.enable = enable;
+        }
+
+        public String getProxy() {
+            return proxy;
+        }
+
+        public void setProxy(String proxy) {
+            this.proxy = proxy;
         }
     }
 }
