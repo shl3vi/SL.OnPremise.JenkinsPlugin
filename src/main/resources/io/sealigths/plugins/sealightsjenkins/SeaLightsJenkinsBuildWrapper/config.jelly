@@ -1,21 +1,66 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
-         xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  <f:section title="SeaLights Continues Testing">
+ xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+    <f:section title="SeaLights Continues Testing">
 
-      <f:entry title="Enable SeaLights Integration" field="enable">
+     <f:entry title="Enable SeaLights Integration" field="enable">
         <f:checkbox/>
-      </f:entry>
-      <f:entry title="Project Name" field="projectName">
+     </f:entry>
+
+     <f:entry title="Project Name" field="projectName">
         <f:textbox value="${projectName}"/>
-      </f:entry>
+     </f:entry>
 
-      <f:entry title= field="projectType">
-        <f:textbox value="${projectType}"/>
-      </f:entry>
+     <f:entry field="projectTypes" title="Project Type">
+       <f:select />
+     </f:entry>
 
-      <f:entry field="projectTypes" title="Project Type">
-         <f:select />
-      </f:entry>
+     <f:entry field="pomPath" title="Root project folder" description="location for parent pom.xml">
+       <f:textbox value="${pomPath}"/>
+     </f:entry>
 
-  </f:section>
-</j:jelly>
+     <f:entry field="packagesincluded" title="packagesincluded">
+       <f:textbox value="${packagesincluded}"/>
+     </f:entry>
+
+     <f:entry field="packagesexcluded" title="packagesexcluded">
+       <f:textbox value="${packagesexcluded}"/>
+     </f:entry>
+
+     <f:entry field="filesincluded" title="filesincluded">
+       <f:textbox value="${filesincluded}"/>
+     </f:entry>
+
+     <f:entry field="filesexcluded" title="filesexcluded">
+       <f:textbox value="${filesexcluded}"/>
+     </f:entry>
+
+     <f:entry field="buildScannerJar" title="buildScannerJar">
+       <f:textbox value="${buildScannerJar}"/>
+     </f:entry>
+
+     <f:entry field="testListenerJar" title="testListenerJar">
+       <f:textbox value="${testListenerJar}"/>
+     </f:entry>
+
+     <f:entry field="testListenerConfigFile" title="testListenerConfigFile">
+       <f:textbox value="${testListenerConfigFile}"/>
+     </f:entry>
+
+     <f:entry field="logEnabled" title="logEnabled">
+       <f:textbox value="${logEnabled}"/>
+     </f:entry>
+
+     <f:entry field="logToFile" title="logToFile">
+       <f:textbox value="${logToFile}"/>
+     </f:entry>
+
+     <f:entry field="logLevel" title="logLevel">
+       <f:textbox value="${logLevel}"/>
+     </f:entry>
+
+     <f:entry field="logFolder" title="logFolder">
+       <f:textbox value="${logFolder}"/>
+     </f:entry>
+
+    </f:section>
+ </j:jelly>

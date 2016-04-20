@@ -1,6 +1,7 @@
 package io.sealigths.plugins.sealightsjenkins;
 
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
@@ -9,13 +10,18 @@ import hudson.model.Descriptor;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 import hudson.util.ListBoxModel;
+import io.sealigths.plugins.sealightsjenkins.io.sealigths.plugins.sealightsjenkins.integration.MavenIntegration;
+import io.sealigths.plugins.sealightsjenkins.io.sealigths.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
+import io.sealigths.plugins.sealightsjenkins.io.sealigths.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
 import javax.management.DescriptorKey;
+import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * Installs tools selected by the user. Exports configured paths and a home variable for each tool.
@@ -30,56 +36,109 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
     private final boolean enable;
     private final String projectName;
     private final String projectType;
+    private final String pomPath;
+    private final String packagesincluded;
+    private final String packagesexcluded;
+    private final String filesincluded;
+    private final String filesexcluded;
+    private final String buildScannerJar;
+    private final String testListenerJar;
+    private final String testListenerConfigFile;
+    private final String logEnabled;
+    private final String logToFile;
+    private final String logLevel;
+    private final String logFolder;
 
 
     @DataBoundConstructor
-    public SeaLightsJenkinsBuildWrapper(boolean enable, String projectName, String projectType) {
+    public SeaLightsJenkinsBuildWrapper(boolean enable, String projectName, String projectType, String pomPath,
+                                        String packagesincluded, String packagesexcluded, String filesincluded,
+                                        String filesexcluded, String buildScannerJar, String testListenerJar,
+                                        String testListenerConfigFile, String logEnabled, String logToFile,
+                                        String logLevel, String logFolder) {
         this.enable = enable;
         this.projectName = projectName;
         this.projectType = projectType;
+        this.pomPath = pomPath;
+        this.packagesincluded = packagesincluded;
+        this.packagesexcluded = packagesexcluded;
+        this.filesincluded = filesincluded;
+        this.filesexcluded = filesexcluded;
+        this.buildScannerJar = buildScannerJar;
+        this.testListenerJar = testListenerJar;
+        this.testListenerConfigFile = testListenerConfigFile;
+        this.logEnabled = logEnabled;
+        this.logToFile = logToFile;
+        this.logLevel = logLevel;
+        this.logFolder = logFolder;
     }
 
     @Override
     public Environment setUp(AbstractBuild build, Launcher launcher,
                              BuildListener listener) throws IOException, InterruptedException {
 
-        listener.getLogger().println("customerid: ");
-        listener.getLogger().println(getDescriptor().getCustomerId());
-
-        listener.getLogger().println("url: ");
-        listener.getLogger().println(getDescriptor().getUrl());
-
-        listener.getLogger().println("enable: ");
+        listener.getLogger().println();
         listener.getLogger().println(enable);
-        listener.getLogger().println("project name: ");
         listener.getLogger().println(projectName);
-        listener.getLogger().println("project type: ");
         listener.getLogger().println(projectType);
+        listener.getLogger().println(pomPath);
+        listener.getLogger().println(packagesincluded);
+        listener.getLogger().println(packagesexcluded);
+        listener.getLogger().println(filesincluded);
+        listener.getLogger().println(filesexcluded);
+        listener.getLogger().println(buildScannerJar);
+        listener.getLogger().println(testListenerJar);
+        listener.getLogger().println(logEnabled);
+        listener.getLogger().println(logToFile);
+        listener.getLogger().println(logLevel);
+        listener.getLogger().println(logFolder);
 
-//        final EnvVars buildEnv = build.getEnvironment(listener);
-//        final Node node = build.getBuiltOn();
-//
-//        return new Environment() {
-//            @Override
-//            public void buildEnvVars(Map<String, String> env) {
-//
-//                // TODO: Inject Home dirs as well
-//                for (SelectedTool selectedTool : selectedTools) {
-//                    CustomTool tool = selectedTool.toCustomTool();
-//                    if (tool != null && tool.hasVersions()) {
-//                        ToolVersion version = ToolVersion.getEffectiveToolVersion(tool, buildEnv, node);
-//                        if (version != null && !env.containsKey(version.getVariableName())) {
-//                            env.put(version.getVariableName(), version.getDefaultVersion());
-//                        }
-//                    }
-//                }
-//            }
-//        };
+        Environment env = new Environment() {
+            @Override
+            public void buildEnvVars(Map<String, String> env) {
+            }
+        };
 
-        return null;
+        FilePath ws = build.getWorkspace();
+        if (ws == null) {
+            return env;
+        }
+
+        String workingDir = ws.getRemote();
+        String pomPath = workingDir + "\\library\\pom.xml";
+
+        listener.getLogger().println("::::::::::::::::::::::::::::::");
+        listener.getLogger().println(pomPath);
+        listener.getLogger().println("::::::::::::::::::::::::::::::");
+
+        SeaLightsPluginInfo slInfo = new SeaLightsPluginInfo();
+        slInfo.setEnabled(enable);
+        slInfo.setBuildName(String.valueOf(build.getNumber()));
+        slInfo.setCustomerId(getDescriptor().getCustomerId());
+        slInfo.setServerUrl(getDescriptor().getUrl());
+        slInfo.setProxy(getDescriptor().getProxy());
+        slInfo.setWorkspacepath(workingDir);
+        slInfo.setAppName("App Name");
+        slInfo.setBranchName("Branch Name");
+        slInfo.setFilesIncluded(filesincluded);
+        slInfo.setFilesExcluded(filesexcluded);
+        slInfo.setPackagesIncluded(packagesincluded);
+        slInfo.setPackagesExcluded(packagesexcluded);
+
+
+        slInfo.setListenerJar(testListenerJar);
+        slInfo.setListenerConfigFile(testListenerConfigFile);
+        slInfo.setScannerJar(buildScannerJar);
+
+        MavenIntegrationInfo info = new MavenIntegrationInfo();
+        info.setSeaLightsPluginInfo(slInfo);
+        info.setPomFilePath(pomPath);
+
+        MavenIntegration mavenIntegration = new MavenIntegration(info);
+        mavenIntegration.integrate();
+
+        return env;
     }
-
-
 
     public DescriptorImpl getDescriptor() {
         Jenkins jenkinsInstance = Jenkins.getInstance();
@@ -92,8 +151,6 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         return new DescriptorImpl();
     }
 
-
-    //    public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
     @Extension
     public static final class DescriptorImpl extends BuildWrapperDescriptor {
 
@@ -109,7 +166,7 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
 
         @Override
         public String getDisplayName() {
-            return "Sealights properties";//Messages.Descriptor_DisplayName();
+            return "Sealights properties";
         }
 
         @Override
@@ -163,11 +220,7 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
 
         public ListBoxModel doFillProjectTypesItems() {
             ListBoxModel items = new ListBoxModel();
-            items.add("Maven");
-            items.add("Gradle");
-            items.add("Ant");
-            items.add("Ruby");
-            items.add("NodeJs");
+            items.add("Maven","");
             return items;
         }
     }

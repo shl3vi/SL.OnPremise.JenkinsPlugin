@@ -41,7 +41,7 @@ public class MavenIntegration {
         {
             throw new RuntimeException("Unsupported Maven Surefire plugin. SeaLights requires a version 2.9 or higher.");
         }
-        
+
         integrateToPomFile();
     }
 
@@ -58,28 +58,81 @@ public class MavenIntegration {
     }
 
     private void integrateToProfile(String profileId) {
-        List<String> profiles = pomFile.getProfileIds();
-        if (profileId.length() == 0)
-        {
-            throw new RuntimeException("The specified POM file does not contain any profiles.");
-        }
-
-        if (!profileId.contains(profileId))
-        {
-            throw new RuntimeException("The specified POM file does not contain a profile with id of '" + profileId + "'.");
-        }
-
+//        List<String> profiles = pomFile.getProfileIds();
+//        if (profileId.length() == 0)
+//        {
+//            throw new RuntimeException("The specified POM file does not contain any profiles.");
+//        }
+//
+//        if (!profileId.contains(profileId))
+//        {
+//            throw new RuntimeException("The specified POM file does not contain a profile with id of '" + profileId + "'.");
+//        }
+//
 
     }
 
     private void integrateToAllProfiles() {
         SeaLightsPluginInfo seaLightsPluginInfo = this.info.getSeaLightsPluginInfo();
-        String xml = ("<artifactId>sl-plugin</artifactId>\n" +
-                "<configuration><appName>#APP_NAME#</appName>\n<branchName>#BRANCH_NAME#</branchName></configuration>\n").replace("#APP_NAME#", seaLightsPluginInfo.getAppName())
-                            .replace("#BRANCH_NAME#", seaLightsPluginInfo.getBranchName());
+        String xml = (
+                "<groupId>io.sealights.on-premise.agents.plugin</groupId>" +
+                        "<artifactId>sealights-maven-plugin</artifactId>" +
+                        "<version>1.0.0</version>" +
+                        "<configuration>" +
+                        "<customerid>#CUSTOMERID</customerid>" +
+                        "<server>#SERVER</server>" +
+                        "<proxy>#PROXY</proxy>" +
+                        "<appName>#APPNAME</appName>" +
+                        "<workspacepath>#WORKSPACEPATH</workspacepath>" +
+                        "<branch>#BRANCH</branch>" +
+                        "<build>#BUILD</build>" +
+                        "<packagesincluded>#PACKAGESINCLUDED</packagesincluded>" +
+                        "<packagesexcluded>#PACKAGESEXCLUDED</packagesexcluded>" +
+                        "<filesincluded>#FILESINCLUDED</filesincluded>" +
+                        "<filesexcluded>#FILESEXCLUDED</filesexcluded>" +
+                        "<buildScannerJar>#BUILDSCANNERJAR</buildScannerJar>" +
+                        "<testListenerJar>#TESTLISTENERJAR</testListenerJar>" +
+                        "<testListenerConfigFile>TESTLISTENERCONFIGFILE</testListenerConfigFile>" +
+                        "<logEnabled>false</logEnabled>" +
+                        "<logToFile>false</logToFile>" +
+                        "<logLevel>x</logLevel>" +
+                        "<logFolder>x</logFolder>" +
+                        "</configuration>" +
+                        "<executions>" +
+                        "<execution>" +
+                        "<inherited>false</inherited>" +
+                        "<id>a1</id>" +
+                        "<goals>" +
+                        "<goal>build-scanner</goal>" +
+                        "</goals>" +
+                        "</execution>" +
+                        "<execution>" +
+                        "<id>a2</id>" +
+                        "<goals>" +
+                        "<goal>test-listener</goal>" +
+                        "</goals>" +
+                        "</execution>" +
+                        "</executions>" +
+                        "</plugin>"
+                                .replace("#CUSTOMERID", seaLightsPluginInfo.getCustomerId())
+                                .replace("#SERVER", seaLightsPluginInfo.getServerUrl())
+                                .replace("#PROXY", seaLightsPluginInfo.getProxy())
+                                .replace("#APPNAME", seaLightsPluginInfo.getAppName())
+                                .replace("#WORKSPACEPATH", seaLightsPluginInfo.getWorkspacepath())
+                                .replace("#BRANCH", seaLightsPluginInfo.getBranchName())
+                                .replace("#BUILD", seaLightsPluginInfo.getBuildName())
+                                .replace("#PACKAGESINCLUDED", seaLightsPluginInfo.getPackagesIncluded())
+                                .replace("#PACKAGESEXCLUDE", seaLightsPluginInfo.getPackagesExcluded())
+                                .replace("#FILESINCLUDED", seaLightsPluginInfo.getFilesIncluded())
+                                .replace("#FILESEXCLUDED", seaLightsPluginInfo.getFilesExcluded())
+                                .replace("#BUILDSCANNERJAR", seaLightsPluginInfo.getScannerJar())
+                                .replace("#TESTLISTENERJAR", seaLightsPluginInfo.getListenerJar())
+                                .replace("#TESTLISTENERCONFIGFILE", seaLightsPluginInfo.getListenerConfigFile())
+        );
+
         pomFile.addPlugin(xml);
         try {
-            pomFile.save("C:\\Work\\Projects\\SL.OnPremise.JenkinsPlugin\\src\\test\\cases\\MavenIntegration\\pom_new.xml");
+            pomFile.save(info.getPomFilePath());
         } catch (TransformerException e) {
             e.printStackTrace();
         }
