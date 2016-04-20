@@ -10,6 +10,9 @@ import hudson.model.Descriptor;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 import hudson.util.ListBoxModel;
+import io.sealigths.plugins.sealightsjenkins.io.sealigths.plugins.sealightsjenkins.integration.MavenIntegration;
+import io.sealigths.plugins.sealightsjenkins.io.sealigths.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
+import io.sealigths.plugins.sealightsjenkins.io.sealigths.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -74,61 +77,68 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
     public Environment setUp(AbstractBuild build, Launcher launcher,
                              BuildListener listener) throws IOException, InterruptedException {
 
-        listener.getLogger().println("build number: ");
-        listener.getLogger().println(build.getNumber());
-        listener.getLogger().println("branch: ");
         listener.getLogger().println();
-        listener.getLogger().println("app display name: ");
-        listener.getLogger().println(build.getDisplayName());
-        listener.getLogger().println("app full display name: ");
-        listener.getLogger().println(build.getFullDisplayName());
-        listener.getLogger().println("working directory: ");
-
-        FilePath ws = build.getWorkspace();
-        if (ws != null) {
-            String workingDir = ws.getRemote();
-            listener.getLogger().println(workingDir);
-            workingDir = workingDir + "\\java-build-agent\\src\\main\\java\\io\\sealights\\javaBuildAgent\\execute";
-            listener.getLogger().println(workingDir);
-            File file = new File(workingDir);
-            if (file.isDirectory()){
-                File[] children = file.listFiles();
-                if (children != null){
-                    listener.getLogger().println(":::::::::::::::::::::::::::::::::::::::::::::");
-                    listener.getLogger().println(":::::::::::::::::::::::::::::::::::::::::::::");
-                    for (File child : children){
-                        listener.getLogger().println(child.getAbsolutePath());
-                    }
-                    listener.getLogger().println(":::::::::::::::::::::::::::::::::::::::::::::");
-                    listener.getLogger().println(":::::::::::::::::::::::::::::::::::::::::::::");
-                }
-            }
-        }
-        listener.getLogger().println("customerid: ");
-        listener.getLogger().println(getDescriptor().getCustomerId());
-
-        listener.getLogger().println("url: ");
-        listener.getLogger().println(getDescriptor().getUrl());
-
-        listener.getLogger().println("enable: ");
         listener.getLogger().println(enable);
-        listener.getLogger().println("project name: ");
         listener.getLogger().println(projectName);
-        listener.getLogger().println("project type: ");
         listener.getLogger().println(projectType);
+        listener.getLogger().println(pomPath);
+        listener.getLogger().println(packagesincluded);
+        listener.getLogger().println(packagesexcluded);
+        listener.getLogger().println(filesincluded);
+        listener.getLogger().println(filesexcluded);
+        listener.getLogger().println(buildScannerJar);
+        listener.getLogger().println(testListenerJar);
+        listener.getLogger().println(logEnabled);
+        listener.getLogger().println(logToFile);
+        listener.getLogger().println(logLevel);
+        listener.getLogger().println(logFolder);
 
-//        final EnvVars buildEnv = build.getEnvironment(listener);
-//        final Node node = build.getBuiltOn();
-//
-        return new Environment() {
+        Environment env = new Environment() {
             @Override
             public void buildEnvVars(Map<String, String> env) {
             }
-
         };
+
+        FilePath ws = build.getWorkspace();
+        if (ws == null) {
+            return env;
+        }
+
+        String workingDir = ws.getRemote();
+        String pomPath = workingDir + "\\library\\pom.xml";
+
+        listener.getLogger().println("::::::::::::::::::::::::::::::");
+        listener.getLogger().println(pomPath);
+        listener.getLogger().println("::::::::::::::::::::::::::::::");
+
+        SeaLightsPluginInfo slInfo = new SeaLightsPluginInfo();
+        slInfo.setEnabled(enable);
+        slInfo.setBuildName(String.valueOf(build.getNumber()));
+        slInfo.setCustomerId(getDescriptor().getCustomerId());
+        slInfo.setServerUrl(getDescriptor().getUrl());
+        slInfo.setProxy(getDescriptor().getProxy());
+        slInfo.setWorkspacepath(workingDir);
+        slInfo.setAppName("App Name");
+        slInfo.setBranchName("Branch Name");
+        slInfo.setFilesIncluded(filesincluded);
+        slInfo.setFilesExcluded(filesexcluded);
+        slInfo.setPackagesIncluded(packagesincluded);
+        slInfo.setPackagesExcluded(packagesexcluded);
+
+
+        slInfo.setListenerJar(testListenerJar);
+        slInfo.setListenerConfigFile(testListenerConfigFile);
+        slInfo.setScannerJar(buildScannerJar);
+
+        MavenIntegrationInfo info = new MavenIntegrationInfo();
+        info.setSeaLightsPluginInfo(slInfo);
+        info.setPomFilePath(pomPath);
+
+        MavenIntegration mavenIntegration = new MavenIntegration(info);
+        mavenIntegration.integrate();
+
+        return env;
     }
-
-
 
     public DescriptorImpl getDescriptor() {
         Jenkins jenkinsInstance = Jenkins.getInstance();
@@ -141,8 +151,6 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         return new DescriptorImpl();
     }
 
-
-    //    public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
     @Extension
     public static final class DescriptorImpl extends BuildWrapperDescriptor {
 
@@ -158,7 +166,7 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
 
         @Override
         public String getDisplayName() {
-            return "Sealights properties";//Messages.Descriptor_DisplayName();
+            return "Sealights properties";
         }
 
         @Override
@@ -213,10 +221,6 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         public ListBoxModel doFillProjectTypesItems() {
             ListBoxModel items = new ListBoxModel();
             items.add("Maven","");
-            items.add("Gradle");
-            items.add("Ant");
-            items.add("Ruby");
-            items.add("NodeJs");
             return items;
         }
     }

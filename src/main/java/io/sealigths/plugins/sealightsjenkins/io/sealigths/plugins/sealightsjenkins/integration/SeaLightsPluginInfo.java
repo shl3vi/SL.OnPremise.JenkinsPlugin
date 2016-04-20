@@ -14,6 +14,24 @@ public class SeaLightsPluginInfo {
     private String filesExcluded;
     private String packagesIncluded;
     private String packagesExcluded;
+    private String workspacepath;
+    private String proxy;
+
+    public String getProxy() {
+        return proxy;
+    }
+
+    public void setProxy(String proxy) {
+        this.proxy = proxy;
+    }
+
+    public String getWorkspacepath() {
+        return workspacepath;
+    }
+
+    public void setWorkspacepath(String workspacepath) {
+        this.workspacepath = workspacepath;
+    }
 
     public boolean isEnabled() {
         return isEnabled;
@@ -93,6 +111,38 @@ public class SeaLightsPluginInfo {
 
     public void setPackagesExcluded(String packagesExcluded) {
         this.packagesExcluded = packagesExcluded;
+    }
+
+
+
+
+
+    private String scannerJar;
+    private String listenerJar;
+    private String listenerConfigFile;
+
+    public String getScannerJar() {
+        return scannerJar;
+    }
+
+    public void setScannerJar(String scannerJar) {
+        this.scannerJar = scannerJar;
+    }
+
+    public String getListenerJar() {
+        return listenerJar;
+    }
+
+    public void setListenerJar(String listenerJar) {
+        this.listenerJar = listenerJar;
+    }
+
+    public String getListenerConfigFile() {
+        return listenerConfigFile;
+    }
+
+    public void setListenerConfigFile(String listenerConfigFile) {
+        this.listenerConfigFile = listenerConfigFile;
     }
 }
 
