@@ -1,7 +1,7 @@
 package io.sealigths.plugins.sealightsjenkins.io.sealigths.plugins.sealightsjenkins.integration;
 
 import javax.xml.transform.TransformerException;
-import java.util.List;
+import java.io.PrintStream;
 
 /**
  * Created by Nadav on 4/19/2016.
@@ -10,10 +10,12 @@ public class MavenIntegration {
     private final static String SUREFIRE_GROUP_ID = "org.apache.maven.plugins";
     private final static String SUREFIRE_ARTIFACT_ID = "maven-surefire-plugin";
     private PomFile pomFile;
-    private  MavenIntegrationInfo info;
+    private MavenIntegrationInfo info;
+    private PrintStream log;
 
-    public MavenIntegration(MavenIntegrationInfo info)
+    public MavenIntegration(PrintStream log, MavenIntegrationInfo info)
     {
+        this.log = log;
         this.info = info;
         this.pomFile = new PomFile(info.getPomFilePath());
     }
@@ -47,14 +49,24 @@ public class MavenIntegration {
 
     private void integrateToPomFile() {
         String profileId = info.getProfileId();
+        String eventListenerPackage = getEventListenerPackage(info.getTestingFramework());
         if (profileId == null || profileId.equals(""))
         {
-            integrateToAllProfiles();
+            integrateToAllProfiles(eventListenerPackage);
         }
         else
         {
             integrateToProfile(profileId);
         }
+    }
+
+    private String getEventListenerPackage(String testingFramework){
+        if ("testng".equalsIgnoreCase(testingFramework)){
+            return "io.sealights.onpremise.agents.java.agent.integrations.testng.TestListener";
+        }else if ("junit".equalsIgnoreCase(testingFramework)){
+            return "io.sealights.onpremise.agents.java.agent.integrations.junit.SlRunListener";
+        }
+        return "";
     }
 
     private void integrateToProfile(String profileId) {
@@ -72,70 +84,45 @@ public class MavenIntegration {
 
     }
 
-    private void integrateToAllProfiles() {
+    private void integrateToAllProfiles(String testingFrameWorkListeners) {
         SeaLightsPluginInfo seaLightsPluginInfo = this.info.getSeaLightsPluginInfo();
-        String xml = (
-                "<groupId>io.sealights.on-premise.agents.plugin</groupId>" +
-                        "<artifactId>sealights-maven-plugin</artifactId>" +
-                        "<version>1.0.0</version>" +
-                        "<configuration>" +
-                        "<customerid>#CUSTOMERID</customerid>" +
-                        "<server>#SERVER</server>" +
-                        "<proxy>#PROXY</proxy>" +
-                        "<appName>#APPNAME</appName>" +
-                        "<workspacepath>#WORKSPACEPATH</workspacepath>" +
-                        "<branch>#BRANCH</branch>" +
-                        "<build>#BUILD</build>" +
-                        "<packagesincluded>#PACKAGESINCLUDED</packagesincluded>" +
-                        "<packagesexcluded>#PACKAGESEXCLUDED</packagesexcluded>" +
-                        "<filesincluded>#FILESINCLUDED</filesincluded>" +
-                        "<filesexcluded>#FILESEXCLUDED</filesexcluded>" +
-                        "<buildScannerJar>#BUILDSCANNERJAR</buildScannerJar>" +
-                        "<testListenerJar>#TESTLISTENERJAR</testListenerJar>" +
-                        "<testListenerConfigFile>TESTLISTENERCONFIGFILE</testListenerConfigFile>" +
-                        "<logEnabled>false</logEnabled>" +
-                        "<logToFile>false</logToFile>" +
-                        "<logLevel>x</logLevel>" +
-                        "<logFolder>x</logFolder>" +
-                        "</configuration>" +
-                        "<executions>" +
-                        "<execution>" +
-                        "<inherited>false</inherited>" +
-                        "<id>a1</id>" +
-                        "<goals>" +
-                        "<goal>build-scanner</goal>" +
-                        "</goals>" +
-                        "</execution>" +
-                        "<execution>" +
-                        "<id>a2</id>" +
-                        "<goals>" +
-                        "<goal>test-listener</goal>" +
-                        "</goals>" +
-                        "</execution>" +
-                        "</executions>" +
-                        "</plugin>"
-                                .replace("#CUSTOMERID", seaLightsPluginInfo.getCustomerId())
-                                .replace("#SERVER", seaLightsPluginInfo.getServerUrl())
-                                .replace("#PROXY", seaLightsPluginInfo.getProxy())
-                                .replace("#APPNAME", seaLightsPluginInfo.getAppName())
-                                .replace("#WORKSPACEPATH", seaLightsPluginInfo.getWorkspacepath())
-                                .replace("#BRANCH", seaLightsPluginInfo.getBranchName())
-                                .replace("#BUILD", seaLightsPluginInfo.getBuildName())
-                                .replace("#PACKAGESINCLUDED", seaLightsPluginInfo.getPackagesIncluded())
-                                .replace("#PACKAGESEXCLUDE", seaLightsPluginInfo.getPackagesExcluded())
-                                .replace("#FILESINCLUDED", seaLightsPluginInfo.getFilesIncluded())
-                                .replace("#FILESEXCLUDED", seaLightsPluginInfo.getFilesExcluded())
-                                .replace("#BUILDSCANNERJAR", seaLightsPluginInfo.getScannerJar())
-                                .replace("#TESTLISTENERJAR", seaLightsPluginInfo.getListenerJar())
-                                .replace("#TESTLISTENERCONFIGFILE", seaLightsPluginInfo.getListenerConfigFile())
-        );
-
+        log.println("*************************************");
+        log.println("*************************************");
+        log.println(pomFile.getPomAsString());
+        log.println("*************************************");
+        log.println("*************************************");
+        String xml = seaLightsPluginInfo.toPluginText();
+        log.println(xml);
         pomFile.addPlugin(xml);
+
+        String eventListenerNode = addListenerToSurefire(testingFrameWorkListeners);
+        pomFile.addEventListener(eventListenerNode);
+
         try {
             pomFile.save(info.getPomFilePath());
+            PomFile pomFile1 = new PomFile(info.getPomFilePath());
+            log.println("*************************************");
+            log.println("*************************************");
+            log.println(pomFile1.getPomAsString());
+            log.println("*************************************");
+            log.println("*************************************");
         } catch (TransformerException e) {
             e.printStackTrace();
         }
+    }
+
+    public String addListenerToSurefire(String testingFrameWorkListeners) {
+        StringBuilder sureFireProperty = new StringBuilder();
+        sureFireProperty.append("<properties>");
+        sureFireProperty.append("<property>");
+        sureFireProperty.append("<name>listener</name>");
+        sureFireProperty.append("<value>");
+        sureFireProperty.append(testingFrameWorkListeners);
+        sureFireProperty.append("</value>");
+        sureFireProperty.append("</property>");
+        sureFireProperty.append("</properties>");
+
+        return sureFireProperty.toString();
     }
 
     public static void main(String[] args)
@@ -145,13 +132,13 @@ public class MavenIntegration {
 //        String surefireVersion = pomFile.getPluginVersion(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID);
 //        System.out.println("pluginExist:" + pluginExist + ", surefireVersion: " + surefireVersion);
 
-        SeaLightsPluginInfo slInfo = new SeaLightsPluginInfo();
-        slInfo.setAppName("App Name");
-        slInfo.setBranchName("Branch Name");
-        MavenIntegrationInfo info = new MavenIntegrationInfo();
-        info.setSeaLightsPluginInfo(slInfo);
-        info.setPomFilePath("C:\\Work\\Projects\\SL.OnPremise.JenkinsPlugin\\src\\test\\cases\\MavenIntegration\\pom.xml");
-        MavenIntegration mavenIntegration = new MavenIntegration(info);
-        mavenIntegration.integrate();
+//        SeaLightsPluginInfo slInfo = new SeaLightsPluginInfo();
+//        slInfo.setAppName("App Name");
+//        slInfo.setBranchName("Branch Name");
+//        MavenIntegrationInfo info = new MavenIntegrationInfo();
+//        info.setSeaLightsPluginInfo(slInfo);
+//        info.setPomFilePath("C:\\Work\\Projects\\SL.OnPremise.JenkinsPlugin\\src\\test\\cases\\MavenIntegration\\pom.xml");
+//        MavenIntegration mavenIntegration = new MavenIntegration(info);
+//        mavenIntegration.integrate();
     }
 }

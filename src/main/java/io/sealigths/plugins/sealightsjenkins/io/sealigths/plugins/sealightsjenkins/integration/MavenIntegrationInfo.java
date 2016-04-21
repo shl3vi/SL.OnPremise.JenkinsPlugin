@@ -6,6 +6,7 @@ package io.sealigths.plugins.sealightsjenkins.io.sealigths.plugins.sealightsjenk
 public class MavenIntegrationInfo {
     private String pomFilePath;
     private String profileId;
+    private String testingFramework;
     private SeaLightsPluginInfo seaLightsPluginInfo;
 
 
@@ -31,5 +32,13 @@ public class MavenIntegrationInfo {
 
     public void setProfileId(String profileId) {
         this.profileId = profileId;
+    }
+
+    public String getTestingFramework() {
+        return testingFramework;
+    }
+
+    public void setTestingFramework(String testingFramework) {
+        this.testingFramework = testingFramework;
     }
 }

@@ -18,8 +18,6 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
-import javax.management.DescriptorKey;
-import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
@@ -35,41 +33,56 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
 
     private final boolean enable;
     private final String projectName;
+    private final String moduleName;
+    private final String branch;
     private final String projectType;
     private final String pomPath;
     private final String packagesincluded;
     private final String packagesexcluded;
     private final String filesincluded;
     private final String filesexcluded;
+    private final String testingFramework;
+    private final String relativePathToEffectivePom;
+    private final boolean recursive;
+    private final String workspacepath;
     private final String buildScannerJar;
     private final String testListenerJar;
     private final String testListenerConfigFile;
-    private final String logEnabled;
-    private final String logToFile;
+    private final boolean inheritedBuild;
+    private final boolean logEnabled;
     private final String logLevel;
+    private final boolean logToFile;
     private final String logFolder;
 
 
     @DataBoundConstructor
-    public SeaLightsJenkinsBuildWrapper(boolean enable, String projectName, String projectType, String pomPath,
-                                        String packagesincluded, String packagesexcluded, String filesincluded,
-                                        String filesexcluded, String buildScannerJar, String testListenerJar,
-                                        String testListenerConfigFile, String logEnabled, String logToFile,
-                                        String logLevel, String logFolder) {
+    public SeaLightsJenkinsBuildWrapper(boolean enable, String projectName, String moduleName,String branch, String projectType, String pomPath,
+                                        String packagesincluded, String packagesexcluded, String filesincluded, String filesexcluded,
+                                        String testingFramework, String relativePathToEffectivePom, boolean recursive,
+                                        String workspacepath, String buildScannerJar, String testListenerJar,
+                                        String testListenerConfigFile, boolean inheritedBuild, boolean logEnabled,
+                                        String logLevel, boolean logToFile, String logFolder) {
         this.enable = enable;
         this.projectName = projectName;
+        this.moduleName = moduleName;
+        this.branch = branch;
         this.projectType = projectType;
         this.pomPath = pomPath;
         this.packagesincluded = packagesincluded;
         this.packagesexcluded = packagesexcluded;
         this.filesincluded = filesincluded;
         this.filesexcluded = filesexcluded;
+        this.testingFramework = testingFramework;
+        this.relativePathToEffectivePom = relativePathToEffectivePom;
+        this.recursive = recursive;
+        this.workspacepath = workspacepath;
         this.buildScannerJar = buildScannerJar;
         this.testListenerJar = testListenerJar;
         this.testListenerConfigFile = testListenerConfigFile;
+        this.inheritedBuild = inheritedBuild;
         this.logEnabled = logEnabled;
-        this.logToFile = logToFile;
         this.logLevel = logLevel;
+        this.logToFile = logToFile;
         this.logFolder = logFolder;
     }
 
@@ -78,8 +91,10 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
                              BuildListener listener) throws IOException, InterruptedException {
 
         listener.getLogger().println();
+        listener.getLogger().println(testingFramework);
         listener.getLogger().println(enable);
         listener.getLogger().println(projectName);
+        listener.getLogger().println(moduleName);
         listener.getLogger().println(projectType);
         listener.getLogger().println(pomPath);
         listener.getLogger().println(packagesincluded);
@@ -105,7 +120,11 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         }
 
         String workingDir = ws.getRemote();
-        String pomPath = workingDir + "\\library\\pom.xml";
+        String pomPath;
+        if (relativePathToEffectivePom != null && !"".equals(relativePathToEffectivePom))
+            pomPath = workingDir + "/" + relativePathToEffectivePom;
+        else
+            pomPath = workingDir + "/pom.xml";
 
         listener.getLogger().println("::::::::::::::::::::::::::::::");
         listener.getLogger().println(pomPath);
@@ -117,24 +136,39 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         slInfo.setCustomerId(getDescriptor().getCustomerId());
         slInfo.setServerUrl(getDescriptor().getUrl());
         slInfo.setProxy(getDescriptor().getProxy());
-        slInfo.setWorkspacepath(workingDir);
-        slInfo.setAppName("App Name");
-        slInfo.setBranchName("Branch Name");
+
+        if (workspacepath != null && !"".equals(workspacepath))
+            slInfo.setWorkspacepath(workspacepath);
+        else
+            slInfo.setWorkspacepath(workingDir);
+
+
+        slInfo.setAppName(projectName);
+        slInfo.setModuleName(moduleName);
+        slInfo.setBranchName(branch);
         slInfo.setFilesIncluded(filesincluded);
         slInfo.setFilesExcluded(filesexcluded);
+        slInfo.setRecursive(recursive);
         slInfo.setPackagesIncluded(packagesincluded);
         slInfo.setPackagesExcluded(packagesexcluded);
-
 
         slInfo.setListenerJar(testListenerJar);
         slInfo.setListenerConfigFile(testListenerConfigFile);
         slInfo.setScannerJar(buildScannerJar);
+        slInfo.setInheritedBuild(inheritedBuild);
+
+        slInfo.setLogEnabled(logEnabled);
+        slInfo.setLogLevel(logLevel);
+        slInfo.setLogToFile(logToFile);
+        slInfo.setLogFolder(logFolder);
+
 
         MavenIntegrationInfo info = new MavenIntegrationInfo();
+        info.setTestingFramework(testingFramework);
         info.setSeaLightsPluginInfo(slInfo);
         info.setPomFilePath(pomPath);
 
-        MavenIntegration mavenIntegration = new MavenIntegration(info);
+        MavenIntegration mavenIntegration = new MavenIntegration(listener.getLogger(), info);
         mavenIntegration.integrate();
 
         return env;
@@ -149,6 +183,95 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
             }
         }
         return new DescriptorImpl();
+    }
+
+    public boolean isEnable() {
+        return enable;
+    }
+
+    public String getProjectName() {
+        return projectName;
+    }
+
+    public String getModuleName() {
+        return moduleName;
+    }
+
+    public String getBranch() {
+        return branch;
+    }
+
+    public String getTestingFramework()
+    {
+        return testingFramework;
+    }
+
+    public String getProjectType() {
+        return projectType;
+    }
+
+    public String getPomPath() {
+        return pomPath;
+    }
+
+    public String getPackagesincluded() {
+        return packagesincluded;
+    }
+
+    public String getPackagesexcluded() {
+        return packagesexcluded;
+    }
+
+    public String getFilesincluded() {
+        return filesincluded;
+    }
+
+    public String getFilesexcluded() {
+        return filesexcluded;
+    }
+
+    public String getRelativePathToEffectivePom() {
+        return relativePathToEffectivePom;
+    }
+
+    public String getWorkspacepath() {
+        return workspacepath;
+    }
+
+    public boolean isRecursive() {
+        return recursive;
+    }
+
+    public String getBuildScannerJar() {
+        return buildScannerJar;
+    }
+
+    public String getTestListenerJar() {
+        return testListenerJar;
+    }
+
+    public String getTestListenerConfigFile() {
+        return testListenerConfigFile;
+    }
+
+    public boolean isInheritedBuild() {
+        return inheritedBuild;
+    }
+
+    public boolean isLogEnabled() {
+        return logEnabled;
+    }
+
+    public String getLogLevel() {
+        return logLevel;
+    }
+
+    public boolean isLogToFile() {
+        return logToFile;
+    }
+
+    public String getLogFolder() {
+        return logFolder;
     }
 
     @Extension
@@ -223,5 +346,14 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
             items.add("Maven","");
             return items;
         }
+
+//        public ListBoxModel doFillTestingFrameworkItems() {
+//            ListBoxModel items = new ListBoxModel();
+//            items.add("testng");
+//            items.add("junit");
+//            return items;
+//        }
+
+
     }
 }

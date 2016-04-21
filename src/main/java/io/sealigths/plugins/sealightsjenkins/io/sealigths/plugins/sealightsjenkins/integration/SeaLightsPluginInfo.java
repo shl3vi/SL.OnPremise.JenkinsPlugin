@@ -6,6 +6,7 @@ package io.sealigths.plugins.sealightsjenkins.io.sealigths.plugins.sealightsjenk
 public class SeaLightsPluginInfo {
     private boolean isEnabled;
     private String appName;
+    private String moduleName;
     private String buildName;
     private String branchName;
     private String customerId;
@@ -16,6 +17,7 @@ public class SeaLightsPluginInfo {
     private String packagesExcluded;
     private String workspacepath;
     private String proxy;
+    private boolean recursive;
 
     public String getProxy() {
         return proxy;
@@ -47,6 +49,14 @@ public class SeaLightsPluginInfo {
 
     public void setAppName(String appName) {
         this.appName = appName;
+    }
+
+    public String getModuleName() {
+        return moduleName;
+    }
+
+    public void setModuleName(String moduleName) {
+        this.moduleName = moduleName;
     }
 
     public String getBuildName() {
@@ -113,9 +123,13 @@ public class SeaLightsPluginInfo {
         this.packagesExcluded = packagesExcluded;
     }
 
+    public boolean isRecursive() {
+        return recursive;
+    }
 
-
-
+    public void setRecursive(boolean recursive) {
+        this.recursive = recursive;
+    }
 
     private String scannerJar;
     private String listenerJar;
@@ -143,6 +157,158 @@ public class SeaLightsPluginInfo {
 
     public void setListenerConfigFile(String listenerConfigFile) {
         this.listenerConfigFile = listenerConfigFile;
+    }
+
+
+    private boolean logEnabled;
+    private boolean logToFile;
+    private String logLevel;
+    private String logFolder;
+
+    public boolean isLogEnabled() {
+        return logEnabled;
+    }
+
+    public void setLogEnabled(boolean logEnabled) {
+        this.logEnabled = logEnabled;
+    }
+
+    public boolean isLogToFile() {
+        return logToFile;
+    }
+
+    public void setLogToFile(boolean logToFile) {
+        this.logToFile = logToFile;
+    }
+
+    public String getLogLevel() {
+        return logLevel;
+    }
+
+    public void setLogLevel(String logLevel) {
+        this.logLevel = logLevel;
+    }
+
+    public String getLogFolder() {
+        return logFolder;
+    }
+
+    public void setLogFolder(String logFolder) {
+        this.logFolder = logFolder;
+    }
+
+    private boolean inheritedBuild;
+
+    public boolean isInheritedBuild() {
+        return inheritedBuild;
+    }
+
+    public void setInheritedBuild(boolean inheritedBuild) {
+        this.inheritedBuild = inheritedBuild;
+    }
+
+    public String toPluginText(){
+
+        StringBuilder plugin = new StringBuilder();
+        plugin.append("<groupId>io.sealights.on-premise.agents.plugin</groupId>");
+        plugin.append("<artifactId>sealights-maven-plugin</artifactId>");
+        plugin.append("<version>1.0.0</version>");
+        plugin.append("<configuration>");
+
+        if (!isEnabled){
+            plugin.append("<enable>false</enable>");
+        }
+
+        if(!isNullOrEmpty(customerId)){
+            plugin.append("<customerid>" + customerId + "</customerid>");
+        }
+        if(!isNullOrEmpty(serverUrl)){
+            plugin.append("<server>" + serverUrl + "</server>");
+        }
+        if(!isNullOrEmpty(proxy)){
+            plugin.append("<proxy>" + proxy + "</proxy>");
+        }
+        if(!isNullOrEmpty(appName)){
+            plugin.append("<appName>" + appName + "</appName>");
+        }
+        if(!isNullOrEmpty(moduleName)){
+            plugin.append("<moduleName>" + moduleName + "</moduleName>");
+        }
+        if(!isNullOrEmpty(workspacepath)){
+            plugin.append("<workspacepath>" + workspacepath + "</workspacepath>");
+        }
+        if(!isNullOrEmpty(buildName)){
+            plugin.append("<build>" + buildName + "</build>");
+        }
+        if(!isNullOrEmpty(branchName)){
+            plugin.append("<branch>" + branchName + "</branch>");
+        }
+        if(!isNullOrEmpty(packagesIncluded)){
+            plugin.append("<packagesincluded>" + packagesIncluded + "</packagesincluded>");
+        }
+        if(!isNullOrEmpty(packagesExcluded)){
+            plugin.append("<packagesexcluded>" + packagesExcluded + "</packagesexcluded>");
+        }
+        if(!isNullOrEmpty(filesIncluded)){
+            plugin.append("<filesincluded>" + filesIncluded + "</filesincluded>");
+        }
+        if(!isNullOrEmpty(filesExcluded)){
+            plugin.append("<filesexcluded>" + filesExcluded + "</filesexcluded>");
+        }
+        if(!isNullOrEmpty(scannerJar)){
+            plugin.append("<buildScannerJar>" + scannerJar + "</buildScannerJar>");
+        }
+        if(!isNullOrEmpty(listenerJar)){
+            plugin.append("<testListenerJar>" + listenerJar + "</testListenerJar>");
+        }
+        if(!isNullOrEmpty(listenerConfigFile)){
+            plugin.append("<testListenerConfigFile>" + listenerConfigFile + "</testListenerConfigFile>");
+        }
+        if(!recursive){
+            plugin.append("<recursive>false</recursive>");
+        }
+
+        if(logEnabled){
+            plugin.append("<logEnabled>true</logEnabled>");
+        }
+        if(!isNullOrEmpty(logLevel)){
+            plugin.append("<logLevel>" + logLevel + "</logLevel>");
+        }
+        if(logToFile){
+            plugin.append("<logToFile>true</logToFile>");
+        }
+        if(!isNullOrEmpty(logFolder)){
+            plugin.append("<logFolder>" + logFolder + "</logFolder>");
+        }
+
+
+        plugin.append("</configuration>");
+        plugin.append("<executions>");
+        plugin.append("<execution>");
+        if (!inheritedBuild)
+            plugin.append("<inherited>false</inherited>");
+        plugin.append("<id>a1</id>");
+        plugin.append("<goals>");
+        plugin.append("<goal>build-scanner</goal>");
+        plugin.append("</goals>");
+
+        plugin.append("</execution>");
+        plugin.append("<execution>");
+        plugin.append("<id>a2</id>");
+        plugin.append("<goals>");
+        plugin.append("<goal>test-listener</goal>");
+        plugin.append("</goals>");
+        plugin.append("</execution>");
+        plugin.append("</executions>");
+
+
+        return plugin.toString();
+    }
+
+    private boolean isNullOrEmpty(String str){
+        if (str == null || "".equals(str))
+            return true;
+        return false;
     }
 }
 

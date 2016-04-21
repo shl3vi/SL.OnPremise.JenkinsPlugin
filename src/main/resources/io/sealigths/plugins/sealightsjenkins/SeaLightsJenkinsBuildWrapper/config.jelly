@@ -10,8 +10,20 @@
         <f:textbox value="${projectName}"/>
      </f:entry>
 
+     <f:entry title="module Name" field="moduleName">
+        <f:textbox default="$${project.name}" value="${moduleName}"/>
+     </f:entry>
+
+     <f:entry title="branch Name" field="branch">
+        <f:textbox default="$${GIT_BRANCH}" value="${branch}"/>
+     </f:entry>
+
      <f:entry field="projectTypes" title="Project Type">
        <f:select />
+     </f:entry>
+
+     <f:entry field="testingFramework" title="Testing Framework">
+        <f:textbox value="${testingFramework}"/>
      </f:entry>
 
      <f:entry field="pomPath" title="Root project folder" description="location for parent pom.xml">
@@ -34,6 +46,18 @@
        <f:textbox value="${filesexcluded}"/>
      </f:entry>
 
+     <f:entry field="relativePathToEffectivePom" title="relative path to effective pom (e.g : 'dir/pom.xml' default is 'pom.xml')">
+       <f:textbox value="${relativePathToEffectivePom}"/>
+     </f:entry>
+
+     <f:entry title="recursive search on folders tree" field="recursive">
+       <f:checkbox/>
+     </f:entry>
+
+    <f:entry field="workspacepath" title="workspace path">
+       <f:textbox value="${workspacepath}"/>
+     </f:entry>
+
      <f:entry field="buildScannerJar" title="buildScannerJar">
        <f:textbox value="${buildScannerJar}"/>
      </f:entry>
@@ -46,16 +70,20 @@
        <f:textbox value="${testListenerConfigFile}"/>
      </f:entry>
 
-     <f:entry field="logEnabled" title="logEnabled">
-       <f:textbox value="${logEnabled}"/>
+    <f:entry title="all modules will do build" field="inheritedBuild">
+       <f:checkbox/>
      </f:entry>
 
-     <f:entry field="logToFile" title="logToFile">
-       <f:textbox value="${logToFile}"/>
+     <f:entry field="logEnabled" title="logEnabled">
+       <f:checkbox value="${logEnabled}"/>
      </f:entry>
 
      <f:entry field="logLevel" title="logLevel">
        <f:textbox value="${logLevel}"/>
+     </f:entry>
+
+    <f:entry field="logToFile" title="logToFile">
+       <f:checkbox value="${logToFile}"/>
      </f:entry>
 
      <f:entry field="logFolder" title="logFolder">
