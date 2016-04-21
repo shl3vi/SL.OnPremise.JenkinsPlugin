@@ -7,7 +7,6 @@ public class MavenIntegrationInfo {
     private String pomFilePath;
     private String profileId;
     private String testingFramework;
-    private String apiAgentPath;
     private SeaLightsPluginInfo seaLightsPluginInfo;
 
 
@@ -41,13 +40,5 @@ public class MavenIntegrationInfo {
 
     public void setTestingFramework(String testingFramework) {
         this.testingFramework = testingFramework;
-    }
-
-    public String getApiAgentPath() {
-        return apiAgentPath;
-    }
-
-    public void setApiAgentPath(String apiAgentPath) {
-        this.apiAgentPath = apiAgentPath;
     }
 }

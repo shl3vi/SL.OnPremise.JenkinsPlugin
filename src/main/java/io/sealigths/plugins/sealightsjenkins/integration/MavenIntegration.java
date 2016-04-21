@@ -53,7 +53,7 @@ public class MavenIntegration {
         String eventListenerPackage = getEventListenerPackage(info.getTestingFramework());
         if (profileId == null || profileId.equals(""))
         {
-            integrateToAllProfiles(eventListenerPackage, info.getApiAgentPath());
+            integrateToAllProfiles(eventListenerPackage, info.getSeaLightsPluginInfo().getApiJar());
         }
         else
         {
