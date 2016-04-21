@@ -39,7 +39,7 @@
      </f:entry>
 
      <f:entry title="Files Excluded" field="filesexcluded" description="Files to exclude from SeaLights' analysis. Supports wildcards (* = any string, ? = any character).">
-       <f:textbox value="${filesexcluded}" default="*/test-classes/*/" />
+       <f:textbox value="${filesexcluded}" default="*/test-classes/*" />
      </f:entry>
 
      <f:entry title="Recursive search on folders tree" field="recursive">
