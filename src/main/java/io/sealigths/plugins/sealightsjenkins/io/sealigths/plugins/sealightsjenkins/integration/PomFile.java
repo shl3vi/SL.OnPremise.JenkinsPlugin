@@ -8,16 +8,11 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.StringReader;
+import javax.xml.xpath.*;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,13 +41,16 @@ public class PomFile {
     public void addPlugin(String pluginBodyAsXml)
     {
         Document doc = this.getDocument();
-        addPlugin(pluginBodyAsXml, doc.getDocumentElement());
+        try {
+            addPlugin(pluginBodyAsXml, doc.getDocumentElement());
+        } catch (XPathExpressionException e) {
+            e.printStackTrace();
+        }
     }
 
-    public void addPlugin(String pluginBodyAsXml, Element parentElement)
-    {
-        Element buildElement = getOrCreateElement("build", parentElement);
-        Element pluginsElement = getOrCreateElement("plugins", buildElement);
+    public void addPlugin(String pluginBodyAsXml, Element parentElement) throws XPathExpressionException {
+        Element buildElement = getOrCreateElement("build", "//build", parentElement);
+        Element pluginsElement = getOrCreateElement("plugins", "//build/plugins", buildElement);
         //Element pluginElement = getDocument().createElement("plugin");
         try {
             String xml = "<plugin>"+pluginBodyAsXml+"</plugin>";
@@ -74,6 +72,32 @@ public class PomFile {
 
     }
 
+    public void addEventListener(String eventListenerNode){
+        Element documentElement = getDocument().getDocumentElement();
+        String basePath = "//*/plugin/artifactId[.='maven-surefire-plugin']/parent::plugin";
+        basePath += "/configuration";
+
+        try{
+            Element configurationElement = getOrCreateElement("configuration", basePath, documentElement);
+            Element propertiesElement = (Element) DocumentBuilderFactory
+                    .newInstance()
+                    .newDocumentBuilder()
+                    .parse(new ByteArrayInputStream(eventListenerNode.getBytes(Charset.forName("UTF-8"))))
+                    .getDocumentElement();
+
+            propertiesElement = (Element) document.importNode(propertiesElement, true);
+            configurationElement.appendChild(propertiesElement);
+        } catch (SAXException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ParserConfigurationException e) {
+            e.printStackTrace();
+        } catch (XPathExpressionException e) {
+            e.printStackTrace();
+        }
+
+    }
 
 
     public void save(String filename) throws TransformerException {
@@ -85,10 +109,14 @@ public class PomFile {
         transformer.transform(domSource, streamResult);
     }
 
-    private Element getOrCreateElement(String name, Element parent) {
-        NodeList childElements = parent.getElementsByTagName(name);
+    private Element getOrCreateElement(String name, String xpath, Element parent) throws XPathExpressionException {
+        XPath xPath = XPathFactory.newInstance().newXPath();
+        XPathExpression expression = xPath.compile(xpath);
+        NodeList nodes = (NodeList)expression.evaluate(getDocument(), XPathConstants.NODESET);
+
+        //NodeList childElements = parent.getElementsByTagName(name);
         Element childElement;
-        if (childElements == null || childElements.getLength() == 0)
+        if (nodes.getLength() == 0)
         {
             Document doc = this.getDocument();
             childElement = doc.createElement(name);
@@ -96,7 +124,7 @@ public class PomFile {
         }
         else
         {
-            childElement = (Element) childElements.item(0);
+            childElement = (Element) nodes.item(0);
         }
 
         return childElement;
@@ -158,6 +186,26 @@ public class PomFile {
             }
         }
 
+        return "";
+    }
+
+    public String getPomAsString(){
+        try {
+            TransformerFactory transfac = TransformerFactory.newInstance();
+            Transformer trans = transfac.newTransformer();
+            trans.setOutputProperty(OutputKeys.METHOD, "xml");
+            trans.setOutputProperty(OutputKeys.INDENT, "yes");
+            trans.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", Integer.toString(2));
+
+            StringWriter sw = new StringWriter();
+            StreamResult result = new StreamResult(sw);
+            DOMSource source = new DOMSource(getDocument().getDocumentElement());
+            trans.transform(source, result);
+            String xmlString = sw.toString();
+            return xmlString;
+        } catch (TransformerException e) {
+            e.printStackTrace();
+        }
         return "";
     }
 
