@@ -1,4 +1,4 @@
-package io.sealigths.plugins.sealightsjenkins.io.sealigths.plugins.sealightsjenkins.integration;
+package io.sealigths.plugins.sealightsjenkins.integration;
 
 import org.w3c.dom.*;
 import org.w3c.dom.Document;

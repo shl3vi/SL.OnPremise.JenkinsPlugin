@@ -1,4 +1,4 @@
-package io.sealigths.plugins.sealightsjenkins.io.sealigths.plugins.sealightsjenkins.integration;
+package io.sealigths.plugins.sealightsjenkins.integration;
 
 /**
  * Created by Nadav on 4/19/2016.
@@ -133,6 +133,7 @@ public class SeaLightsPluginInfo {
 
     private String scannerJar;
     private String listenerJar;
+    private String apiJar;
     private String listenerConfigFile;
 
     public String getScannerJar() {
@@ -309,6 +310,14 @@ public class SeaLightsPluginInfo {
         if (str == null || "".equals(str))
             return true;
         return false;
+    }
+
+    public String getApiJar() {
+        return apiJar;
+    }
+
+    public void setApiJar(String apiJar) {
+        this.apiJar = apiJar;
     }
 }
 
