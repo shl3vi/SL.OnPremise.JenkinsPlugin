@@ -10,9 +10,10 @@ import hudson.model.Descriptor;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 import hudson.util.ListBoxModel;
-import io.sealigths.plugins.sealightsjenkins.io.sealigths.plugins.sealightsjenkins.integration.MavenIntegration;
-import io.sealigths.plugins.sealightsjenkins.io.sealigths.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
-import io.sealigths.plugins.sealightsjenkins.io.sealigths.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
+import io.sealigths.plugins.sealightsjenkins.integration.JarsHelper;
+import io.sealigths.plugins.sealightsjenkins.integration.MavenIntegration;
+import io.sealigths.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
+import io.sealigths.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -32,7 +33,7 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
 
 
     private final boolean enable;
-    private final String projectName;
+    private final String appName;
     private final String moduleName;
     private final String branch;
     private final String projectType;
@@ -47,6 +48,7 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
     private final String workspacepath;
     private final String buildScannerJar;
     private final String testListenerJar;
+    private final String apiJar;
     private final String testListenerConfigFile;
     private final boolean inheritedBuild;
     private final boolean logEnabled;
@@ -56,14 +58,14 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
 
 
     @DataBoundConstructor
-    public SeaLightsJenkinsBuildWrapper(boolean enable, String projectName, String moduleName,String branch, String projectType, String pomPath,
+    public SeaLightsJenkinsBuildWrapper(boolean enable, String appName, String moduleName, String branch, String projectType, String pomPath,
                                         String packagesincluded, String packagesexcluded, String filesincluded, String filesexcluded,
                                         String testingFramework, String relativePathToEffectivePom, boolean recursive,
                                         String workspacepath, String buildScannerJar, String testListenerJar,
                                         String testListenerConfigFile, boolean inheritedBuild, boolean logEnabled,
-                                        String logLevel, boolean logToFile, String logFolder) {
+                                        String logLevel, boolean logToFile, String logFolder, String apiJar) throws IOException {
         this.enable = enable;
-        this.projectName = projectName;
+        this.appName = appName;
         this.moduleName = moduleName;
         this.branch = branch;
         this.projectType = projectType;
@@ -76,14 +78,35 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         this.relativePathToEffectivePom = relativePathToEffectivePom;
         this.recursive = recursive;
         this.workspacepath = workspacepath;
-        this.buildScannerJar = buildScannerJar;
-        this.testListenerJar = testListenerJar;
         this.testListenerConfigFile = testListenerConfigFile;
         this.inheritedBuild = inheritedBuild;
         this.logEnabled = logEnabled;
         this.logLevel = logLevel;
         this.logToFile = logToFile;
         this.logFolder = logFolder;
+
+        if (isNullOrEmpty(buildScannerJar))
+        {
+            //The user didn't specify a specify version of the scanner. Use an embedded one.
+            buildScannerJar = JarsHelper.loadJarAndSaveAsTempFile("sl-build-scanner");
+        }
+
+        if (isNullOrEmpty(testListenerJar))
+        {
+            //The user didn't specify a specify version of the test listener. Use an embedded one.
+            testListenerJar = JarsHelper.loadJarAndSaveAsTempFile("sl-test-listener");
+        }
+
+        if (isNullOrEmpty(apiJar))
+        {
+            //The user didn't specify a specify version of the test listener. Use an embedded one.
+            apiJar = JarsHelper.loadJarAndSaveAsTempFile("sl-api");
+        }
+
+
+        this.buildScannerJar = buildScannerJar;
+        this.testListenerJar = testListenerJar;
+        this.apiJar = apiJar;
     }
 
     @Override
@@ -93,7 +116,7 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         listener.getLogger().println();
         listener.getLogger().println(testingFramework);
         listener.getLogger().println(enable);
-        listener.getLogger().println(projectName);
+        listener.getLogger().println(appName);
         listener.getLogger().println(moduleName);
         listener.getLogger().println(projectType);
         listener.getLogger().println(pomPath);
@@ -103,6 +126,7 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         listener.getLogger().println(filesexcluded);
         listener.getLogger().println(buildScannerJar);
         listener.getLogger().println(testListenerJar);
+        listener.getLogger().println(apiJar);
         listener.getLogger().println(logEnabled);
         listener.getLogger().println(logToFile);
         listener.getLogger().println(logLevel);
@@ -143,7 +167,7 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
             slInfo.setWorkspacepath(workingDir);
 
 
-        slInfo.setAppName(projectName);
+        slInfo.setAppName(appName);
         slInfo.setModuleName(moduleName);
         slInfo.setBranchName(branch);
         slInfo.setFilesIncluded(filesincluded);
@@ -155,6 +179,7 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         slInfo.setListenerJar(testListenerJar);
         slInfo.setListenerConfigFile(testListenerConfigFile);
         slInfo.setScannerJar(buildScannerJar);
+        slInfo.setApiJar(apiJar);
         slInfo.setInheritedBuild(inheritedBuild);
 
         slInfo.setLogEnabled(logEnabled);
@@ -189,8 +214,8 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         return enable;
     }
 
-    public String getProjectName() {
-        return projectName;
+    public String getAppName() {
+        return appName;
     }
 
     public String getModuleName() {
@@ -272,6 +297,15 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
 
     public String getLogFolder() {
         return logFolder;
+    }
+
+    public String getApiJar() {
+        return apiJar;
+    }
+
+    private boolean isNullOrEmpty(String str)
+    {
+        return  (str == null || str.equals(""));
     }
 
     @Extension
