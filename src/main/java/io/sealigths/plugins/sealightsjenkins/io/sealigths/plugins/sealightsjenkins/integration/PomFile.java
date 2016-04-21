@@ -72,20 +72,30 @@ public class PomFile {
 
     }
 
-    public void addEventListener(String eventListenerNode){
+    public void addEventListener(String additionalClassPath, String properties){
         Element documentElement = getDocument().getDocumentElement();
         String basePath = "//*/plugin/artifactId[.='maven-surefire-plugin']/parent::plugin";
         basePath += "/configuration";
 
         try{
             Element configurationElement = getOrCreateElement("configuration", basePath, documentElement);
+
+            Element additionalClassPathElement = (Element) DocumentBuilderFactory
+                    .newInstance()
+                    .newDocumentBuilder()
+                    .parse(new ByteArrayInputStream(additionalClassPath.getBytes(Charset.forName("UTF-8"))))
+                    .getDocumentElement();
+
             Element propertiesElement = (Element) DocumentBuilderFactory
                     .newInstance()
                     .newDocumentBuilder()
-                    .parse(new ByteArrayInputStream(eventListenerNode.getBytes(Charset.forName("UTF-8"))))
+                    .parse(new ByteArrayInputStream(properties.getBytes(Charset.forName("UTF-8"))))
                     .getDocumentElement();
 
+            additionalClassPathElement = (Element) document.importNode(additionalClassPathElement, true);
             propertiesElement = (Element) document.importNode(propertiesElement, true);
+
+            configurationElement.appendChild(additionalClassPathElement);
             configurationElement.appendChild(propertiesElement);
         } catch (SAXException e) {
             e.printStackTrace();

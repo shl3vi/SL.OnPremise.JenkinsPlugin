@@ -3,6 +3,7 @@ package io.sealigths.plugins.sealightsjenkins.io.sealigths.plugins.sealightsjenk
 import javax.xml.transform.TransformerException;
 import java.io.PrintStream;
 
+//import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 /**
  * Created by Nadav on 4/19/2016.
  */
@@ -35,14 +36,14 @@ public class MavenIntegration {
             throw new RuntimeException("SeaLights plugin requires Maven Surefire Plugin");
         }
 
-        String version = pomFile.getPluginVersion(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID);
-        String[] tokens = version.split("\\.");
-        int majorVersion = Integer.parseInt(tokens[0]);
-        int minorVersion = Integer.parseInt(tokens[1]);
-        if ((majorVersion < 2) || (majorVersion == 2 && minorVersion < 9))
-        {
-            throw new RuntimeException("Unsupported Maven Surefire plugin. SeaLights requires a version 2.9 or higher.");
-        }
+//        String version = pomFile.getPluginVersion(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID);
+//        String[] tokens = version.split("\\.");
+//        int majorVersion = Integer.parseInt(tokens[0]);
+//        int minorVersion = Integer.parseInt(tokens[1]);
+//        if ((majorVersion < 2) || (majorVersion == 2 && minorVersion < 9))
+//        {
+//            throw new RuntimeException("Unsupported Maven Surefire plugin. SeaLights requires a version 2.9 or higher.");
+//        }
 
         integrateToPomFile();
     }
@@ -52,7 +53,7 @@ public class MavenIntegration {
         String eventListenerPackage = getEventListenerPackage(info.getTestingFramework());
         if (profileId == null || profileId.equals(""))
         {
-            integrateToAllProfiles(eventListenerPackage);
+            integrateToAllProfiles(eventListenerPackage, info.getApiAgentPath());
         }
         else
         {
@@ -84,7 +85,7 @@ public class MavenIntegration {
 
     }
 
-    private void integrateToAllProfiles(String testingFrameWorkListeners) {
+    private void integrateToAllProfiles(String testingFrameworkListeners, String apiAgentPath) {
         SeaLightsPluginInfo seaLightsPluginInfo = this.info.getSeaLightsPluginInfo();
         log.println("*************************************");
         log.println("*************************************");
@@ -95,8 +96,9 @@ public class MavenIntegration {
         log.println(xml);
         pomFile.addPlugin(xml);
 
-        String eventListenerNode = addListenerToSurefire(testingFrameWorkListeners);
-        pomFile.addEventListener(eventListenerNode);
+        String additionalClassPathElement = createSurefireAdditionalClassPathElement(apiAgentPath);
+        String propertiesElement = createSurefirePropertiesElement(testingFrameworkListeners);
+        pomFile.addEventListener(additionalClassPathElement, propertiesElement);
 
         try {
             pomFile.save(info.getPomFilePath());
@@ -111,18 +113,30 @@ public class MavenIntegration {
         }
     }
 
-    public String addListenerToSurefire(String testingFrameWorkListeners) {
+    private String createSurefirePropertiesElement(String testingFrameworkListeners){
         StringBuilder sureFireProperty = new StringBuilder();
         sureFireProperty.append("<properties>");
         sureFireProperty.append("<property>");
         sureFireProperty.append("<name>listener</name>");
         sureFireProperty.append("<value>");
-        sureFireProperty.append(testingFrameWorkListeners);
+        sureFireProperty.append(testingFrameworkListeners);
         sureFireProperty.append("</value>");
         sureFireProperty.append("</property>");
         sureFireProperty.append("</properties>");
 
         return sureFireProperty.toString();
+    }
+
+    private String createSurefireAdditionalClassPathElement(String apiAgentPath) {
+
+        StringBuilder additionalClasspathElements = new StringBuilder();
+        additionalClasspathElements.append("<additionalClasspathElements>");
+        additionalClasspathElements.append("<additionalClasspathElement>");
+        additionalClasspathElements.append(apiAgentPath);
+        additionalClasspathElements.append("</additionalClasspathElement>");
+        additionalClasspathElements.append("</additionalClasspathElements>");
+
+        return additionalClasspathElements.toString();
     }
 
     public static void main(String[] args)
@@ -140,5 +154,17 @@ public class MavenIntegration {
 //        info.setPomFilePath("C:\\Work\\Projects\\SL.OnPremise.JenkinsPlugin\\src\\test\\cases\\MavenIntegration\\pom.xml");
 //        MavenIntegration mavenIntegration = new MavenIntegration(info);
 //        mavenIntegration.integrate();
+    }
+
+    private void getPomAsMavenProject(){
+//        Model model = null;
+//        FileReader reader = null;
+//        MavenXpp3Reader mavenreader = new MavenXpp3Reader();
+//        try {
+//            reader = new FileReader(pomfile);
+//            model = mavenreader.read(reader);
+//            model.setPomFile(pomfile);
+//        }catch(Exception ex){}
+//        MavenProject project = new MavenProject(model);
     }
 }
