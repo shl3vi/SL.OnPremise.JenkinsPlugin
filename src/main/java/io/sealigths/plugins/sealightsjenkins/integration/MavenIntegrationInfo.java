@@ -1,4 +1,4 @@
-package io.sealigths.plugins.sealightsjenkins.io.sealigths.plugins.sealightsjenkins.integration;
+package io.sealigths.plugins.sealightsjenkins.integration;
 
 /**
  * Created by Nadav on 4/19/2016.

@@ -1,4 +1,4 @@
-package io.sealigths.plugins.sealightsjenkins.io.sealigths.plugins.sealightsjenkins.integration;
+package io.sealigths.plugins.sealightsjenkins.integration;
 
 import javax.xml.transform.TransformerException;
 import java.io.PrintStream;
