@@ -1,99 +1,112 @@
+<?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
- xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+         xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
     <f:section title="SeaLights Continues Testing">
+        <!--<f:entry title="Enable SeaLights Integration" field="enable">-->
+            <!--<f:checkbox/>-->
+        <!--</f:entry>-->
 
-     <f:entry title="Enable SeaLights Integration" field="enable">
-        <f:checkbox/>
-     </f:entry>
+        <f:entry title="App Name" field="appName">
+            <f:textbox value="${appName}" default="$${JOB_NAME}"/>
+        </f:entry>
 
-     <f:entry title="App Name" field="appName">
-        <f:textbox value="${appName}" default="$${JOB_NAME}"/>
-     </f:entry>
+        <f:entry title="Branch Name" field="branch">
+            <f:textbox default="$${GIT_BRANCH}" value="${branch}"/>
+        </f:entry>
 
-     <f:entry title="Module Name" field="moduleName">
-        <f:textbox default="$${project.name}" value="${moduleName}"/>
-     </f:entry>
+        <!--<f:entry title="Project Type" field="projectTypes">-->
+            <!--<f:select/>-->
+        <!--</f:entry>-->
 
-     <f:entry title="Branch Name" field="branch">
-        <f:textbox default="$${GIT_BRANCH}" value="${branch}"/>
-     </f:entry>
+        <!--<f:entry title="Testing Framework" field="testingFramework">-->
+            <!--<f:textbox value="${testingFramework}"/>-->
+        <!--</f:entry>-->
 
-     <f:entry title="Project Type" field="projectTypes">
-       <f:select />
-     </f:entry>
+        <f:entry title="Packages Included" field="packagesincluded"
+                 description="Java packages that will be analyzed by SeaLights. Supports wildcards (* = any string, ? = any character).">
+            <f:textbox value="${packagesincluded}"/>
+        </f:entry>
 
-     <f:entry title="Testing Framework" field="testingFramework">
-        <f:textbox value="${testingFramework}"/>
-     </f:entry>
+        <!--<f:entry title="Packages Excluded" field="packagesexcluded"-->
+                 <!--description="Java packages to exclude from SeaLights' analysis. Supports wildcards (* = any string, ? = any character).">-->
+            <!--<f:textbox value="${packagesexcluded}"-->
+                       <!--default="*FastClassByGuice*, *ByCGLIB*, *EnhancerByMockitoWithCGLIB*, *EnhancerBySpringCGLIB*"/>-->
+        <!--</f:entry>-->
 
-     <f:entry title="Packages Included" field="packagesincluded" description="Java packages that will be analyzed by SeaLights. Supports wildcards (* = any string, ? = any character).">
-       <f:textbox value="${packagesincluded}" />
-     </f:entry>
+        <f:entry title="Files Included" field="filesincluded"
+                 description="Files to include in SeaLights' analysis. Supports wildcards (* = any string, ? = any character).">
+            <f:textbox value="${filesincluded}" default="*.class"/>
+        </f:entry>
 
-     <f:entry title="Packages Excluded" field="packagesexcluded" description="Java packages to exclude from SeaLights' analysis. Supports wildcards (* = any string, ? = any character).">
-       <f:textbox value="${packagesexcluded}" default="*FastClassByGuice*, *ByCGLIB*, *EnhancerByMockitoWithCGLIB*, *EnhancerBySpringCGLIB*"/>
-     </f:entry>
+        <f:entry title="Files Excluded" field="filesexcluded"
+                 description="Files to exclude from SeaLights' analysis. Supports wildcards (* = any string, ? = any character).">
+            <f:textbox value="${filesexcluded}" default="*/test-classes/*"/>
+        </f:entry>
 
-     <f:entry title="Files Included" field="filesincluded" description="Files to include in SeaLights' analysis. Supports wildcards (* = any string, ? = any character).">
-       <f:textbox value="${filesincluded}" default="*.class"/>
-     </f:entry>
-
-     <f:entry title="Files Excluded" field="filesexcluded" description="Files to exclude from SeaLights' analysis. Supports wildcards (* = any string, ? = any character).">
-       <f:textbox value="${filesexcluded}" default="*/test-classes/*" />
-     </f:entry>
-
-     <f:entry title="Recursive search on folders tree" field="recursive">
+        <f:entry title="Recursive search on folders tree" field="recursive">
             <f:checkbox default="true"/>
-     </f:entry>
-
-     <f:entry field="relativePathToEffectivePom" title="Relative path to effective pom (e.g : 'dir/pom.xml'. default is 'pom.xml')">
-       <f:textbox value="${relativePathToEffectivePom}"/>
-     </f:entry>
-
-    <f:entry field="workspacepath" title="workspace path" description="Path to a the workspace folder in which the source code exists.">
-       <f:textbox value="${workspacepath}" default="$${WORKSPACE}"/>
-     </f:entry>
-
-     <f:entry title="Build Scanner JAR Path" field="buildScannerJar" description="Overrides the default Build Scanner JAR with a path to a different Build Scanner. Leave empty to use the default one." >
-       <f:textbox value="${buildScannerJar}"/>
-     </f:entry>
-
-     <f:entry title="Test Listener JAR Path" field="testListenerJar" description="Overrides the default Test Listener JAR with a path to a different Test Listener JAR. Leave empty to use the default one." >
-       <f:textbox value="${testListenerJar}"/>
-     </f:entry>
-
-        <f:entry title="API JAR Path" field="apiJar" description="Overrides the default API JAR with a path to a different one. Leave empty to use the default one." >
-            <f:textbox value="${apiJar}"/>
         </f:entry>
 
-     <f:entry field="testListenerConfigFile" title="testListenerConfigFile">
-       <f:textbox value="${testListenerConfigFile}"/>
-     </f:entry>
-
-    <f:entry title="Show all modules as a single build." field="inheritedBuild" description="When checked, all modules in the project appear in SeaLights' dashboard as a single build with aggregated results. When unchecked, each module appear as a different application.">
-       <f:checkbox/>
-     </f:entry>
-
-    <f:optionalBlock name="logsOptionalBlock" title="Enable logs" default="true">
-        <f:entry title="Log Level" field="logLevel">
-           <f:textbox value="${logLevel}" default="info"/>
-         </f:entry>
-
-        <f:entry title="Log To File" field="logToFile" description="Check in order to write the logs to a file.">
-            <f:checkbox value="${logToFile}"/>
+        <f:entry field="relativePathToEffectivePom" title="Top-level Pom"
+                 description="Relative path to top-level pom (e.g : 'dir/pom.xml'. default is 'pom.xml')">
+            <f:textbox value="${relativePathToEffectivePom}"/>
         </f:entry>
 
-        <f:entry title="Logs Folder" field="logFolder" description="The path in which the logs will be saved.">
-           <f:textbox value="${logFolder}"/>
+        <f:entry field="workspacepath" title="Workspace Path"
+                 description="Path to a the workspace folder in which the source code exists.">
+            <f:textbox value="${workspacepath}" default="$${project.basedir}"/>
         </f:entry>
 
-        <f:entry title="Enables logs" field="logEnabled" description="Check to enable SeaLights' logs.">
-               <f:checkbox value="${logEnabled}"/>
+        <!--<f:entry field="testListenerConfigFile" title="testListenerConfigFile">-->
+            <!--<f:textbox value="${testListenerConfigFile}"/>-->
+        <!--</f:entry>-->
+
+        <f:entry title="Show all modules as a single build" field="inheritedBuild"
+                 description="When checked, all modules in the project appear in SeaLights' dashboard as a single build with aggregated results. When unchecked, each module appear as a different application.">
+            <f:checkbox/>
         </f:entry>
 
-    </f:optionalBlock>
+        <f:entry title="Module Name" field="moduleName">
+            <f:textbox default="$${project.name}" value="${moduleName}"/>
+        </f:entry>
 
+
+        <f:optionalBlock name="overrideJarOptionalBlock" title="Override Jars Locations">
+            <f:entry title="Build Scanner JAR Path" field="buildScannerJar"
+                     description="Overrides the default Build Scanner JAR with a path to a different Build Scanner. Leave empty to use the default one.">
+                <f:textbox value="${buildScannerJar}"/>
+            </f:entry>
+
+            <f:entry title="Test Listener JAR Path" field="testListenerJar"
+                     description="Overrides the default Test Listener JAR with a path to a different Test Listener JAR. Leave empty to use the default one.">
+                <f:textbox value="${testListenerJar}"/>
+            </f:entry>
+
+            <f:entry title="API JAR Path" field="apiJar"
+                     description="Overrides the default API JAR with a path to a different one. Leave empty to use the default one.">
+                <f:textbox value="${apiJar}"/>
+            </f:entry>
+        </f:optionalBlock>
+
+        <f:optionalBlock name="logsOptionalBlock" title="Enable logs">
+            <f:entry title="Log Level" field="logLevel">
+                <f:textbox value="${instance.logLevel}" default="info"/>
+            </f:entry>
+
+            <f:entry title="Log To File" field="logToFile" description="Check in order to write the logs to a file.">
+                <f:checkbox value="${instance.logToFile}"/>
+            </f:entry>
+
+            <f:entry title="Logs Folder" field="logFolder" description="The path in which the logs will be saved.">
+                <f:textbox value="${instance.logFolder}"/>
+            </f:entry>
+
+            <f:entry title="Enables logs" field="logEnabled" description="Check to enable SeaLights' logs.">
+                <f:checkbox value="${instance.logEnabled}"/>
+            </f:entry>
+
+        </f:optionalBlock>
 
 
     </f:section>
- </j:jelly>
+</j:jelly>
