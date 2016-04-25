@@ -9,6 +9,11 @@ import java.io.PrintStream;
 public class MavenIntegration {
     private final static String SUREFIRE_GROUP_ID = "org.apache.maven.plugins";
     private final static String SUREFIRE_ARTIFACT_ID = "maven-surefire-plugin";
+    private final static String SEALIGHTS_GROUP_ID = "io.sealights.on-premise.agents.plugin";
+    private final static String SEALIGHTS_ARTIFACT_ID = "sealights-maven-plugin";
+
+
+
     private PomFile pomFile;
     private MavenIntegrationInfo info;
     private PrintStream log;
@@ -24,26 +29,27 @@ public class MavenIntegration {
     {
 
         this.log.println("MavenIntegration.integrate - starting");
-        if (pomFile.isPluginExist("sealights", "maven-plugin-name"))
+        if (pomFile.isPluginExistInEntriePom(SEALIGHTS_GROUP_ID, SEALIGHTS_ARTIFACT_ID))
         {
-            //Sealights plugin is already defined. No need to redefine.
+            this.log.println("MavenIntegration.integrate - Skipping the integration since SeaLights plugin is already defined in the the POM file.");
             return;
         }
 
-        if (!pomFile.isPluginExist(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID))
-        {
-            //Surefire plugin isn't defined.
-            throw new RuntimeException("SeaLights plugin requires Maven Surefire Plugin");
-        }
-
-        String version = pomFile.getPluginVersion(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID);
-        String[] tokens = version.split("\\.");
-        int majorVersion = Integer.parseInt(tokens[0]);
-        int minorVersion = Integer.parseInt(tokens[1]);
-        if ((majorVersion < 2) || (majorVersion == 2 && minorVersion < 9))
-        {
-            throw new RuntimeException("Unsupported Maven Surefire plugin. SeaLights requires a version 2.9 or higher.");
-        }
+        //TODO: Check the SureFire version on the resolved (effective) *.pom file.
+//        if (!pomFile.isPluginExistInEntriePom(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID))
+//        {
+//            //Surefire plugin isn't defined.
+//            throw new RuntimeException("SeaLights plugin requires Maven Surefire Plugin");
+//        }
+//
+//        String version = pomFile.getPluginVersion(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID);
+//        String[] tokens = version.split("\\.");
+//        int majorVersion = Integer.parseInt(tokens[0]);
+//        int minorVersion = Integer.parseInt(tokens[1]);
+//        if ((majorVersion < 2) || (majorVersion == 2 && minorVersion < 9))
+//        {
+//            throw new RuntimeException("Unsupported Maven Surefire plugin. SeaLights requires a version 2.9 or higher.");
+//        }
 
         integrateToPomFile();
     }

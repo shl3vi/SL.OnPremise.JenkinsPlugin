@@ -115,6 +115,29 @@ public class MavenIntegrationTest {
         Assert.assertEquals("Expected to have a different POM file.", expected, actual);
     }
 
+    @Test
+    public void InjectSeaLightsPluginToAPomWithProfileWhichHasSurefireAndAnotherDoesnt() throws Exception {
+
+        //Arrange
+        String TESTING_FRAMEWORK="junit";
+        String TEST_CASE = "6_Inject_SeaLights_plugin_to_a_pom_with_a_profile_which_has_surefire_and_another_doesnt";
+        String testFolder = getTestFolder(TEST_CASE);
+
+        MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
+        mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
+        MavenIntegration mavenIntegration = new MavenIntegration(new PrintStream(System.out),mavenIntegrationInfo);
+
+        //Act
+        mavenIntegration.integrate();
+
+        //Assert
+        String expected = readFileAndTrim(testFolder + "/expected.xml");
+        String actual = readFileAndTrim(testFolder + "/actual.xml");
+        Assert.assertEquals("Expected to have a different POM file.", expected, actual);
+    }
+
+
+
     private String readFileAndTrim(String filepath) throws IOException {
         String s = FileUtils.readFileToString(new File(filepath));
         return trim(s);

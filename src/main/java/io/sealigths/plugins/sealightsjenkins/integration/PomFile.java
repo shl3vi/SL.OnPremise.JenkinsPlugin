@@ -24,6 +24,9 @@ public class PomFile {
 
     private String filename;
     private Document document;
+    private final static String SUREFIRE_GROUP_ID = "org.apache.maven.plugins";
+    private final static String SUREFIRE_ARTIFACT_ID = "maven-surefire-plugin";
+    private final static String SUREFIRE_XML = "<groupId>org.apache.maven.plugins</groupId><artifactId>maven-surefire-plugin</artifactId><version>2.19</version>";
 
     public PomFile(String filename) {
         this.filename = filename;
@@ -35,8 +38,13 @@ public class PomFile {
         return profiles;
     }
 
-    public boolean isPluginExist(String groupId, String artifactId) {
-        return isPluginExist(groupId, artifactId, null);
+    public boolean isPluginExistInEntriePom(String groupId, String artifactId) {
+        try {
+            return isPluginExistInElement(groupId, artifactId, getDocument().getDocumentElement());
+        } catch (XPathExpressionException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public void addPlugin(String pluginBodyAsXml) {
@@ -57,15 +65,13 @@ public class PomFile {
 
                 for (int i = 0; i < pluginsElements.size(); i++) {
                     Element pluginsElement = pluginsElements.get(i);
-                    String xml = "<plugin>" + pluginBodyAsXml + "</plugin>";
-                    Element pluginElement = DocumentBuilderFactory
-                            .newInstance()
-                            .newDocumentBuilder()
-                            .parse(new ByteArrayInputStream(xml.getBytes(Charset.forName("UTF-8"))))
-                            .getDocumentElement();
 
-                    pluginElement = (Element) document.importNode(pluginElement, true);
-                    pluginsElement.appendChild(pluginElement);
+                    if (!isPluginExistInElement(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID, pluginsElement)){
+                        //Surefire doesn't exist in element. it it.
+                        addPluginToPluginsElement(SUREFIRE_XML, pluginsElement);
+                    }
+
+                    addPluginToPluginsElement(pluginBodyAsXml, pluginsElement);
                 }
 
             } catch (SAXException e) {
@@ -76,6 +82,18 @@ public class PomFile {
                 e.printStackTrace();
             }
         }
+    }
+
+    private void addPluginToPluginsElement(String pluginBodyAsXml, Element pluginsElement) throws SAXException, IOException, ParserConfigurationException {
+        String xml = "<plugin>" + pluginBodyAsXml + "</plugin>";
+        Element pluginElement = DocumentBuilderFactory
+                .newInstance()
+                .newDocumentBuilder()
+                .parse(new ByteArrayInputStream(xml.getBytes(Charset.forName("UTF-8"))))
+                .getDocumentElement();
+
+        pluginElement = (Element) document.importNode(pluginElement, true);
+        pluginsElement.appendChild(pluginElement);
     }
 
     String SUREFIRE_PLUGIN = "//build/plugins/plugin/artifactId[.='maven-surefire-plugin']/parent::plugin";
@@ -145,64 +163,15 @@ public class PomFile {
     }
 
 
-    public boolean isPluginExist(String groupId, String artifactId, String version) {
-        Node pluginNode = getPluginNode(groupId, artifactId, version);
-        Boolean isExist = pluginNode != null;
-        return isExist;
-    }
+    String PLUGIN_TEMPLATE = "plugin[artifactId='#ARTIFACT_ID#' and groupId='#GROUP_ID#']";
 
-    public Node getPluginNode(String groupId, String artifactId, String version) {
-        Document doc = this.getDocument();
-        NodeList allPluginNodes = doc.getElementsByTagName("plugin");
-        if (allPluginNodes == null)
-            return null;
-        for (int i = 0; i < allPluginNodes.getLength(); i++) {
-            Node pluginNode = allPluginNodes.item(i);
-            if (isPlugin(groupId, artifactId, version, pluginNode))
-                return pluginNode;
-        }
-        return null;
-    }
+    private boolean isPluginExistInElement(String groupId, String artifactId, Element parent) throws XPathExpressionException {
+        String xpath = PLUGIN_TEMPLATE.replace("#GROUP_ID#", groupId).replace("#ARTIFACT_ID#",artifactId);
 
-    private boolean isPlugin(String groupId, String artifactId, String version, Node pluginNode) {
-        //Get the node which holds the plugin information (groupId, artifactId, version, etc).
-        NodeList pluginInformation = pluginNode.getChildNodes();
-        boolean sameGroupId = false;
-        boolean sameArtifactId = false;
-        boolean sameVersion = false;
-        for (int j = 0; j < pluginInformation.getLength(); j++) {
-            Node child = pluginInformation.item(j);
-            String nodeName = child.getNodeName();
-            String nodeContent = child.getTextContent();
-            if (nodeName.equalsIgnoreCase("groupId")) {
-                sameGroupId = nodeContent.equalsIgnoreCase(groupId);
-            } else if (nodeName.equalsIgnoreCase("artifactId")) {
-                sameArtifactId = nodeContent.equalsIgnoreCase(artifactId);
-            } else if (nodeName.equalsIgnoreCase("version")) {
-                sameVersion = nodeContent.equalsIgnoreCase(version);
-            }
-        }
-
-        if (sameGroupId && sameArtifactId && (sameVersion || version == null))
-            return true;
-        return false;
-    }
-
-    public String getPluginVersion(String groupId, String artifactId) {
-        Node pluginNode = getPluginNode(groupId, artifactId, null);
-        if (pluginNode == null)
-            return "";
-
-        NodeList pluginInformation = pluginNode.getChildNodes();
-        for (int j = 0; j < pluginInformation.getLength(); j++) {
-            Node child = pluginInformation.item(j);
-            String nodeName = child.getNodeName();
-            if (nodeName.equalsIgnoreCase("version")) {
-                return child.getTextContent();
-            }
-        }
-
-        return "";
+        XPath xPath = XPathFactory.newInstance().newXPath();
+        XPathExpression expression = xPath.compile(xpath);
+        NodeList nodes = (NodeList) expression.evaluate(parent, XPathConstants.NODESET);
+        return nodes.getLength() > 0;
     }
 
     public String getPomAsString() {
