@@ -1,5 +1,7 @@
 package io.sealigths.plugins.sealightsjenkins.integration;
 
+import io.sealigths.plugins.sealightsjenkins.LogLevel;
+import io.sealigths.plugins.sealightsjenkins.TestingFramework;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -14,7 +16,7 @@ public class MavenIntegrationTest {
     public void InjectSeaLightsPluginWithTestngListenerToAPomWithoutThePluginButWithSurefire() throws Exception {
 
         //Arrange
-        String TESTING_FRAMEWORK="testng";
+        TestingFramework TESTING_FRAMEWORK=TestingFramework.TESTNG;
         String TEST_CASE = "1_Inject_SeaLights_plugin_with_testng_listener_to_a_pom_without_the_plugin_but_with_surefire";
         String testFolder = getTestFolder(TEST_CASE);
 
@@ -35,7 +37,7 @@ public class MavenIntegrationTest {
     public void InjectSeaLightsPluginWithJunitListenerToAPomWithoutThePluginButWithSurefire() throws Exception {
 
         //Arrange
-        String TESTING_FRAMEWORK="junit";
+        TestingFramework TESTING_FRAMEWORK=TestingFramework.JUNIT;
         String TEST_CASE = "2_Inject_SeaLights_plugin_with_junit_listener_to_a_pom_without_the_plugin_but_with_surefire";
         String testFolder = getTestFolder(TEST_CASE);
 
@@ -56,7 +58,7 @@ public class MavenIntegrationTest {
     public void InjectSeaLightsPluginToAPomWithSingleProfileWithSurefire() throws Exception {
 
         //Arrange
-        String TESTING_FRAMEWORK="junit";
+        TestingFramework TESTING_FRAMEWORK=TestingFramework.JUNIT;
         String TEST_CASE = "3_Inject_SeaLights_plugin_to_a_pom_with_a_single_profile_with_surefire";
         String testFolder = getTestFolder(TEST_CASE);
 
@@ -77,7 +79,7 @@ public class MavenIntegrationTest {
     public void InjectSeaLightsPluginToAPomWithTwoProfilesWithSurefire() throws Exception {
 
         //Arrange
-        String TESTING_FRAMEWORK="junit";
+        TestingFramework TESTING_FRAMEWORK=TestingFramework.JUNIT;
         String TEST_CASE = "4_Inject_SeaLights_plugin_to_a_pom_with_a_two_profiles_with_surefire";
         String testFolder = getTestFolder(TEST_CASE);
 
@@ -98,7 +100,7 @@ public class MavenIntegrationTest {
     public void InjectSeaLightsPluginToAPomWithTwoProfilesWithSurefireAndAnotherSurefireNotInProfile() throws Exception {
 
         //Arrange
-        String TESTING_FRAMEWORK="junit";
+        TestingFramework TESTING_FRAMEWORK=TestingFramework.JUNIT;
         String TEST_CASE = "5_Inject_SeaLights_plugin_to_a_pom_with_a_two_profiles_with_surefire_and_another_surefire_not_in_profile";
         String testFolder = getTestFolder(TEST_CASE);
 
@@ -119,7 +121,7 @@ public class MavenIntegrationTest {
     public void InjectSeaLightsPluginToAPomWithProfileWhichHasSurefireAndAnotherDoesnt() throws Exception {
 
         //Arrange
-        String TESTING_FRAMEWORK="junit";
+        TestingFramework TESTING_FRAMEWORK=TestingFramework.JUNIT;
         String TEST_CASE = "6_Inject_SeaLights_plugin_to_a_pom_with_a_profile_which_has_surefire_and_another_doesnt";
         String testFolder = getTestFolder(TEST_CASE);
 
@@ -185,13 +187,12 @@ public class MavenIntegrationTest {
         slInfo.setInheritedBuild(true);
 
         slInfo.setLogEnabled(false);
-        slInfo.setLogLevel("info");
-        slInfo.setLogToFile(true);
+        slInfo.setLogLevel(LogLevel.INFO);
         slInfo.setLogFolder("c:\\fake-log-folder");
 
 
         MavenIntegrationInfo info = new MavenIntegrationInfo();
-        info.setTestingFramework("testng");
+        info.setTestingFramework(TestingFramework.TESTNG);
         info.setSeaLightsPluginInfo(slInfo);
         info.setSourcePomFile(path + "/pom.xml");
         info.setTargetPomFile(path + "/actual.xml");

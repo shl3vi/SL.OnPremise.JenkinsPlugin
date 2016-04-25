@@ -27,6 +27,9 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.19</version>
             <configuration>
+<additionalClasspathElements>
+<additionalClasspathElement>c:\fake-api.jar</additionalClasspathElement>
+</additionalClasspathElements>
 <properties>
 <property>
 <name>listener</name>
@@ -52,8 +55,7 @@
 <filesincluded>*.class</filesincluded>
 <buildScannerJar>c:\fake-build-scanner.jar</buildScannerJar>
 <testListenerJar>c:\fake-test-listener.jar</testListenerJar>
-<logLevel>info</logLevel>
-<logToFile>true</logToFile>
+<logLevel>INFO</logLevel>
 <logFolder>c:\fake-log-folder</logFolder>
 </configuration>
 <executions>
@@ -84,6 +86,9 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>2.19</version>
                     <configuration>
+<additionalClasspathElements>
+<additionalClasspathElement>c:\fake-api.jar</additionalClasspathElement>
+</additionalClasspathElements>
 <properties>
 <property>
 <name>listener</name>
@@ -109,8 +114,7 @@
 <filesincluded>*.class</filesincluded>
 <buildScannerJar>c:\fake-build-scanner.jar</buildScannerJar>
 <testListenerJar>c:\fake-test-listener.jar</testListenerJar>
-<logLevel>info</logLevel>
-<logToFile>true</logToFile>
+<logLevel>INFO</logLevel>
 <logFolder>c:\fake-log-folder</logFolder>
 </configuration>
 <executions>
@@ -140,6 +144,9 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>2.19</version>
                     <configuration>
+<additionalClasspathElements>
+<additionalClasspathElement>c:\fake-api.jar</additionalClasspathElement>
+</additionalClasspathElements>
 <properties>
 <property>
 <name>listener</name>
@@ -185,8 +192,7 @@
 <filesincluded>*.class</filesincluded>
 <buildScannerJar>c:\fake-build-scanner.jar</buildScannerJar>
 <testListenerJar>c:\fake-test-listener.jar</testListenerJar>
-<logLevel>info</logLevel>
-<logToFile>true</logToFile>
+<logLevel>INFO</logLevel>
 <logFolder>c:\fake-log-folder</logFolder>
 </configuration>
 <executions>
