@@ -6,7 +6,6 @@ import javax.xml.transform.TransformerException;
 import java.io.PrintStream;
 
 //import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-
 /**
  * Created by Nadav on 4/19/2016.
  */
@@ -17,24 +16,36 @@ public class MavenIntegration {
     private final static String SEALIGHTS_ARTIFACT_ID = "sealights-maven-plugin";
 
 
+
     private PomFile pomFile;
     private MavenIntegrationInfo info;
     private PrintStream log;
 
-    public MavenIntegration(PrintStream log, MavenIntegrationInfo info) {
+    public MavenIntegration(PrintStream log, MavenIntegrationInfo info)
+    {
         this.log = log;
         this.info = info;
         this.pomFile = new PomFile(info.getSourcePomFile());
     }
 
-    public void integrate() {
+    public void integrate()
+    {
 
         this.log.println("MavenIntegration.integrate - starting");
-        if (pomFile.isPluginExistInEntriePom(SEALIGHTS_GROUP_ID, SEALIGHTS_ARTIFACT_ID)) {
+        if (pomFile.isPluginExistInEntriePom(SEALIGHTS_GROUP_ID, SEALIGHTS_ARTIFACT_ID))
+        {
             this.log.println("MavenIntegration.integrate - Skipping the integration since SeaLights plugin is already defined in the the POM file.");
             return;
         }
 
+<<<<<<< HEAD
+        if (!pomFile.isPluginExist(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID))
+        {
+            //Surefire plugin isn't defined.
+            throw new RuntimeException("SeaLights plugin requires MAVEN Surefire Plugin");
+        }
+
+=======
         //TODO: Check the SureFire version on the resolved (effective) *.pom file.
 //        if (!pomFile.isPluginExistInEntriePom(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID))
 //        {
@@ -42,13 +53,18 @@ public class MavenIntegration {
 //            throw new RuntimeException("SeaLights plugin requires Maven Surefire Plugin");
 //        }
 //
+>>>>>>> 531b3d1e09d66227c91d0cc19017d975e5aa98f0
 //        String version = pomFile.getPluginVersion(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID);
 //        String[] tokens = version.split("\\.");
 //        int majorVersion = Integer.parseInt(tokens[0]);
 //        int minorVersion = Integer.parseInt(tokens[1]);
 //        if ((majorVersion < 2) || (majorVersion == 2 && minorVersion < 9))
 //        {
+<<<<<<< HEAD
+//            throw new RuntimeException("Unsupported MAVEN Surefire plugin. SeaLights requires a version 2.9 or higher.");
+=======
 //            throw new RuntimeException("Unsupported Maven Surefire plugin. SeaLights requires a version 2.9 or higher.");
+>>>>>>> 531b3d1e09d66227c91d0cc19017d975e5aa98f0
 //        }
 
         integrateToPomFile();
@@ -57,17 +73,20 @@ public class MavenIntegration {
     private void integrateToPomFile() {
         String profileId = info.getProfileId();
         String eventListenerPackage = getEventListenerPackage(info.getTestingFramework());
-        if (profileId == null || profileId.equals("")) {
+        if (profileId == null || profileId.equals(""))
+        {
             integrateToAllProfiles(eventListenerPackage, info.getSeaLightsPluginInfo().getApiJar());
-        } else {
+        }
+        else
+        {
             integrateToProfile(profileId);
         }
     }
 
-    private String getEventListenerPackage(TestingFramework testingFramework) {
-        if ("testng".equalsIgnoreCase(testingFramework.name())) {
+    private String getEventListenerPackage(TestingFramework testingFramework){
+        if ("testng".equalsIgnoreCase(testingFramework.name())){
             return "io.sealights.onpremise.agents.java.agent.integrations.testng.TestListener";
-        } else if ("junit".equalsIgnoreCase(testingFramework.name())) {
+        }else if ("junit".equalsIgnoreCase(testingFramework.name())){
             return "io.sealights.onpremise.agents.java.agent.integrations.junit.SlRunListener";
         }
         return "";
@@ -93,17 +112,19 @@ public class MavenIntegration {
         String xml = seaLightsPluginInfo.toPluginText();
         pomFile.addPlugin(xml);
 
+<<<<<<< HEAD
         String additionalClassPathElement = createSurefireAdditionalClassPathElement(apiAgentPath);
         String propertiesElement = createSurefirePropertiesElement(testingFrameworkListeners);
         pomFile.addEventListener(additionalClassPathElement, propertiesElement);
+=======
+        String eventListenerNode = addListenerToSurefire(testingFrameWorkListeners);
+        pomFile.addTestingFrameworkListener(eventListenerNode);
+>>>>>>> 531b3d1e09d66227c91d0cc19017d975e5aa98f0
 
         try {
             String target = info.getTargetPomFile();
             if (target == null || target.equals(""))
-                //throw new RuntimeException("Target file is null or empty.");
-            {
-                info.setTargetPomFile(info.getSourcePomFile());
-            }
+                throw new RuntimeException("Target file is null or empty.");
 
             pomFile.save(info.getTargetPomFile());
         } catch (TransformerException e) {
@@ -111,7 +132,7 @@ public class MavenIntegration {
         }
     }
 
-    private String createSurefirePropertiesElement(String testingFrameworkListeners) {
+    private String createSurefirePropertiesElement(String testingFrameworkListeners){
         StringBuilder sureFireProperty = new StringBuilder();
         sureFireProperty.append("<properties>");
         sureFireProperty.append("<property>");
@@ -125,6 +146,7 @@ public class MavenIntegration {
         return sureFireProperty.toString();
     }
 
+<<<<<<< HEAD
     private String createSurefireAdditionalClassPathElement(String apiAgentPath) {
 
         StringBuilder additionalClasspathElements = new StringBuilder();
@@ -137,8 +159,24 @@ public class MavenIntegration {
         return additionalClasspathElements.toString();
     }
 
+    public static void main(String[] args)
+    {
+//        PomFile pomFile= new PomFile("C:\\Work\\Projects\\SL.OnPremise.JenkinsPlugin\\src\\test\\cases\\MavenIntegration\\pom.xml");
+//        boolean pluginExist = pomFile.isPluginExist(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID);
+//        String surefireVersion = pomFile.getPluginVersion(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID);
+//        System.out.println("pluginExist:" + pluginExist + ", surefireVersion: " + surefireVersion);
 
-    //private void getPomAsMavenProject(){
+//        SeaLightsPluginInfo slInfo = new SeaLightsPluginInfo();
+//        slInfo.setAppName("App Name");
+//        slInfo.setBranchName("Branch Name");
+//        MavenIntegrationInfo info = new MavenIntegrationInfo();
+//        info.setSeaLightsPluginInfo(slInfo);
+//        info.setPomFilePath("C:\\Work\\Projects\\SL.OnPremise.JenkinsPlugin\\src\\test\\cases\\MavenIntegration\\pom.xml");
+//        MavenIntegration mavenIntegration = new MavenIntegration(info);
+//        mavenIntegration.integrate();
+    }
+
+    private void getPomAsMavenProject(){
 //        Model model = null;
 //        FileReader reader = null;
 //        MavenXpp3Reader mavenreader = new MavenXpp3Reader();
@@ -148,6 +186,8 @@ public class MavenIntegration {
 //            model.setPomFile(pomfile);
 //        }catch(Exception ex){}
 //        MavenProject project = new MavenProject(model);
-//}
+    }
+=======
 
+>>>>>>> 531b3d1e09d66227c91d0cc19017d975e5aa98f0
 }

@@ -213,7 +213,7 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         MavenIntegrationInfo info = new MavenIntegrationInfo();
         info.setTestingFramework(testingFramework);
         info.setSeaLightsPluginInfo(slInfo);
-        info.setPomFilePath(pomPath);
+        info.setSourcePomFile(pomPath);
 
         MavenIntegration mavenIntegration = new MavenIntegration(listener.getLogger(), info);
         mavenIntegration.integrate();
