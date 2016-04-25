@@ -29,6 +29,7 @@ public class PomFile {
         this.filename = filename;
     }
 
+
     public List<String> getProfileIds() {
         List<String> profiles = new ArrayList<>();
         return profiles;
@@ -38,8 +39,7 @@ public class PomFile {
         return isPluginExist(groupId, artifactId, null);
     }
 
-    public void addPlugin(String pluginBodyAsXml)
-    {
+    public void addPlugin(String pluginBodyAsXml) {
         Document doc = this.getDocument();
         try {
             addPlugin(pluginBodyAsXml, doc.getDocumentElement());
@@ -49,44 +49,56 @@ public class PomFile {
     }
 
     public void addPlugin(String pluginBodyAsXml, Element parentElement) throws XPathExpressionException {
-        Element buildElement = getOrCreateElement("build", "//build", parentElement);
-        Element pluginsElement = getOrCreateElement("plugins", "//build/plugins", buildElement);
-        //Element pluginElement = getDocument().createElement("plugin");
-        try {
-            String xml = "<plugin>"+pluginBodyAsXml+"</plugin>";
-            Element pluginElement = (Element) DocumentBuilderFactory
-                    .newInstance()
-                    .newDocumentBuilder()
-                    .parse(new ByteArrayInputStream(xml.getBytes(Charset.forName("UTF-8"))))
-                    .getDocumentElement();
+        List<Element> buildElements = getOrCreateElements("build", "//build", parentElement);
 
-            pluginElement = (Element) document.importNode(pluginElement, true);
-            pluginsElement.appendChild(pluginElement);
-        } catch (SAXException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ParserConfigurationException e) {
-            e.printStackTrace();
+        for (Element buildElement : buildElements) {
+            List<Element> pluginsElements = getOrCreateElements("plugins", "plugins", buildElement);
+            try {
+
+                for (int i = 0; i < pluginsElements.size(); i++) {
+                    Element pluginsElement = pluginsElements.get(i);
+                    String xml = "<plugin>" + pluginBodyAsXml + "</plugin>";
+                    Element pluginElement = DocumentBuilderFactory
+                            .newInstance()
+                            .newDocumentBuilder()
+                            .parse(new ByteArrayInputStream(xml.getBytes(Charset.forName("UTF-8"))))
+                            .getDocumentElement();
+
+                    pluginElement = (Element) document.importNode(pluginElement, true);
+                    pluginsElement.appendChild(pluginElement);
+                }
+
+            } catch (SAXException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ParserConfigurationException e) {
+                e.printStackTrace();
+            }
         }
-
     }
 
-    public void addEventListener(String eventListenerNode){
+    String SUREFIRE_PLUGIN = "//build/plugins/plugin/artifactId[.='maven-surefire-plugin']/parent::plugin";
+
+    public void addTestingFrameworkListener(String testFrameworkListenerXml) {
         Element documentElement = getDocument().getDocumentElement();
-        String basePath = "//*/plugin/artifactId[.='maven-surefire-plugin']/parent::plugin";
-        basePath += "/configuration";
 
-        try{
-            Element configurationElement = getOrCreateElement("configuration", basePath, documentElement);
-            Element propertiesElement = (Element) DocumentBuilderFactory
-                    .newInstance()
-                    .newDocumentBuilder()
-                    .parse(new ByteArrayInputStream(eventListenerNode.getBytes(Charset.forName("UTF-8"))))
-                    .getDocumentElement();
+        try {
+            List<Element> surefireElements = getOrCreateElements("plugin", SUREFIRE_PLUGIN, documentElement);
+            for (Element surefireElement : surefireElements) {
+                List<Element> configurationElements = getOrCreateElements("configuration", "/configuration", surefireElement);
+                for (Element configurationElement : configurationElements) {
+                    Element propertiesElement = (Element) DocumentBuilderFactory
+                            .newInstance()
+                            .newDocumentBuilder()
+                            .parse(new ByteArrayInputStream(testFrameworkListenerXml.getBytes(Charset.forName("UTF-8"))))
+                            .getDocumentElement();
 
-            propertiesElement = (Element) document.importNode(propertiesElement, true);
-            configurationElement.appendChild(propertiesElement);
+                    propertiesElement = (Element) document.importNode(propertiesElement, true);
+                    configurationElement.appendChild(propertiesElement);
+                }
+            }
+
         } catch (SAXException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -104,30 +116,32 @@ public class PomFile {
         // write the DOM object to the file
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
         Transformer transformer = transformerFactory.newTransformer();
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
         DOMSource domSource = new DOMSource(getDocument());
         StreamResult streamResult = new StreamResult(new File(filename));
         transformer.transform(domSource, streamResult);
     }
 
-    private Element getOrCreateElement(String name, String xpath, Element parent) throws XPathExpressionException {
+    private List<Element> getOrCreateElements(String name, String xpath, Element parent) throws XPathExpressionException {
         XPath xPath = XPathFactory.newInstance().newXPath();
         XPathExpression expression = xPath.compile(xpath);
-        NodeList nodes = (NodeList)expression.evaluate(getDocument(), XPathConstants.NODESET);
+        NodeList nodes = (NodeList) expression.evaluate(parent, XPathConstants.NODESET);
 
-        //NodeList childElements = parent.getElementsByTagName(name);
-        Element childElement;
-        if (nodes.getLength() == 0)
-        {
+        List<Element> childElements = new ArrayList<Element>();
+        if (nodes.getLength() == 0) {
             Document doc = this.getDocument();
-            childElement = doc.createElement(name);
-            parent.appendChild(childElement);
-        }
-        else
-        {
-            childElement = (Element) nodes.item(0);
+            Element child = doc.createElement(name);
+            parent.appendChild(child);
+            childElements.add(child);
+        } else {
+            for (int i = 0; i < nodes.getLength(); i++) {
+                Node node = nodes.item(i);
+                if (node.getNodeType() == Node.ELEMENT_NODE)
+                    childElements.add((Element) node);
+            }
         }
 
-        return childElement;
+        return childElements;
     }
 
 
@@ -140,6 +154,8 @@ public class PomFile {
     public Node getPluginNode(String groupId, String artifactId, String version) {
         Document doc = this.getDocument();
         NodeList allPluginNodes = doc.getElementsByTagName("plugin");
+        if (allPluginNodes == null)
+            return null;
         for (int i = 0; i < allPluginNodes.getLength(); i++) {
             Node pluginNode = allPluginNodes.item(i);
             if (isPlugin(groupId, artifactId, version, pluginNode))
@@ -189,7 +205,7 @@ public class PomFile {
         return "";
     }
 
-    public String getPomAsString(){
+    public String getPomAsString() {
         try {
             TransformerFactory transfac = TransformerFactory.newInstance();
             Transformer trans = transfac.newTransformer();

@@ -17,12 +17,13 @@ public class MavenIntegration {
     {
         this.log = log;
         this.info = info;
-        this.pomFile = new PomFile(info.getPomFilePath());
+        this.pomFile = new PomFile(info.getSourcePomFile());
     }
 
     public void integrate()
     {
 
+        this.log.println("MavenIntegration.integrate - starting");
         if (pomFile.isPluginExist("sealights", "maven-plugin-name"))
         {
             //Sealights plugin is already defined. No need to redefine.
@@ -86,26 +87,18 @@ public class MavenIntegration {
 
     private void integrateToAllProfiles(String testingFrameWorkListeners) {
         SeaLightsPluginInfo seaLightsPluginInfo = this.info.getSeaLightsPluginInfo();
-        log.println("*************************************");
-        log.println("*************************************");
-        log.println(pomFile.getPomAsString());
-        log.println("*************************************");
-        log.println("*************************************");
         String xml = seaLightsPluginInfo.toPluginText();
-        log.println(xml);
         pomFile.addPlugin(xml);
 
         String eventListenerNode = addListenerToSurefire(testingFrameWorkListeners);
-        pomFile.addEventListener(eventListenerNode);
+        pomFile.addTestingFrameworkListener(eventListenerNode);
 
         try {
-            pomFile.save(info.getPomFilePath());
-            PomFile pomFile1 = new PomFile(info.getPomFilePath());
-            log.println("*************************************");
-            log.println("*************************************");
-            log.println(pomFile1.getPomAsString());
-            log.println("*************************************");
-            log.println("*************************************");
+            String target = info.getTargetPomFile();
+            if (target == null || target.equals(""))
+                throw new RuntimeException("Target file is null or empty.");
+
+            pomFile.save(info.getTargetPomFile());
         } catch (TransformerException e) {
             e.printStackTrace();
         }
@@ -125,20 +118,5 @@ public class MavenIntegration {
         return sureFireProperty.toString();
     }
 
-    public static void main(String[] args)
-    {
-//        PomFile pomFile= new PomFile("C:\\Work\\Projects\\SL.OnPremise.JenkinsPlugin\\src\\test\\cases\\MavenIntegration\\pom.xml");
-//        boolean pluginExist = pomFile.isPluginExist(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID);
-//        String surefireVersion = pomFile.getPluginVersion(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID);
-//        System.out.println("pluginExist:" + pluginExist + ", surefireVersion: " + surefireVersion);
 
-//        SeaLightsPluginInfo slInfo = new SeaLightsPluginInfo();
-//        slInfo.setAppName("App Name");
-//        slInfo.setBranchName("Branch Name");
-//        MavenIntegrationInfo info = new MavenIntegrationInfo();
-//        info.setSeaLightsPluginInfo(slInfo);
-//        info.setPomFilePath("C:\\Work\\Projects\\SL.OnPremise.JenkinsPlugin\\src\\test\\cases\\MavenIntegration\\pom.xml");
-//        MavenIntegration mavenIntegration = new MavenIntegration(info);
-//        mavenIntegration.integrate();
-    }
 }

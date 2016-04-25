@@ -4,19 +4,14 @@ package io.sealigths.plugins.sealightsjenkins.integration;
  * Created by Nadav on 4/19/2016.
  */
 public class MavenIntegrationInfo {
-    private String pomFilePath;
+    private String sourcePomFile;
+    private String targetPomFile;
     private String profileId;
     private String testingFramework;
     private SeaLightsPluginInfo seaLightsPluginInfo;
 
 
-    public String getPomFilePath() {
-        return pomFilePath;
-    }
 
-    public void setPomFilePath(String pomFilePath) {
-        this.pomFilePath = pomFilePath;
-    }
 
     public SeaLightsPluginInfo getSeaLightsPluginInfo() {
         return seaLightsPluginInfo;
@@ -40,5 +35,21 @@ public class MavenIntegrationInfo {
 
     public void setTestingFramework(String testingFramework) {
         this.testingFramework = testingFramework;
+    }
+
+    public String getSourcePomFile() {
+        return sourcePomFile;
+    }
+
+    public void setSourcePomFile(String sourcePomFile) {
+        this.sourcePomFile = sourcePomFile;
+    }
+
+    public String getTargetPomFile() {
+        return targetPomFile;
+    }
+
+    public void setTargetPomFile(String targetPomFile) {
+        this.targetPomFile = targetPomFile;
     }
 }
