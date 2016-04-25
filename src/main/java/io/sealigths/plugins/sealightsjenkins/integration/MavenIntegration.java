@@ -1,5 +1,7 @@
 package io.sealigths.plugins.sealightsjenkins.integration;
 
+import io.sealigths.plugins.sealightsjenkins.TestingFramework;
+
 import javax.xml.transform.TransformerException;
 import java.io.PrintStream;
 
@@ -33,7 +35,7 @@ public class MavenIntegration {
         if (!pomFile.isPluginExist(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID))
         {
             //Surefire plugin isn't defined.
-            throw new RuntimeException("SeaLights plugin requires Maven Surefire Plugin");
+            throw new RuntimeException("SeaLights plugin requires MAVEN Surefire Plugin");
         }
 
 //        String version = pomFile.getPluginVersion(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID);
@@ -42,7 +44,7 @@ public class MavenIntegration {
 //        int minorVersion = Integer.parseInt(tokens[1]);
 //        if ((majorVersion < 2) || (majorVersion == 2 && minorVersion < 9))
 //        {
-//            throw new RuntimeException("Unsupported Maven Surefire plugin. SeaLights requires a version 2.9 or higher.");
+//            throw new RuntimeException("Unsupported MAVEN Surefire plugin. SeaLights requires a version 2.9 or higher.");
 //        }
 
         integrateToPomFile();
@@ -61,10 +63,10 @@ public class MavenIntegration {
         }
     }
 
-    private String getEventListenerPackage(String testingFramework){
-        if ("testng".equalsIgnoreCase(testingFramework)){
+    private String getEventListenerPackage(TestingFramework testingFramework){
+        if ("testng".equalsIgnoreCase(testingFramework.name())){
             return "io.sealights.onpremise.agents.java.agent.integrations.testng.TestListener";
-        }else if ("junit".equalsIgnoreCase(testingFramework)){
+        }else if ("junit".equalsIgnoreCase(testingFramework.name())){
             return "io.sealights.onpremise.agents.java.agent.integrations.junit.SlRunListener";
         }
         return "";

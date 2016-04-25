@@ -23,8 +23,8 @@
         <!-- For Jenkins version >= 1.580.1 use JTH 2.x or higher. -->
         <jenkins-test-harness.version>2.1</jenkins-test-harness.version>
         <!-- Other properties you may want to use:
-             ~ hpi-plugin.version: The HPI Maven Plugin version used by the plugin..
-             ~ stapler-plugin.version: The Stapler Maven plugin version required by the plugin.
+             ~ hpi-plugin.version: The HPI MAVEN Plugin version used by the plugin..
+             ~ stapler-plugin.version: The Stapler MAVEN plugin version required by the plugin.
         -->
 
         <sealights.version>1.3.157</sealights.version>

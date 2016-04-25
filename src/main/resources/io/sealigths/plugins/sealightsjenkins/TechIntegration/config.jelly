@@ -1,0 +1,13 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
+         xmlns:h="/lib/hudson" xmlns:f="/lib/form" xmlns:t="/lib/hudson">
+    <f:entry field="relativePathToEffectivePom" title="Top-level Pom"
+             description="Relative path to top-level pom (e.g : 'dir/pom.xml'. default is 'pom.xml')">
+        <f:textbox value="${relativePathToEffectivePom}"/>
+    </f:entry>
+
+    <f:entry field="pomPath" title="pom Path!"
+             description="no description here amigo..">
+        <f:textbox value="${pomPath}"/>
+    </f:entry>
+</j:jelly>

@@ -1,5 +1,8 @@
 package io.sealigths.plugins.sealightsjenkins.integration;
 
+import io.sealigths.plugins.sealightsjenkins.LogDestination;
+import io.sealigths.plugins.sealightsjenkins.LogLevel;
+
 /**
  * Created by Nadav on 4/19/2016.
  */
@@ -18,6 +21,7 @@ public class SeaLightsPluginInfo {
     private String workspacepath;
     private String proxy;
     private boolean recursive;
+    private String environment;
 
     public String getProxy() {
         return proxy;
@@ -162,8 +166,8 @@ public class SeaLightsPluginInfo {
 
 
     private boolean logEnabled;
-    private boolean logToFile;
-    private String logLevel;
+    private LogDestination logDestination;
+    private LogLevel logLevel;
     private String logFolder;
 
     public boolean isLogEnabled() {
@@ -174,19 +178,19 @@ public class SeaLightsPluginInfo {
         this.logEnabled = logEnabled;
     }
 
-    public boolean isLogToFile() {
-        return logToFile;
+    public LogDestination isLogDestination() {
+        return logDestination;
     }
 
-    public void setLogToFile(boolean logToFile) {
-        this.logToFile = logToFile;
+    public void setLogDestination(LogDestination logDestination) {
+        this.logDestination = logDestination;
     }
 
-    public String getLogLevel() {
+    public LogLevel getLogLevel() {
         return logLevel;
     }
 
-    public void setLogLevel(String logLevel) {
+    public void setLogLevel(LogLevel logLevel) {
         this.logLevel = logLevel;
     }
 
@@ -241,6 +245,9 @@ public class SeaLightsPluginInfo {
         if(!isNullOrEmpty(buildName)){
             plugin.append("<build>" + buildName + "</build>");
         }
+        if(!isNullOrEmpty(environment)){
+            plugin.append("<environment>" + environment + "</environment>");
+        }
         if(!isNullOrEmpty(branchName)){
             plugin.append("<branch>" + branchName + "</branch>");
         }
@@ -272,10 +279,10 @@ public class SeaLightsPluginInfo {
         if(logEnabled){
             plugin.append("<logEnabled>true</logEnabled>");
         }
-        if(!isNullOrEmpty(logLevel)){
-            plugin.append("<logLevel>" + logLevel + "</logLevel>");
+        if(!isNullOrEmpty(logLevel.name())){
+            plugin.append("<logLevel>" + logLevel.name() + "</logLevel>");
         }
-        if(logToFile){
+        if(logDestination != null && "file".equalsIgnoreCase(logDestination.name())){
             plugin.append("<logToFile>true</logToFile>");
         }
         if(!isNullOrEmpty(logFolder)){
@@ -318,6 +325,18 @@ public class SeaLightsPluginInfo {
 
     public void setApiJar(String apiJar) {
         this.apiJar = apiJar;
+    }
+
+    public void setEnvironment(String environment) {
+        this.environment = environment;
+    }
+
+    public String getEnvironment() {
+        return environment;
+    }
+
+    public LogDestination getLogDestination() {
+        return logDestination;
     }
 }
 

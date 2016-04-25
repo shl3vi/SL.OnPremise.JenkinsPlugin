@@ -1,12 +1,14 @@
 package io.sealigths.plugins.sealightsjenkins.integration;
 
+import io.sealigths.plugins.sealightsjenkins.TestingFramework;
+
 /**
  * Created by Nadav on 4/19/2016.
  */
 public class MavenIntegrationInfo {
     private String pomFilePath;
     private String profileId;
-    private String testingFramework;
+    private TestingFramework testingFramework;
     private SeaLightsPluginInfo seaLightsPluginInfo;
 
 
@@ -34,11 +36,11 @@ public class MavenIntegrationInfo {
         this.profileId = profileId;
     }
 
-    public String getTestingFramework() {
+    public TestingFramework getTestingFramework() {
         return testingFramework;
     }
 
-    public void setTestingFramework(String testingFramework) {
+    public void setTestingFramework(TestingFramework testingFramework) {
         this.testingFramework = testingFramework;
     }
 }
