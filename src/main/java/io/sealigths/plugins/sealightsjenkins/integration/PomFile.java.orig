@@ -96,15 +96,14 @@ public class PomFile {
         pluginsElement.appendChild(pluginElement);
     }
 
-    String SUREFIRE_PLUGIN = "//build/plugins/plugin/artifactId[.='maven-surefire-plugin']/parent::plugin";
+<<<<<<< HEAD
     public void addEventListener(String additionalClassPath, String properties){
         Element documentElement = getDocument().getDocumentElement();
+        String basePath = "//*/plugin/artifactId[.='maven-surefire-plugin']/parent::plugin";
+        basePath += "/configuration";
 
-        try {
-            List<Element> surefireElements = getOrCreateElements("plugin", SUREFIRE_PLUGIN, documentElement);
-            for (Element surefireElement : surefireElements) {
-                List<Element> configurationElements = getOrCreateElements("configuration", "/configuration", surefireElement);
-                for (Element configurationElement : configurationElements) {
+        try{
+            Element configurationElement = getOrCreateElement("configuration", basePath, documentElement);
 
             Element additionalClassPathElement = (Element) DocumentBuilderFactory
                     .newInstance()
@@ -112,20 +111,40 @@ public class PomFile {
                     .parse(new ByteArrayInputStream(additionalClassPath.getBytes(Charset.forName("UTF-8"))))
                     .getDocumentElement();
 
+            Element propertiesElement = (Element) DocumentBuilderFactory
+                    .newInstance()
+                    .newDocumentBuilder()
+                    .parse(new ByteArrayInputStream(properties.getBytes(Charset.forName("UTF-8"))))
+                    .getDocumentElement();
+
+            additionalClassPathElement = (Element) document.importNode(additionalClassPathElement, true);
+            propertiesElement = (Element) document.importNode(propertiesElement, true);
+
+            configurationElement.appendChild(additionalClassPathElement);
+            configurationElement.appendChild(propertiesElement);
+=======
+    String SUREFIRE_PLUGIN = "//build/plugins/plugin/artifactId[.='maven-surefire-plugin']/parent::plugin";
+
+    public void addTestingFrameworkListener(String testFrameworkListenerXml) {
+        Element documentElement = getDocument().getDocumentElement();
+
+        try {
+            List<Element> surefireElements = getOrCreateElements("plugin", SUREFIRE_PLUGIN, documentElement);
+            for (Element surefireElement : surefireElements) {
+                List<Element> configurationElements = getOrCreateElements("configuration", "/configuration", surefireElement);
+                for (Element configurationElement : configurationElements) {
                     Element propertiesElement = (Element) DocumentBuilderFactory
                             .newInstance()
                             .newDocumentBuilder()
-                    .parse(new ByteArrayInputStream(properties.getBytes(Charset.forName("UTF-8"))))
+                            .parse(new ByteArrayInputStream(testFrameworkListenerXml.getBytes(Charset.forName("UTF-8"))))
                             .getDocumentElement();
 
-            additionalClassPathElement = (Element) document.importNode(additionalClassPathElement, true);
                     propertiesElement = (Element) document.importNode(propertiesElement, true);
-
-            configurationElement.appendChild(additionalClassPathElement);
                     configurationElement.appendChild(propertiesElement);
                 }
             }
 
+>>>>>>> 531b3d1e09d66227c91d0cc19017d975e5aa98f0
         } catch (SAXException e) {
             e.printStackTrace();
         } catch (IOException e) {
