@@ -34,7 +34,25 @@ public class PomFile {
 
 
     public List<String> getProfileIds() {
+        XPath xPath = XPathFactory.newInstance().newXPath();
+        NodeList nodes = null;
+        try {
+            XPathExpression expression = xPath.compile("//profiles/profile/id");
+            nodes = (NodeList) expression.evaluate(getDocument(), XPathConstants.NODESET);
+        } catch (XPathExpressionException e) {
+            e.printStackTrace();
+        }
+
+
         List<String> profiles = new ArrayList<>();
+
+        if (nodes != null) {
+            for (int i = 0; i < nodes.getLength(); i++) {
+                Node node = nodes.item(i);
+                profiles.add(node.getTextContent());
+            }
+        }
+
         return profiles;
     }
 
@@ -66,7 +84,7 @@ public class PomFile {
                 for (int i = 0; i < pluginsElements.size(); i++) {
                     Element pluginsElement = pluginsElements.get(i);
 
-                    if (!isPluginExistInElement(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID, pluginsElement)){
+                    if (!isPluginExistInElement(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID, pluginsElement)) {
                         //Surefire doesn't exist in element. it it.
                         addPluginToPluginsElement(SUREFIRE_XML, pluginsElement);
                     }
@@ -97,45 +115,108 @@ public class PomFile {
     }
 
     String SUREFIRE_PLUGIN = "//build/plugins/plugin/artifactId[.='maven-surefire-plugin']/parent::plugin";
-    public void addEventListener(String additionalClassPath, String properties){
+
+    public void updateSurefirePlugin(String listenerValue, String apiJarPath) {
         Element documentElement = getDocument().getDocumentElement();
+        updateSurefirePlugin(documentElement, listenerValue, apiJarPath);
+    }
 
+    private void updateSurefirePlugin(Element parentElement, String listenerValue, String apiJarPath) {
         try {
-            List<Element> surefireElements = getOrCreateElements("plugin", SUREFIRE_PLUGIN, documentElement);
+            List<Element> surefireElements = getOrCreateElements("plugin", SUREFIRE_PLUGIN, parentElement);
             for (Element surefireElement : surefireElements) {
-                List<Element> configurationElements = getOrCreateElements("configuration", "/configuration", surefireElement);
+                List<Element> configurationElements = getOrCreateElements("configuration", "configuration", surefireElement);
                 for (Element configurationElement : configurationElements) {
-
-            Element additionalClassPathElement = (Element) DocumentBuilderFactory
-                    .newInstance()
-                    .newDocumentBuilder()
-                    .parse(new ByteArrayInputStream(additionalClassPath.getBytes(Charset.forName("UTF-8"))))
-                    .getDocumentElement();
-
-                    Element propertiesElement = (Element) DocumentBuilderFactory
-                            .newInstance()
-                            .newDocumentBuilder()
-                    .parse(new ByteArrayInputStream(properties.getBytes(Charset.forName("UTF-8"))))
-                            .getDocumentElement();
-
-            additionalClassPathElement = (Element) document.importNode(additionalClassPathElement, true);
-                    propertiesElement = (Element) document.importNode(propertiesElement, true);
-
-            configurationElement.appendChild(additionalClassPathElement);
-                    configurationElement.appendChild(propertiesElement);
+                    verifyPropertiesElement(listenerValue, configurationElement);
+                    verifyAdditionalClasspathElements(apiJarPath, configurationElement);
                 }
             }
-
-        } catch (SAXException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ParserConfigurationException e) {
-            e.printStackTrace();
         } catch (XPathExpressionException e) {
             e.printStackTrace();
         }
+    }
 
+    private void verifyPropertiesElement(String listenerValue, Element configurationElement) throws XPathExpressionException {
+        List<Element> propertiesElements = getOrCreateElements("properties", "properties", configurationElement);
+        boolean foundListenerProperty = false;
+        for (Element propertiesElement : propertiesElements) {
+            List<Element> propertyElements = getOrCreateElements("property", "property", propertiesElement);
+            foundListenerProperty = isFoundListenerProperty(listenerValue, propertiesElements, foundListenerProperty);
+
+            if (!foundListenerProperty) {
+                //Add one.
+                Element name = getDocument().createElement("name");
+                name.setTextContent("listener");
+
+                Element value = getDocument().createElement("value");
+                value.setTextContent(listenerValue);
+
+                Element property = propertyElements.get(0);
+                property.appendChild(name);
+                property.appendChild(value);
+
+            }
+        }
+    }
+
+    private void verifyAdditionalClasspathElements(String apiJarPath, Element configurationElement) throws XPathExpressionException {
+        List<Element> additionalClasspathElements = getOrCreateElements("additionalClasspathElements", "additionalClasspathElements", configurationElement);
+        boolean foundApiJar = false;
+        for (Element additionalClasspathElement : additionalClasspathElements) {
+            List<Element> additionalClasspathElementList = getOrCreateElements("additionalClasspathElement", "additionalClasspathElement", additionalClasspathElement);
+            foundApiJar = isFoundAdditonalClasspathElementWithApiJar(apiJarPath, additionalClasspathElements, foundApiJar);
+
+            if (!foundApiJar) {
+                //Add one.
+                Element classPathElement = additionalClasspathElementList.get(0);
+                classPathElement.setTextContent(apiJarPath);
+            }
+        }
+    }
+
+    private boolean isFoundListenerProperty(String listenerValue, List<Element> propertiesElements, boolean foundListenerProperty) throws XPathExpressionException {
+        for (Element propertyElement : propertiesElements) {
+            {
+                //Does the current property is a listener property.
+                if (isNodeExist(propertyElement, "./name[text() = 'listener']")) {
+                    if (isNodeExist(propertyElement, "./value")) {
+                        //Update the current value
+                        List<Element> valueElements = getOrCreateElements("value", "./value", propertyElement);
+                        Element valueElement = valueElements.get(0);
+                        String currentValue = valueElements.get(0).getTextContent();
+                        if (currentValue != null && !currentValue.equals("")) {
+                            currentValue += ", " + listenerValue;
+                        } else {
+                            currentValue = listenerValue;
+                        }
+
+                        valueElement.setTextContent(currentValue);
+                    } else {
+                        //A "value" element doesn't exist. Add it.
+                        List<Element> valueElements = getOrCreateElements("value", "./value", propertyElement);
+                        valueElements.get(0).setTextContent(listenerValue);
+
+                    }
+
+                    foundListenerProperty = true;
+                }
+
+
+            }
+        }
+        return foundListenerProperty;
+    }
+
+    private boolean isFoundAdditonalClasspathElementWithApiJar(String apiJarPath, List<Element> propertiesElements, boolean foundListenerProperty) throws XPathExpressionException {
+        for (Element propertyElement : propertiesElements) {
+            {
+                //Does the current property is a listener property.
+                if (isNodeExist(propertyElement, "/additionalClasspathElement[text() = '"+apiJarPath+"']")) {
+                   return true;
+                }
+            }
+        }
+        return false;
     }
 
 
@@ -175,10 +256,13 @@ public class PomFile {
     String PLUGIN_TEMPLATE = "plugin[artifactId='#ARTIFACT_ID#' and groupId='#GROUP_ID#']";
 
     private boolean isPluginExistInElement(String groupId, String artifactId, Element parent) throws XPathExpressionException {
-        String xpath = PLUGIN_TEMPLATE.replace("#GROUP_ID#", groupId).replace("#ARTIFACT_ID#",artifactId);
+        String xpath = PLUGIN_TEMPLATE.replace("#GROUP_ID#", groupId).replace("#ARTIFACT_ID#", artifactId);
+        return isNodeExist(parent, xpath);
+    }
 
+    private boolean isNodeExist(Element parent, String xpathToNode) throws XPathExpressionException {
         XPath xPath = XPathFactory.newInstance().newXPath();
-        XPathExpression expression = xPath.compile(xpath);
+        XPathExpression expression = xPath.compile(xpathToNode);
         NodeList nodes = (NodeList) expression.evaluate(parent, XPathConstants.NODESET);
         return nodes.getLength() > 0;
     }
