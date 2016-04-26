@@ -32,15 +32,15 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>2.14</version>
                         <configuration>
-                            <additionalClasspathElements>
-                                <additionalClasspathElement>c:\fake-api.jar</additionalClasspathElement>
-                            </additionalClasspathElements>
                             <properties>
                                 <property>
                                     <name>listener</name>
                                     <value>io.sealights.onpremise.agents.java.agent.integrations.junit.SlRunListener</value>
                                 </property>
                             </properties>
+                            <additionalClasspathElements>
+                                <additionalClasspathElement>c:\fake-api.jar</additionalClasspathElement>
+                            </additionalClasspathElements>
                         </configuration>
                     </plugin>
                     <plugin>
@@ -110,15 +110,15 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>2.19</version>
                         <configuration>
-                            <additionalClasspathElements>
-                                <additionalClasspathElement>c:\fake-api.jar</additionalClasspathElement>
-                            </additionalClasspathElements>
                             <properties>
                                 <property>
                                     <name>listener</name>
                                     <value>io.sealights.onpremise.agents.java.agent.integrations.junit.SlRunListener</value>
                                 </property>
                             </properties>
+                            <additionalClasspathElements>
+                                <additionalClasspathElement>c:\fake-api.jar</additionalClasspathElement>
+                            </additionalClasspathElements>
                         </configuration>
                     </plugin>
                     <plugin>
