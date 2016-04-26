@@ -84,7 +84,7 @@ public class TechIntegration extends BuildWrapper {
         return  (str == null || str.equals(""));
     }
 
-    @Extension
+//    @Extension
     public static final class DescriptorImpl extends BuildWrapperDescriptor {
 
         public DescriptorImpl() {

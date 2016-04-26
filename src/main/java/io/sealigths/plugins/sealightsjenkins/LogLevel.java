@@ -4,6 +4,11 @@ package io.sealigths.plugins.sealightsjenkins;
  * Created by shahar on 4/24/2016.
  */
 public enum LogLevel {
+    OFF() {
+        @Override public String getDisplayName() {
+            return "Off";
+        }
+    },
     INFO() {
         @Override public String getDisplayName() {
             return "Info";
