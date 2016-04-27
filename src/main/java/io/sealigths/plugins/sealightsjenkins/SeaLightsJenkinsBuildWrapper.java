@@ -30,7 +30,7 @@ import java.util.Map;
 
 public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
 
-    private final TechIntegration integrations;
+//    private final TechIntegration integrations;
 
     private final String appName;
     private final String moduleName;
@@ -58,8 +58,8 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
     private final String logFolder;
 
     private TestingFramework testingFramework = TestingFramework.TESTNG;
-    private LogLevel logLevel = LogLevel.INFO;
-    private Language language = Language.JAVA;
+    private LogLevel logLevel = LogLevel.OFF;
+//    private Language language = Language.JAVA;
     private ProjectType projectType = ProjectType.MAVEN;
 
     @DataBoundConstructor
@@ -74,7 +74,7 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
                                         boolean logEnabled, @NonNull LogLevel logLevel, @NonNull LogDestination logDestination, String logFolder
             , TechIntegration integrations, @NonNull Language language, boolean autoRestoreBuildFile) throws IOException {
 
-        this.integrations = integrations;
+//        this.integrations = integrations;
         this.appName = appName;
         this.moduleName = moduleName;
         this.branch = branch;
@@ -96,7 +96,7 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
 
         this.projectType = projectType;
 
-        this.language = language;
+//        this.language = language;
 
         this.logEnabled = logEnabled;
         this.logLevel = logLevel;
@@ -215,7 +215,7 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
 
         slInfo.setEnvironment(environment);
 
-        slInfo.setLogEnabled(logEnabled);
+        slInfo.setLogEnabled(!("Off".equalsIgnoreCase(logLevel.getDisplayName())));
         slInfo.setLogLevel(logLevel);
         slInfo.setLogDestination(logDestination);
         slInfo.setLogFolder(logFolder);
@@ -264,9 +264,9 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         return new DescriptorImpl();
     }
 
-    public TechIntegration getIntegrations() {
-        return integrations;
-    }
+//    public TechIntegration getIntegrations() {
+//        return integrations;
+//    }
 
     public String getAppName() {
         return appName;
@@ -290,13 +290,13 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
 //    }
 
 
-    public Language getLanguage() {
-        return language;
-    }
-
-    public void setLanguage(Language language) {
-        this.language = language;
-    }
+//    public Language getLanguage() {
+//        return language;
+//    }
+//
+//    public void setLanguage(Language language) {
+//        this.language = language;
+//    }
 
     public String getPomPath() {
         return pomPath;
