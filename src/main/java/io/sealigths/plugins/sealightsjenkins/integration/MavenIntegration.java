@@ -60,12 +60,14 @@ public class MavenIntegration {
 
     private void integrateToPomFile() {
         String profileId = info.getProfileId();
-        //profileId = "moise";
-        if (profileId == null || profileId.equals("")) {
-            integrateToAllProfiles();
-        } else {
-            integrateToProfile(profileId);
-        }
+
+        integrateToAllProfiles();
+        //TODO: Enable the profile integration once done + tested.
+//        if (profileId == null || profileId.equals("")) {
+//            integrateToAllProfiles();
+//        } else {
+//            integrateToProfile(profileId);
+//        }
     }
 
     private String getEventListenerPackage(TestingFramework testingFramework) {
