@@ -10,6 +10,7 @@ import hudson.model.Descriptor;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 import hudson.util.ComboBoxModel;
+import hudson.util.DescribableList;
 import hudson.util.ListBoxModel;
 import io.sealigths.plugins.sealightsjenkins.integration.JarsHelper;
 import io.sealigths.plugins.sealightsjenkins.integration.MavenIntegration;
@@ -22,7 +23,9 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import edu.umd.cs.findbugs.annotations.NonNull;
+
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Map;
 
 public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
@@ -47,6 +50,8 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
     private final String apiJar;
     private final String testListenerConfigFile;
     private final boolean inheritedBuild;
+    private boolean autoRestoreBuildFile;
+
 
     private boolean logEnabled;
     private LogDestination logDestination = LogDestination.CONSOLE;
@@ -65,9 +70,9 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
                                         String relativePathToEffectivePom, boolean recursive,
                                         String workspacepath, String testListenerConfigFile,
                                         String buildScannerJar, String testListenerJar, String apiJar,
-                                        boolean inheritedBuild, String environment,@NonNull ProjectType projectType,
+                                        boolean inheritedBuild, String environment, @NonNull ProjectType projectType,
                                         boolean logEnabled, @NonNull LogLevel logLevel, @NonNull LogDestination logDestination, String logFolder
-                                        ,TechIntegration integrations,@NonNull Language language) throws IOException {
+            , TechIntegration integrations, @NonNull Language language, boolean autoRestoreBuildFile) throws IOException {
 
         this.integrations = integrations;
         this.appName = appName;
@@ -83,6 +88,7 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         this.workspacepath = workspacepath;
         this.testListenerConfigFile = testListenerConfigFile;
         this.inheritedBuild = inheritedBuild;
+        this.autoRestoreBuildFile = autoRestoreBuildFile;
 
         this.environment = environment;
 
@@ -97,20 +103,17 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         this.logDestination = logDestination;
         this.logFolder = logFolder;
 
-        if (isNullOrEmpty(buildScannerJar))
-        {
+        if (isNullOrEmpty(buildScannerJar)) {
             //The user didn't specify a specify version of the scanner. Use an embedded one.
             buildScannerJar = JarsHelper.loadJarAndSaveAsTempFile("sl-build-scanner");
         }
 
-        if (isNullOrEmpty(testListenerJar))
-        {
+        if (isNullOrEmpty(testListenerJar)) {
             //The user didn't specify a specify version of the test listener. Use an embedded one.
             testListenerJar = JarsHelper.loadJarAndSaveAsTempFile("sl-test-listener");
         }
 
-        if (isNullOrEmpty(apiJar))
-        {
+        if (isNullOrEmpty(apiJar)) {
             //The user didn't specify a specify version of the test listener. Use an embedded one.
             apiJar = JarsHelper.loadJarAndSaveAsTempFile("sl-api");
         }
@@ -125,31 +128,34 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
     public Environment setUp(AbstractBuild build, Launcher launcher,
                              BuildListener listener) throws IOException, InterruptedException {
 
-        listener.getLogger().println("-----------Sealights Jenkins Plugin Configuration--------------");
-        listener.getLogger().println("testing framework: " + testingFramework);
-        listener.getLogger().println("branch: " + branch);
-        listener.getLogger().println("appName:" +appName);
-        listener.getLogger().println("moduleName:" +moduleName);
-        listener.getLogger().println("recursive: " + recursive);
-        listener.getLogger().println("workspacepath: " + workspacepath);
-        listener.getLogger().println("environment: " + environment);
-        //listener.getLogger().println("projectType:" +projectType);
-        listener.getLogger().println("pomPath:" +pomPath);
-        listener.getLogger().println("packagesincluded:" +packagesincluded);
-        listener.getLogger().println("packagesexcluded:" +packagesexcluded);
-        listener.getLogger().println("filesincluded:" +filesincluded);
-        listener.getLogger().println("filesexcluded:" +filesexcluded);
-        listener.getLogger().println("buildScannerJar:" +buildScannerJar);
-        listener.getLogger().println("testListenerJar:" +testListenerJar);
-        listener.getLogger().println("testListenerConfigFile :" +testListenerConfigFile);
-        listener.getLogger().println("inheried: " + inheritedBuild);
-        listener.getLogger().println("apiJar:" +apiJar);
-        listener.getLogger().println("project Type : " + projectType);
-        listener.getLogger().println("LogEnabled:" + logEnabled);
-        listener.getLogger().println("logDestination:" + logDestination);
-        listener.getLogger().println("logLevel:" +logLevel);
-        listener.getLogger().println("logFolder:" +logFolder);
-        listener.getLogger().println("-----------Sealights Jenkins Plugin Configuration--------------");
+
+        PrintStream logger = listener.getLogger();
+        log(logger, "testing framework: " + testingFramework);
+        log(logger, "-----------Sealights Jenkins Plugin Configuration--------------");
+        log(logger, "branch: " + branch);
+        log(logger, "appName:" + appName);
+        log(logger, "moduleName:" + moduleName);
+        log(logger, "recursive: " + recursive);
+        log(logger, "workspacepath: " + workspacepath);
+        log(logger, "environment: " + environment);
+        //log(logger, "projectType:" +projectType);
+        log(logger, "pomPath:" + pomPath);
+        log(logger, "packagesincluded:" + packagesincluded);
+        log(logger, "packagesexcluded:" + packagesexcluded);
+        log(logger, "filesincluded:" + filesincluded);
+        log(logger, "filesexcluded:" + filesexcluded);
+        log(logger, "buildScannerJar:" + buildScannerJar);
+        log(logger, "testListenerJar:" + testListenerJar);
+        log(logger, "testListenerConfigFile :" + testListenerConfigFile);
+        log(logger, "inheried: " + inheritedBuild);
+        log(logger, "apiJar:" + apiJar);
+        log(logger, "project Type : " + projectType);
+        log(logger, "LogEnabled:" + logEnabled);
+        log(logger, "logDestination:" + logDestination);
+        log(logger, "logLevel:" + logLevel);
+        log(logger, "logFolder:" + logFolder);
+        log(logger, "autoRestoreBuildFile:" + autoRestoreBuildFile);
+        log(logger, "-----------Sealights Jenkins Plugin Configuration--------------");
 
         Environment env = new Environment() {
             @Override
@@ -162,6 +168,11 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
             return env;
         }
 
+        if (this.autoRestoreBuildFile) {
+            tryAddRestoreBuildFilePublisher(build, logger);
+        }
+
+
         String workingDir = ws.getRemote();
         String pomPath;
         if (relativePathToEffectivePom != null && !"".equals(relativePathToEffectivePom))
@@ -169,9 +180,9 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         else
             pomPath = workingDir + "/pom.xml";
 
-        listener.getLogger().println("::::::::::::::::::::::::::::::");
-        listener.getLogger().println(pomPath);
-        listener.getLogger().println("::::::::::::::::::::::::::::::");
+        log(logger, "::::::::::::::::::::::::::::::");
+        log(logger, pomPath);
+        log(logger, "::::::::::::::::::::::::::::::");
 
         SeaLightsPluginInfo slInfo = new SeaLightsPluginInfo();
         //slInfo.setEnabled(enable);
@@ -221,12 +232,33 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         return env;
     }
 
+    private void tryAddRestoreBuildFilePublisher(AbstractBuild build, PrintStream logger) {
+        DescribableList publishersList = build.getProject().getPublishersList();
+        boolean found = false;
+        for (Object item : publishersList) {
+            if (item.toString().contains("RestoreBuildFile") ) {
+                found = true;
+                log(logger, "There was no need to add a new RestoreBuildFile since there is one. Current one:" + item.toString());
+                //If found, this was added manually. Remove the check box.
+                break;
+            }
+        }
+
+        if (!found)
+            publishersList.add(new RestoreBuildFile(true));
+    }
+
+    private void log(PrintStream logger, String message) {
+        message = "[SeaLights Jenkins Plugin] " + message;
+        logger.println(message);
+    }
+
     public DescriptorImpl getDescriptor() {
         Jenkins jenkinsInstance = Jenkins.getInstance();
-        if (jenkinsInstance != null){
+        if (jenkinsInstance != null) {
             Descriptor desc = jenkinsInstance.getDescriptorOrDie(getClass());
-            if (desc != null){
-                return (DescriptorImpl)desc;
+            if (desc != null) {
+                return (DescriptorImpl) desc;
             }
         }
         return new DescriptorImpl();
@@ -362,9 +394,16 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         this.testingFramework = testingFramework;
     }
 
-    private boolean isNullOrEmpty(String str)
-    {
-        return  (str == null || str.equals(""));
+    private boolean isNullOrEmpty(String str) {
+        return (str == null || str.equals(""));
+    }
+
+    public boolean isAutoRestoreBuildFile() {
+        return autoRestoreBuildFile;
+    }
+
+    public void setAutoRestoreBuildFile(boolean autoRestoreBuildFile) {
+        this.autoRestoreBuildFile = autoRestoreBuildFile;
     }
 
     @Extension
@@ -425,16 +464,16 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
 
         public ListBoxModel doFillProjectTypesItems() {
             ListBoxModel items = new ListBoxModel();
-            items.add("MAVEN","");
+            items.add("MAVEN", "");
             return items;
         }
 
         public ComboBoxModel doFillTheTypeItems(@QueryParameter ProjectType projectType) {
             switch (projectType.getDisplayName()) {
                 case "maven":
-                    return new ComboBoxModel("Come Together","Something","I Want You");
+                    return new ComboBoxModel("Come Together", "Something", "I Want You");
                 default:
-                    return new ComboBoxModel("The One After 909","Rocker","Get Back");
+                    return new ComboBoxModel("The One After 909", "Rocker", "Get Back");
             }
         }
 

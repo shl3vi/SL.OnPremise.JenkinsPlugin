@@ -1,34 +1,30 @@
 package io.sealigths.plugins.sealightsjenkins;
 
 
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Extension;
-import hudson.model.Action;
 import hudson.tasks.*;
-import hudson.util.FormValidation;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.AbstractProject;
-import net.sf.json.JSONObject;
+import io.sealigths.plugins.sealightsjenkins.integration.FileUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.QueryParameter;
 
-import javax.servlet.ServletException;
-import java.io.IOException;
+import java.io.File;
 import java.io.PrintStream;
+import java.util.List;
 
 /**
- *
  * @author Nadav
  */
-public class TestExamplePublisher extends Recorder {
+public class RestoreBuildFile extends Recorder {
 
     private final boolean shouldRestore;
 
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
-    public TestExamplePublisher(boolean shouldRestore) {
+    public RestoreBuildFile(boolean shouldRestore) {
         this.shouldRestore = shouldRestore;
     }
 
@@ -41,19 +37,31 @@ public class TestExamplePublisher extends Recorder {
 
     @Override
     public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
-        // This is where you 'build' the project.
-        // Since this is a dummy, we just say 'hello world' and call that a build.
-
         PrintStream logger = listener.getLogger();
 
-        // This also shows how you can consult the global configuration of the builder
-        String message;
-        if (this.shouldRestore)
-            message = "Bonjour, " + shouldRestore + "!";
-        else
-            message = "Hello, " + shouldRestore + "!";
+        if (this.shouldRestore) {
+            log(logger, "Searching for files to restore.");
+            FilePath ws = build.getWorkspace();
+            if (ws == null) {
+                log(logger, "Failed to retrieve workspace path.");
+                return false;
+            }
+            
 
-        logger.println(message);
+            File currentDirectory = new File(ws.getRemote());
+            boolean recursive = false;
+            List<String> filesToRestore = FileUtils.searchFilesByExtension(currentDirectory, recursive, "slbak");
+            for (String currentName : filesToRestore) {
+                String newName = currentName.replace(".slbak","");
+                boolean isSuccess = FileUtils.renameFileOrFolder(currentName, newName);
+                if (isSuccess)
+                    log(logger, "Restored '" + currentName + "' to '" + newName + "'.");
+                else
+                    log(logger, "Failed restoring '" + currentName + "' to '" + newName + "'.");
+            }
+        } else {
+            log(logger, "No need to restore any files.");
+        }
 
         return true;
     }
@@ -73,10 +81,10 @@ public class TestExamplePublisher extends Recorder {
 
 
     /**
-     * Descriptor for {@link TestExamplePublisher}. Used as a singleton.
+     * Descriptor for {@link RestoreBuildFile}. Used as a singleton.
      * The class is marked as public so that it can be accessed from views.
-
-     * See <tt>src/main/resources/org/jenkinsci/plugins/testExample/TestExamplePublisher/*.jelly</tt>
+     * <p>
+     * See <tt>src/main/resources/org/jenkinsci/plugins/testExample/RestoreBuildFile/*.jelly</tt>
      * for the actual HTML fragment for the configuration screen.
      */
     @Extension // This indicates to Jenkins that this is an implementation of an extension point.
@@ -109,5 +117,10 @@ public class TestExamplePublisher extends Recorder {
             return "SeaLights - Restore Build File";
         }
 
+    }
+
+    private void log(PrintStream logger, String message) {
+        message = "[SeaLights Jenkins Plugin] " + message;
+        logger.println(message);
     }
 }

@@ -53,6 +53,8 @@ public class MavenIntegration {
 //            throw new RuntimeException("Unsupported Maven Surefire plugin. SeaLights requires a version 2.9 or higher.");
 //        }
 
+        String backupFile = this.info.getSourcePomFile() +".slbak";
+        this.savePom(backupFile);
         integrateToPomFile();
     }
 
@@ -113,14 +115,17 @@ public class MavenIntegration {
     }
 
     private void savePom() {
-        try {
-            String target = info.getTargetPomFile();
-            if (target == null || target.equals(""))
-            {
-                info.setTargetPomFile(info.getSourcePomFile());
-            }
+        String target = info.getTargetPomFile();
+        if (target == null || target.equals(""))
+        {
+            info.setTargetPomFile(info.getSourcePomFile());
+        }
+        savePom(info.getTargetPomFile());
+    }
 
-            pomFile.save(info.getTargetPomFile());
+    private void savePom(String filename) {
+        try {
+            pomFile.save(filename);
         } catch (TransformerException e) {
             e.printStackTrace();
         }

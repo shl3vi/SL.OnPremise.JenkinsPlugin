@@ -159,7 +159,69 @@ public class MavenIntegrationTest {
         Assert.assertEquals("Expected to have a different POM file.", expected, actual);
     }
 
+    @Test
+    public void InjectSeaLightsPluginToAPomWithSurefireThatHasExistingConfigurationElementWithArgLineElementThatDoesntChainOldValues() throws Exception {
 
+        //Arrange
+        TestingFramework TESTING_FRAMEWORK=TestingFramework.JUNIT;
+        String TEST_CASE = "8_Inject_SeaLights_plugin_to_a_pom_with_surefire_that_has_existing_configuration_element_with_argLine_element_that_doesnt_chain_old_values";
+        String testFolder = getTestFolder(TEST_CASE);
+
+        MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
+        mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
+        MavenIntegration mavenIntegration = new MavenIntegration(new PrintStream(System.out),mavenIntegrationInfo);
+
+        //Act
+        mavenIntegration.integrate();
+
+        //Assert
+        String expected = readFileAndTrim(testFolder + "/expected.xml");
+        String actual = readFileAndTrim(testFolder + "/actual.xml");
+        Assert.assertEquals("Expected to have a different POM file.", expected, actual);
+    }
+
+
+    @Test
+    public void InjectSeaLightsPluginToAPomWithSurefireThatHasExistingConfigurationElementWithArgLineElementThatDoesChainOldValues() throws Exception {
+
+        //Arrange
+        TestingFramework TESTING_FRAMEWORK=TestingFramework.JUNIT;
+        String TEST_CASE = "9_Inject_SeaLights_plugin_to_a_pom_with_surefire_that_has_existing_configuration_element_with_argLine_element_that_does_chain_old_values";
+        String testFolder = getTestFolder(TEST_CASE);
+
+        MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
+        mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
+        MavenIntegration mavenIntegration = new MavenIntegration(new PrintStream(System.out),mavenIntegrationInfo);
+
+        //Act
+        mavenIntegration.integrate();
+
+        //Assert
+        String expected = readFileAndTrim(testFolder + "/expected.xml");
+        String actual = readFileAndTrim(testFolder + "/actual.xml");
+        Assert.assertEquals("Expected to have a different POM file.", expected, actual);
+    }
+
+    @Test
+    public void InjectSeaLightsPluginToAPomWithSurefireInsidePluginManagementElement() throws Exception {
+
+        //Arrange
+        TestingFramework TESTING_FRAMEWORK=TestingFramework.JUNIT;
+        String TEST_CASE = "10_Inject_SeaLights_plugin_to_a_pom_with_surefire_inside_pluginManagement_element";
+        String testFolder = getTestFolder(TEST_CASE);
+
+        MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
+        mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
+        MavenIntegration mavenIntegration = new MavenIntegration(new PrintStream(System.out),mavenIntegrationInfo);
+
+        //Act
+        mavenIntegration.integrate();
+
+        //Assert
+        String expected = readFileAndTrim(testFolder + "/expected.xml");
+        String actual = readFileAndTrim(testFolder + "/actual.xml");
+        Assert.assertEquals("Expected to have a different POM file.", expected, actual);
+    }
 
     private String readFileAndTrim(String filepath) throws IOException {
         String s = FileUtils.readFileToString(new File(filepath));

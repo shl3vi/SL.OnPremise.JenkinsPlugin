@@ -78,27 +78,35 @@ public class PomFile {
         List<Element> buildElements = getOrCreateElements("build", "//build", parentElement);
 
         for (Element buildElement : buildElements) {
-            List<Element> pluginsElements = getOrCreateElements("plugins", "plugins", buildElement);
-            try {
+            verifyPluginsElement(pluginBodyAsXml, buildElement);
+            if (isNodeExist(buildElement, "./pluginManagement")) {
+                List<Element> pluginManagementElements = getOrCreateElements("pluginManagement", "pluginManagement", buildElement);
+                verifyPluginsElement(pluginBodyAsXml, pluginManagementElements.get(0));
+            }
+        }
+    }
 
-                for (int i = 0; i < pluginsElements.size(); i++) {
-                    Element pluginsElement = pluginsElements.get(i);
+    private void verifyPluginsElement(String pluginBodyAsXml, Element parentElement) throws XPathExpressionException {
+        List<Element> pluginsElements = getOrCreateElements("plugins", "plugins", parentElement);
+        try {
 
-                    if (!isPluginExistInElement(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID, pluginsElement)) {
-                        //Surefire doesn't exist in element. it it.
-                        addPluginToPluginsElement(SUREFIRE_XML, pluginsElement);
-                    }
+            for (int i = 0; i < pluginsElements.size(); i++) {
+                Element pluginsElement = pluginsElements.get(i);
 
-                    addPluginToPluginsElement(pluginBodyAsXml, pluginsElement);
+                if (!isPluginExistInElement(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID, pluginsElement)) {
+                    //Surefire doesn't exist in element. it it.
+                    addPluginToPluginsElement(SUREFIRE_XML, pluginsElement);
                 }
 
-            } catch (SAXException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (ParserConfigurationException e) {
-                e.printStackTrace();
+                addPluginToPluginsElement(pluginBodyAsXml, pluginsElement);
             }
+
+        } catch (SAXException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ParserConfigurationException e) {
+            e.printStackTrace();
         }
     }
 
@@ -114,7 +122,8 @@ public class PomFile {
         pluginsElement.appendChild(pluginElement);
     }
 
-    String SUREFIRE_PLUGIN = "//build/plugins/plugin/artifactId[.='maven-surefire-plugin']/parent::plugin";
+    //String SUREFIRE_PLUGIN = "//build/plugins/plugin/artifactId[.='maven-surefire-plugin']/parent::plugin";
+    String SUREFIRE_PLUGIN = "//plugin/artifactId[.='maven-surefire-plugin']/parent::plugin";
 
     public void updateSurefirePlugin(String listenerValue, String apiJarPath) {
         Element documentElement = getDocument().getDocumentElement();
@@ -129,10 +138,26 @@ public class PomFile {
                 for (Element configurationElement : configurationElements) {
                     verifyPropertiesElement(listenerValue, configurationElement);
                     verifyAdditionalClasspathElements(apiJarPath, configurationElement);
+                    verifyArgLineElement(configurationElement);
                 }
             }
         } catch (XPathExpressionException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void verifyArgLineElement(Element configurationElement) throws XPathExpressionException {
+        if (isNodeExist(configurationElement, "./argLine")) {
+            //We have argLine node. If that's the case, we must make sure that it contains ${argLine}
+            // or else it will not invoke our Test Listener and customers will get ClassNotFoundException on our classes.
+            List<Element> argLineElements = getOrCreateElements("argLine", "argLine", configurationElement);
+            Element argLine = argLineElements.get(0);
+            String currentValue = argLine.getTextContent();
+            if (!currentValue.contains("${argLine}"))
+            {
+                currentValue = "${argLine} " + currentValue;
+                argLine.setTextContent(currentValue);
+            }
         }
     }
 
