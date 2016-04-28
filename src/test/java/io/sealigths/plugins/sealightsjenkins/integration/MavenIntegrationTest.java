@@ -267,7 +267,7 @@ public class MavenIntegrationTest {
         slInfo.setListenerJar("c:\\fake-test-listener.jar");
         slInfo.setScannerJar("c:\\fake-build-scanner.jar");
         slInfo.setApiJar("c:\\fake-api.jar");
-        slInfo.setInheritedBuild(true);
+        slInfo.setBuildStrategy(true);
 
         slInfo.setLogEnabled(false);
         slInfo.setLogLevel(LogLevel.INFO);

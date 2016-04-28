@@ -35,10 +35,14 @@
 
         <f:advanced>
 
+            <f:entry title="Build Strategy" field="buildStrategy"
+                     description="'One Build': all modules in the project appear in SeaLights' dashboard as a single build with aggregated results. , each module appear as a different application.">
+                <f:enum>${it.displayName}</f:enum>
+            </f:entry>
+
             <f:entry title="Packages Excluded" field="packagesexcluded"
                      description="Java packages to exclude from SeaLights' analysis. Supports wildcards (* = any string, ? = any character).">
-                <f:textbox value="${packagesexcluded}"
-                           default="*FastClassByGuice*, *ByCGLIB*, *EnhancerByMockitoWithCGLIB*, *EnhancerBySpringCGLIB*"/>
+                <f:textbox value="${packagesexcluded}"/>
             </f:entry>
 
             <f:entry title="Files Included" field="filesincluded"
@@ -56,12 +60,8 @@
                 <f:textbox value="${environment}" default="Unit Tests"/>
             </f:entry>
 
-            <f:entry title="Recursive search on folders tree" field="recursive">
-                <f:checkbox default="true"/>
-            </f:entry>
-
-            <f:entry field="relativePathToEffectivePom" title="Top-level Pom"
-                     description="Relative path to top-level pom (e.g : 'dir/pom.xml'. default is 'pom.xml')">
+            <f:entry field="relativePathToEffectivePom" title="Project's build file"
+                     description="Relative path to build file (e.g in maven : 'dir/pom.xml'. default is 'pom.xml')">
                 <f:textbox value="${relativePathToEffectivePom}"/>
             </f:entry>
 
@@ -70,14 +70,19 @@
                 <f:textbox value="${workspacepath}" default="$${project.basedir}"/>
             </f:entry>
 
-            <f:entry field="testListenerConfigFile" title="testListenerConfigFile">
+            <f:entry title="Recursive search on folders tree" field="recursive"
+                     description="When checked, the Build Scanner will also go down the Workspace Path folder tree to scan files.">
+                <f:checkbox default="true"/>
+            </f:entry>
+
+            <f:entry field="testListenerConfigFile" title="SeaLights Additional configuration file (for advanced configuration).">
                 <f:textbox value="${testListenerConfigFile}"/>
             </f:entry>
 
-            <f:entry title="Show all modules as a single build" field="inheritedBuild"
-                     description="When checked, all modules in the project appear in SeaLights' dashboard as a single build with aggregated results. When unchecked, each module appear as a different application.">
-                <f:checkbox/>
-            </f:entry>
+            <!--<f:entry title="Show all modules as a single build" field="buildStrategy"-->
+                     <!--description="When checked, all modules in the project appear in SeaLights' dashboard as a single build with aggregated results. When unchecked, each module appear as a different application.">-->
+                <!--<f:checkbox/>-->
+            <!--</f:entry>-->
 
             <f:entry title="Module Name" field="moduleName">
                 <f:textbox default="$${project.name}" value="${moduleName}"/>

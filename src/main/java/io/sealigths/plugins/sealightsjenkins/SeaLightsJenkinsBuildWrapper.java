@@ -49,7 +49,7 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
     private final String testListenerJar;
     private final String apiJar;
     private final String testListenerConfigFile;
-    private final boolean inheritedBuild;
+//    private final boolean inheritedBuild;
     private boolean autoRestoreBuildFile;
 
 
@@ -61,6 +61,7 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
     private LogLevel logLevel = LogLevel.OFF;
 //    private Language language = Language.JAVA;
     private ProjectType projectType = ProjectType.MAVEN;
+    private BuildStrategy buildStrategy = BuildStrategy.ONE_BUILD;
 
     @DataBoundConstructor
     public SeaLightsJenkinsBuildWrapper(String appName, String moduleName, String branch, String pomPath,
@@ -70,7 +71,7 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
                                         String relativePathToEffectivePom, boolean recursive,
                                         String workspacepath, String testListenerConfigFile,
                                         String buildScannerJar, String testListenerJar, String apiJar,
-                                        boolean inheritedBuild, String environment, @NonNull ProjectType projectType,
+                                        BuildStrategy buildStrategy, String environment, @NonNull ProjectType projectType,
                                         boolean logEnabled, @NonNull LogLevel logLevel, @NonNull LogDestination logDestination, String logFolder
             , TechIntegration integrations, @NonNull Language language, boolean autoRestoreBuildFile) throws IOException {
 
@@ -87,7 +88,7 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         this.recursive = recursive;
         this.workspacepath = workspacepath;
         this.testListenerConfigFile = testListenerConfigFile;
-        this.inheritedBuild = inheritedBuild;
+        this.buildStrategy = buildStrategy;
         this.autoRestoreBuildFile = autoRestoreBuildFile;
 
         this.environment = environment;
@@ -147,7 +148,7 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         log(logger, "buildScannerJar:" + buildScannerJar);
         log(logger, "testListenerJar:" + testListenerJar);
         log(logger, "testListenerConfigFile :" + testListenerConfigFile);
-        log(logger, "inheried: " + inheritedBuild);
+        log(logger, "strategy: " + buildStrategy);
         log(logger, "apiJar:" + apiJar);
         log(logger, "project Type : " + projectType);
         log(logger, "LogEnabled:" + logEnabled);
@@ -180,12 +181,9 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         else
             pomPath = workingDir + "/pom.xml";
 
-        log(logger, "::::::::::::::::::::::::::::::");
-        log(logger, pomPath);
-        log(logger, "::::::::::::::::::::::::::::::");
+        log(logger, "Absolute path to effective file: " + pomPath);
 
         SeaLightsPluginInfo slInfo = new SeaLightsPluginInfo();
-        //slInfo.setEnabled(enable);
         slInfo.setEnabled(true);
         slInfo.setBuildName(String.valueOf(build.getNumber()));
         slInfo.setCustomerId(getDescriptor().getCustomerId());
@@ -211,7 +209,7 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         slInfo.setListenerConfigFile(testListenerConfigFile);
         slInfo.setScannerJar(buildScannerJar);
         slInfo.setApiJar(apiJar);
-        slInfo.setInheritedBuild(inheritedBuild);
+        slInfo.setBuildStrategy(buildStrategy);
 
         slInfo.setEnvironment(environment);
 
@@ -342,8 +340,8 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         return testListenerConfigFile;
     }
 
-    public boolean isInheritedBuild() {
-        return inheritedBuild;
+    public BuildStrategy getBuildStrategy() {
+        return buildStrategy;
     }
 
     public boolean isLogEnabled() {
