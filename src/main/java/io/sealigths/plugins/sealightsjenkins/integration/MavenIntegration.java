@@ -59,7 +59,7 @@ public class MavenIntegration {
     }
 
     private void integrateToPomFile() {
-        String profileId = info.getProfileId();
+//        String profileId = info.getProfileId();
 
         integrateToAllProfiles();
         //TODO: Enable the profile integration once done + tested.

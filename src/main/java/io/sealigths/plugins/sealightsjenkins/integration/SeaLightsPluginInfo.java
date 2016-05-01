@@ -1,5 +1,6 @@
 package io.sealigths.plugins.sealightsjenkins.integration;
 
+import io.sealigths.plugins.sealightsjenkins.BuildStrategy;
 import io.sealigths.plugins.sealightsjenkins.LogDestination;
 import io.sealigths.plugins.sealightsjenkins.LogLevel;
 
@@ -202,14 +203,14 @@ public class SeaLightsPluginInfo {
         this.logFolder = logFolder;
     }
 
-    private boolean inheritedBuild;
+    private BuildStrategy buildStrategy;
 
-    public boolean isInheritedBuild() {
-        return inheritedBuild;
+    public BuildStrategy isBuildStrategy() {
+        return buildStrategy;
     }
 
-    public void setInheritedBuild(boolean inheritedBuild) {
-        this.inheritedBuild = inheritedBuild;
+    public void setBuildStrategy(BuildStrategy buildStrategy) {
+        this.buildStrategy = buildStrategy;
     }
 
     public String toPluginText(){
@@ -233,21 +234,25 @@ public class SeaLightsPluginInfo {
         if(!isNullOrEmpty(proxy)){
             plugin.append("<proxy>" + proxy + "</proxy>");
         }
+
+        if("Build Per Module".equalsIgnoreCase(buildStrategy.getDisplayName())){
+            appName = moduleName;
+        }
         if(!isNullOrEmpty(appName)){
             plugin.append("<appName>" + appName + "</appName>");
         }
-        if(!isNullOrEmpty(moduleName)){
-            plugin.append("<moduleName>" + moduleName + "</moduleName>");
-        }
+//        if(!isNullOrEmpty(moduleName)){
+//            plugin.append("<moduleName>" + moduleName + "</moduleName>");
+//        }
         if(!isNullOrEmpty(workspacepath)){
             plugin.append("<workspacepath>" + workspacepath + "</workspacepath>");
         }
         if(!isNullOrEmpty(buildName)){
             plugin.append("<build>" + buildName + "</build>");
         }
-        if(!isNullOrEmpty(environment)){
-            plugin.append("<environment>" + environment + "</environment>");
-        }
+//        if(!isNullOrEmpty(environment)){
+//            plugin.append("<environment>" + environment + "</environment>");
+//        }
         if(!isNullOrEmpty(branchName)){
             plugin.append("<branch>" + branchName + "</branch>");
         }
@@ -255,14 +260,14 @@ public class SeaLightsPluginInfo {
             plugin.append("<packagesincluded>" + packagesIncluded + "</packagesincluded>");
         }
         if(!isNullOrEmpty(packagesExcluded)){
-            plugin.append("<packagesexcluded>" + packagesExcluded + "</packagesexcluded>");
+            plugin.append("<packagesexcluded>*FastClassByGuice*, *ByCGLIB*, *EnhancerByMockitoWithCGLIB*, *EnhancerBySpringCGLIB*, " + packagesExcluded + "</packagesexcluded>");
         }
         if(!isNullOrEmpty(filesIncluded)){
             plugin.append("<filesincluded>" + filesIncluded + "</filesincluded>");
         }
-        if(!isNullOrEmpty(filesExcluded)){
-            plugin.append("<filesexcluded>" + filesExcluded + "</filesexcluded>");
-        }
+//        if(!isNullOrEmpty(filesExcluded)){
+//            plugin.append("<filesexcluded>" + filesExcluded + "</filesexcluded>");
+//        }
         if(!isNullOrEmpty(scannerJar)){
             plugin.append("<buildScannerJar>" + scannerJar + "</buildScannerJar>");
         }
@@ -293,8 +298,11 @@ public class SeaLightsPluginInfo {
         plugin.append("</configuration>");
         plugin.append("<executions>");
         plugin.append("<execution>");
-        if (!inheritedBuild)
+
+
+        if ("One Build".equalsIgnoreCase(buildStrategy.getDisplayName()))
             plugin.append("<inherited>false</inherited>");
+
         plugin.append("<id>a1</id>");
         plugin.append("<goals>");
         plugin.append("<goal>build-scanner</goal>");
