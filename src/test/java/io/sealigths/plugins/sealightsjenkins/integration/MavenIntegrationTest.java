@@ -1,5 +1,6 @@
 package io.sealigths.plugins.sealightsjenkins.integration;
 
+import io.sealigths.plugins.sealightsjenkins.BuildStrategy;
 import io.sealigths.plugins.sealightsjenkins.LogLevel;
 import io.sealigths.plugins.sealightsjenkins.TestingFramework;
 import org.apache.commons.io.FileUtils;
@@ -267,7 +268,7 @@ public class MavenIntegrationTest {
         slInfo.setListenerJar("c:\\fake-test-listener.jar");
         slInfo.setScannerJar("c:\\fake-build-scanner.jar");
         slInfo.setApiJar("c:\\fake-api.jar");
-        slInfo.setBuildStrategy(true);
+        slInfo.setBuildStrategy(BuildStrategy.ONE_BUILD);
 
         slInfo.setLogEnabled(false);
         slInfo.setLogLevel(LogLevel.INFO);
