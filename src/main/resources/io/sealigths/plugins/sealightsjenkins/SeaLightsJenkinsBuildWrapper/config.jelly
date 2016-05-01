@@ -20,9 +20,9 @@
             <f:enum>${it.displayName}</f:enum>
         </f:entry>
 
-        <f:entry title="Packages Included" field="packagesincluded"
+        <f:entry title="Packages Included" field="packagesIncluded"
                  description="Java packages that will be analyzed by SeaLights. Supports wildcards (* = any string, ? = any character).">
-            <f:textbox value="${packagesincluded}"/>
+            <f:textbox value="${packagesIncluded}"/>
         </f:entry>
 
         <!--<f:entry title="Project Type" field="projectType">-->
@@ -40,19 +40,19 @@
                 <f:enum>${it.displayName}</f:enum>
             </f:entry>
 
-            <f:entry title="Packages Excluded" field="packagesexcluded"
+            <f:entry title="Packages Excluded" field="packagesExcluded"
                      description="Java packages to exclude from SeaLights' analysis. Supports wildcards (* = any string, ? = any character).">
-                <f:textbox value="${packagesexcluded}"/>
+                <f:textbox value="${packagesExcluded}"/>
             </f:entry>
 
-            <f:entry title="Files Included" field="filesincluded"
+            <f:entry title="Files Included" field="filesIncluded"
                      description="Files to include in SeaLights' analysis. Supports wildcards (* = any string, ? = any character).">
-                <f:textbox value="${filesincluded}" default="*.class"/>
+                <f:textbox value="${filesIncluded}" default="*.class"/>
             </f:entry>
 
-            <f:entry title="Files Excluded" field="filesexcluded"
+            <f:entry title="Files Excluded" field="filesExcluded"
                      description="Files to exclude from SeaLights' analysis. Supports wildcards (* = any string, ? = any character).">
-                <f:textbox value="${filesexcluded}" default="*/test-classes/*"/>
+                <f:textbox value="${filesExcluded}" default="*/test-classes/*"/>
             </f:entry>
 
             <f:entry title="Environment" field="environment"

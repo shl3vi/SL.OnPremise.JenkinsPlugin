@@ -38,10 +38,10 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
 
     private final String pomPath;
     private final String environment;
-    private final String packagesincluded;
-    private final String packagesexcluded;
-    private final String filesincluded;
-    private final String filesexcluded;
+    private final String packagesIncluded;
+    private final String packagesExcluded;
+    private final String filesIncluded;
+    private final String filesExcluded;
     private final String relativePathToEffectivePom;
     private final boolean recursive;
     private final String workspacepath;
@@ -66,8 +66,8 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
     @DataBoundConstructor
     public SeaLightsJenkinsBuildWrapper(String appName, String moduleName, String branch, String pomPath,
                                         @NonNull TestingFramework testingFramework,
-                                        String packagesincluded, String packagesexcluded,
-                                        String filesincluded, String filesexcluded,
+                                        String packagesIncluded, String packagesExcluded,
+                                        String filesIncluded, String filesExcluded,
                                         String relativePathToEffectivePom, boolean recursive,
                                         String workspacepath, String testListenerConfigFile,
                                         String buildScannerJar, String testListenerJar, String apiJar,
@@ -80,10 +80,10 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         this.moduleName = moduleName;
         this.branch = branch;
         this.pomPath = pomPath;
-        this.packagesincluded = packagesincluded;
-        this.packagesexcluded = packagesexcluded;
-        this.filesincluded = filesincluded;
-        this.filesexcluded = filesexcluded;
+        this.packagesIncluded = packagesIncluded;
+        this.packagesExcluded = packagesExcluded;
+        this.filesIncluded = filesIncluded;
+        this.filesExcluded = filesExcluded;
         this.relativePathToEffectivePom = relativePathToEffectivePom;
         this.recursive = recursive;
         this.workspacepath = workspacepath;
@@ -141,10 +141,10 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         log(logger, "environment: " + environment);
         //log(logger, "projectType:" +projectType);
         log(logger, "pomPath:" + pomPath);
-        log(logger, "packagesincluded:" + packagesincluded);
-        log(logger, "packagesexcluded:" + packagesexcluded);
-        log(logger, "filesincluded:" + filesincluded);
-        log(logger, "filesexcluded:" + filesexcluded);
+        log(logger, "packagesIncluded:" + packagesIncluded);
+        log(logger, "packagesExcluded:" + packagesExcluded);
+        log(logger, "filesIncluded:" + filesIncluded);
+        log(logger, "filesExcluded:" + filesExcluded);
         log(logger, "buildScannerJar:" + buildScannerJar);
         log(logger, "testListenerJar:" + testListenerJar);
         log(logger, "testListenerConfigFile :" + testListenerConfigFile);
@@ -199,11 +199,11 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         slInfo.setAppName(appName);
         slInfo.setModuleName(moduleName);
         slInfo.setBranchName(branch);
-        slInfo.setFilesIncluded(filesincluded);
-        slInfo.setFilesExcluded(filesexcluded);
+        slInfo.setFilesIncluded(filesIncluded);
+        slInfo.setFilesExcluded(filesExcluded);
         slInfo.setRecursive(recursive);
-        slInfo.setPackagesIncluded(packagesincluded);
-        slInfo.setPackagesExcluded(packagesexcluded);
+        slInfo.setPackagesIncluded(packagesIncluded);
+        slInfo.setPackagesExcluded(packagesExcluded);
 
         slInfo.setListenerJar(testListenerJar);
         slInfo.setListenerConfigFile(testListenerConfigFile);
@@ -300,20 +300,20 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         return pomPath;
     }
 
-    public String getPackagesincluded() {
-        return packagesincluded;
+    public String getPackagesIncluded() {
+        return packagesIncluded;
     }
 
-    public String getPackagesexcluded() {
-        return packagesexcluded;
+    public String getPackagesExcluded() {
+        return packagesExcluded;
     }
 
-    public String getFilesincluded() {
-        return filesincluded;
+    public String getFilesIncluded() {
+        return filesIncluded;
     }
 
-    public String getFilesexcluded() {
-        return filesexcluded;
+    public String getFilesExcluded() {
+        return filesExcluded;
     }
 
     public String getRelativePathToEffectivePom() {
