@@ -158,14 +158,6 @@ public class PomFile {
                 currentValue = "${argLine} " + currentValue;
                 argLine.setTextContent(currentValue);
             }
-
-            //combine.children="append"
-            String combineChildren = argLine.getAttribute("combine.children");
-            if (!"append".equalsIgnoreCase(combineChildren)){
-                combineChildren = "append";
-                argLine.setAttribute("combine.children", combineChildren);
-            }
-
         }
     }
 
