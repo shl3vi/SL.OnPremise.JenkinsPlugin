@@ -161,7 +161,8 @@ public class MavenIntegration {
         try {
             pomFile.save(filename);
         } catch (TransformerException e) {
-            e.printStackTrace();
+            log.println("Failed saving POM file. Error:");
+            e.printStackTrace(this.log);
         }
     }
 
