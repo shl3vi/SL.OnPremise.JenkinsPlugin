@@ -327,5 +327,7 @@ public class PomFile {
         return document;
     }
 
-
+    public String getFilename() {
+        return filename;
+    }
 }

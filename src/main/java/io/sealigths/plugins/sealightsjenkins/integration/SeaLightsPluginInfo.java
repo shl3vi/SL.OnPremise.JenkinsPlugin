@@ -23,6 +23,28 @@ public class SeaLightsPluginInfo {
     private String proxy;
     private boolean recursive;
     private String environment;
+    private String buildFilesFolders;
+    private String buildFilesPatterns;
+
+    public String getBuildFilesFolders() {
+        return buildFilesFolders;
+    }
+
+    public void setBuildFilesFolders(String buildFilesFolders) {
+        this.buildFilesFolders = buildFilesFolders;
+    }
+
+    public String getBuildFilesPatterns() {
+        return buildFilesPatterns;
+    }
+
+    public void setBuildFilesPatterns(String buildFilesPatterns) {
+        this.buildFilesPatterns = buildFilesPatterns;
+    }
+
+    public BuildStrategy getBuildStrategy() {
+        return buildStrategy;
+    }
 
     public String getProxy() {
         return proxy;
@@ -236,7 +258,7 @@ public class SeaLightsPluginInfo {
         }
 
         if("Build Per Module".equalsIgnoreCase(buildStrategy.getDisplayName())){
-            appName = moduleName;
+            appName = "[" + appName + "] - " +moduleName;
         }
         if(!isNullOrEmpty(appName)){
             plugin.append("<appName>" + appName + "</appName>");
@@ -300,8 +322,8 @@ public class SeaLightsPluginInfo {
         plugin.append("<execution>");
 
 
-        if ("One Build".equalsIgnoreCase(buildStrategy.getDisplayName()))
-            plugin.append("<inherited>false</inherited>");
+//        if ("One Build".equalsIgnoreCase(buildStrategy.getDisplayName()))
+//            plugin.append("<inherited>false</inherited>");
 
         plugin.append("<id>a1</id>");
         plugin.append("<goals>");
