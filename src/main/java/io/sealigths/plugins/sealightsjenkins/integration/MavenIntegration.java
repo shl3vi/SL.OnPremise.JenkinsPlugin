@@ -83,7 +83,8 @@ public class MavenIntegration {
                 this.savePom(backupFile, pomFile);
                 integrateToPomFile(pomFile);
             }catch (Exception e){
-                log(log , "MavenIntegration.integrate - Unable to parse pom : " + pomFile.getFilename());
+                log(log , "MavenIntegration.integrate - Unable to parse pom : " + pomFile.getFilename() + ". Error:");
+                e.printStackTrace(log);
             }
         }
 
@@ -160,7 +161,8 @@ public class MavenIntegration {
         try {
             pomFile.save(filename);
         } catch (TransformerException e) {
-            e.printStackTrace();
+            log.println("Failed saving POM file. Error:");
+            e.printStackTrace(this.log);
         }
     }
 
