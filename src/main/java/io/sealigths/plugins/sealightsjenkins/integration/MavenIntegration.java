@@ -1,9 +1,14 @@
 package io.sealigths.plugins.sealightsjenkins.integration;
 
 import io.sealigths.plugins.sealightsjenkins.TestingFramework;
+import io.sealigths.plugins.sealightsjenkins.utils.FileAndFolderUtils;
+import io.sealigths.plugins.sealightsjenkins.utils.IncludeExcludeFilter;
+import io.sealigths.plugins.sealightsjenkins.utils.StringUtils;
 
 import javax.xml.transform.TransformerException;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 //import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
@@ -19,25 +24,45 @@ public class MavenIntegration {
     private final static String SEALIGHTS_ARTIFACT_ID = "sealights-maven-plugin";
 
 
-    private PomFile pomFile;
+    private List<PomFile> poms;
     private MavenIntegrationInfo info;
     private PrintStream log;
 
     public MavenIntegration(PrintStream log, MavenIntegrationInfo info) {
         this.log = log;
         this.info = info;
-        this.pomFile = new PomFile(info.getSourcePomFile());
+    }
+
+    private List<PomFile> getPoms(){
+        SeaLightsPluginInfo slInfo = info.getSeaLightsPluginInfo();
+        List<PomFile> pomFiles = new ArrayList<>();
+
+        List<String> folders = Arrays.asList(slInfo.getBuildFilesFolders().split("\\s*,\\s*"));
+        IncludeExcludeFilter filter  = new IncludeExcludeFilter(slInfo.getBuildFilesPatterns(), null);
+
+        for (String folder: folders){
+            List<String> matchingPoms = FileAndFolderUtils.findAllFilesWithFilter(folder, true, filter);
+            for (String matchingPom : matchingPoms){
+                pomFiles.add(new PomFile(matchingPom));
+            }
+        }
+
+        return pomFiles;
+
     }
 
     public void integrate() {
 
         this.log.println("MavenIntegration.integrate - starting");
-        if (pomFile.isPluginExistInEntriePom(SEALIGHTS_GROUP_ID, SEALIGHTS_ARTIFACT_ID)) {
-            this.log.println("MavenIntegration.integrate - Skipping the integration since SeaLights plugin is already defined in the the POM file.");
-            return;
-        }
+        poms = getPoms();
 
-        //TODO: Check the SureFire version on the resolved (effective) *.pom file.
+        for (PomFile pomFile : poms) {
+            if (pomFile.isPluginExistInEntriePom(SEALIGHTS_GROUP_ID, SEALIGHTS_ARTIFACT_ID)) {
+                this.log.println("MavenIntegration.integrate - Skipping the integration since SeaLights plugin is already defined in the the POM file.");
+                return;
+            }
+
+            //TODO: Check the SureFire version on the resolved (effective) *.pom file.
 //        if (!pomFile.isPluginExistInEntriePom(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID))
 //        {
 //            //Surefire plugin isn't defined.
@@ -53,13 +78,14 @@ public class MavenIntegration {
 //            throw new RuntimeException("Unsupported Maven Surefire plugin. SeaLights requires a version 2.9 or higher.");
 //        }
 
-        String backupFile = this.info.getSourcePomFile() +".slbak";
-        this.savePom(backupFile);
-        integrateToPomFile();
+            String backupFile = this.info.getSourcePomFile() + ".slbak";
+            this.savePom(backupFile);
+            integrateToPomFile(pomFile);
+        }
     }
 
-    private void integrateToPomFile() {
-//        String profileId = info.getProfileId();
+    private void integrateToPomFile(PomFile pomFile) {
+        String profileId = info.getProfileId();
 
         integrateToAllProfiles();
         //TODO: Enable the profile integration once done + tested.
@@ -79,8 +105,8 @@ public class MavenIntegration {
         return "";
     }
 
-    private void integrateToProfile(String profileId) {
-        List<String> profiles = pomFile.getProfileIds();
+    private void integrateToProfile(String profileId, PomFile pomFile) {
+        List<String> profileIdfiles = pomFile.getProfileIds();
         if (profileId.length() == 0)
         {
             throw new RuntimeException("The specified POM file does not contain any profiles.");
@@ -103,7 +129,7 @@ public class MavenIntegration {
 
     }
 
-    private void integrateToAllProfiles() {
+    private void integrateToAllProfiles(PomFile pomFile) {
         SeaLightsPluginInfo seaLightsPluginInfo = this.info.getSeaLightsPluginInfo();
         String xml = seaLightsPluginInfo.toPluginText();
         pomFile.addPlugin(xml);

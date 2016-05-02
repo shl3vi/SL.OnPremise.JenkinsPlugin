@@ -3,12 +3,10 @@ package io.sealigths.plugins.sealightsjenkins;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
-import hudson.model.Descriptor;
+import hudson.model.*;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
+import hudson.tasks.Recorder;
 import hudson.util.ComboBoxModel;
 import hudson.util.DescribableList;
 import hudson.util.ListBoxModel;
@@ -26,6 +24,8 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
@@ -53,6 +53,9 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
     private boolean autoRestoreBuildFile;
 
 
+    private final String buildFilesPatterns;
+    private final String buildFilesFolders;
+
     private boolean logEnabled;
     private LogDestination logDestination = LogDestination.CONSOLE;
     private final String logFolder;
@@ -72,8 +75,9 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
                                         String workspacepath, String testListenerConfigFile,
                                         String buildScannerJar, String testListenerJar, String apiJar,
                                         BuildStrategy buildStrategy, String environment, @NonNull ProjectType projectType,
-                                        boolean logEnabled, @NonNull LogLevel logLevel, @NonNull LogDestination logDestination, String logFolder
-            , TechIntegration integrations, @NonNull Language language, boolean autoRestoreBuildFile) throws IOException {
+                                        boolean logEnabled, @NonNull LogLevel logLevel, @NonNull LogDestination logDestination, String logFolder,
+                                        TechIntegration integrations, @NonNull Language language, boolean autoRestoreBuildFile,
+                                        String buildFilesPatterns, String buildFilesFolders) throws IOException {
 
 //        this.integrations = integrations;
         this.appName = appName;
@@ -98,6 +102,9 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         this.projectType = projectType;
 
 //        this.language = language;
+
+        this.buildFilesFolders = buildFilesFolders;
+        this.buildFilesPatterns = buildFilesPatterns;
 
         this.logEnabled = logEnabled;
         this.logLevel = logLevel;
@@ -129,8 +136,8 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
     public Environment setUp(AbstractBuild build, Launcher launcher,
                              BuildListener listener) throws IOException, InterruptedException {
 
-
         PrintStream logger = listener.getLogger();
+
         log(logger, "testing framework: " + testingFramework);
         log(logger, "-----------Sealights Jenkins Plugin Configuration--------------");
         log(logger, "branch: " + branch);
@@ -140,6 +147,9 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         log(logger, "workspacepath: " + workspacepath);
         log(logger, "environment: " + environment);
         //log(logger, "projectType:" +projectType);
+
+        log(logger, "buildFilesFolders: " + buildFilesFolders  + " buildFilesPatterns: " + buildFilesPatterns);
+
         log(logger, "pomPath:" + pomPath);
         log(logger, "packagesIncluded:" + packagesIncluded);
         log(logger, "packagesExcluded:" + packagesExcluded);
@@ -169,8 +179,10 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
             return env;
         }
 
+        //TODO: remember cases
         if (this.autoRestoreBuildFile) {
-            tryAddRestoreBuildFilePublisher(build, logger);
+            RestoreBuildFile restoreBuildFile = getOrCreateRestoreBuildFile(build, logger);
+            addRestoreBuildFilePublisher(build, restoreBuildFile, logger);
         }
 
 
@@ -218,6 +230,8 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         slInfo.setLogDestination(logDestination);
         slInfo.setLogFolder(logFolder);
 
+        slInfo.setBuildFilesFolders(buildFilesFolders);
+        slInfo.setBuildFilesPatterns(buildFilesPatterns);
 
         MavenIntegrationInfo info = new MavenIntegrationInfo();
         info.setTestingFramework(testingFramework);
@@ -230,20 +244,22 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         return env;
     }
 
-    private void tryAddRestoreBuildFilePublisher(AbstractBuild build, PrintStream logger) {
+    private RestoreBuildFile getOrCreateRestoreBuildFile(AbstractBuild build, PrintStream logger){
         DescribableList publishersList = build.getProject().getPublishersList();
-        boolean found = false;
         for (Object item : publishersList) {
             if (item.toString().contains("RestoreBuildFile") ) {
-                found = true;
                 log(logger, "There was no need to add a new RestoreBuildFile since there is one. Current one:" + item.toString());
-                //If found, this was added manually. Remove the check box.
-                break;
+                return (RestoreBuildFile)item;
             }
         }
+        return new RestoreBuildFile(true, buildFilesFolders, buildFilesPatterns);
+    }
 
-        if (!found)
-            publishersList.add(new RestoreBuildFile(true));
+    private void addRestoreBuildFilePublisher(AbstractBuild build, RestoreBuildFile restoreBuildFile, PrintStream logger) {
+        DescribableList publishersList = build.getProject().getPublishersList();
+        if (publishersList != null) {
+            publishersList.add(restoreBuildFile);
+        }
     }
 
     private void log(PrintStream logger, String message) {
