@@ -93,24 +93,36 @@
                 <f:checkbox default="true"/>
             </f:entry>
 
-            <f:optionalBlock name="overrideJarOptionalBlock" title="Override Jars Locations">
+            <f:optionalBlock name="multipleBuildFilesOptionalBlock" title="Enable multiple build files" field="${instance.multipleBuildFiles}" inline="true">
+
+                <f:entry title="Folders" field="buildFilesFolders" description="Comma separated list of root folders that contains the build files. The default is the working directory">
+                    <f:textbox value="${instance.buildFilesFolders}"/>
+                </f:entry>
+
+                <f:entry title="Files Pattern" field="buildFilesPatterns" description="Comma separated list of Wild cards for the files names (e.g 'a?.pom, a_*b.pom'). The default is '*pom.xml'">
+                    <f:textbox value="${instance.buildFilesPatterns}"/>
+                </f:entry>
+
+            </f:optionalBlock>
+
+            <f:optionalBlock name="overrideJarOptionalBlock" title="Override Jars Locations" inline="true" field="${instance.overrideJars}">
                 <f:entry title="Build Scanner JAR Path" field="buildScannerJar"
                          description="Overrides the default Build Scanner JAR with a path to a different Build Scanner. Leave empty to use the default one.">
-                    <f:textbox value="${buildScannerJar}"/>
+                    <f:textbox value="${instance.buildScannerJar}"/>
                 </f:entry>
 
                 <f:entry title="Test Listener JAR Path" field="testListenerJar"
                          description="Overrides the default Test Listener JAR with a path to a different Test Listener JAR. Leave empty to use the default one.">
-                    <f:textbox value="${testListenerJar}"/>
+                    <f:textbox value="${instance.testListenerJar}"/>
                 </f:entry>
 
                 <f:entry title="API JAR Path" field="apiJar"
                          description="Overrides the default API JAR with a path to a different one. Leave empty to use the default one.">
-                    <f:textbox value="${apiJar}"/>
+                    <f:textbox value="${instance.apiJar}"/>
                 </f:entry>
             </f:optionalBlock>
 
-            <f:optionalBlock name="logsOptionalBlock" title="Enable logs" checked="${instance.logEnabled}" inline="true">
+            <f:optionalBlock name="logsOptionalBlock" title="Enable logs" checked="${instance.logEnabled}" inline="true" field="${instance.logEnabled}">
 
                 <f:entry field="logLevel" title="Log Level">
                     <f:enum>${it.displayName}</f:enum>

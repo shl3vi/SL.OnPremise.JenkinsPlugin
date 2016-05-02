@@ -6,7 +6,6 @@ import hudson.Launcher;
 import hudson.model.*;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
-import hudson.tasks.Recorder;
 import hudson.util.ComboBoxModel;
 import hudson.util.DescribableList;
 import hudson.util.ListBoxModel;
@@ -15,6 +14,7 @@ import io.sealigths.plugins.sealightsjenkins.integration.MavenIntegration;
 import io.sealigths.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
 import io.sealigths.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
 import io.sealigths.plugins.sealightsjenkins.language.Language;
+import io.sealigths.plugins.sealightsjenkins.utils.StringUtils;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -24,8 +24,6 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
@@ -35,6 +33,9 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
     private final String appName;
     private final String moduleName;
     private final String branch;
+
+    private final boolean overrideJars;
+    private final boolean multipleBuildFiles;
 
     private final String pomPath;
     private final String environment;
@@ -49,7 +50,7 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
     private final String testListenerJar;
     private final String apiJar;
     private final String testListenerConfigFile;
-//    private final boolean inheritedBuild;
+//  private final boolean inheritedBuild;
     private boolean autoRestoreBuildFile;
 
 
@@ -76,8 +77,9 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
                                         String buildScannerJar, String testListenerJar, String apiJar,
                                         BuildStrategy buildStrategy, String environment, @NonNull ProjectType projectType,
                                         boolean logEnabled, @NonNull LogLevel logLevel, @NonNull LogDestination logDestination, String logFolder,
-                                        TechIntegration integrations, @NonNull Language language, boolean autoRestoreBuildFile,
-                                        String buildFilesPatterns, String buildFilesFolders) throws IOException {
+                                        boolean autoRestoreBuildFile,
+                                        String buildFilesPatterns, String buildFilesFolders,
+                                        boolean multipleBuildFiles, boolean overrideJars) throws IOException {
 
 //        this.integrations = integrations;
         this.appName = appName;
@@ -100,6 +102,9 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         this.testingFramework = testingFramework;
 
         this.projectType = projectType;
+
+        this.multipleBuildFiles = multipleBuildFiles;
+        this.overrideJars = overrideJars;
 
 //        this.language = language;
 
@@ -126,7 +131,6 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
             apiJar = JarsHelper.loadJarAndSaveAsTempFile("sl-api");
         }
 
-
         this.buildScannerJar = buildScannerJar;
         this.testListenerJar = testListenerJar;
         this.apiJar = apiJar;
@@ -147,6 +151,9 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         log(logger, "workspacepath: " + workspacepath);
         log(logger, "environment: " + environment);
         //log(logger, "projectType:" +projectType);
+
+        log(logger, "overrideJars: " + overrideJars);
+        log(logger, "multipleBuildFiles: " + multipleBuildFiles);
 
         log(logger, "buildFilesFolders: " + buildFilesFolders  + " buildFilesPatterns: " + buildFilesPatterns);
 
@@ -179,12 +186,10 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
             return env;
         }
 
-        //TODO: remember cases
         if (this.autoRestoreBuildFile) {
-            RestoreBuildFile restoreBuildFile = getOrCreateRestoreBuildFile(build, logger);
-            addRestoreBuildFilePublisher(build, restoreBuildFile, logger);
+            tryAddRestoreBuildFilePublisher(build, logger);
         }
-
+        configureBuildFilePublisher(build);
 
         String workingDir = ws.getRemote();
         String pomPath;
@@ -230,13 +235,18 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         slInfo.setLogDestination(logDestination);
         slInfo.setLogFolder(logFolder);
 
-        slInfo.setBuildFilesFolders(buildFilesFolders);
-        slInfo.setBuildFilesPatterns(buildFilesPatterns);
+        String foldersToSearch = StringUtils.isNullOrEmpty(buildFilesFolders)? workingDir : buildFilesFolders;
+        String patternsToSearch = StringUtils.isNullOrEmpty(buildFilesPatterns)? "*pom.xml" : buildFilesPatterns;
 
-        MavenIntegrationInfo info = new MavenIntegrationInfo();
-        info.setTestingFramework(testingFramework);
-        info.setSeaLightsPluginInfo(slInfo);
-        info.setSourcePomFile(pomPath);
+        slInfo.setBuildFilesFolders(foldersToSearch);
+        slInfo.setBuildFilesPatterns(patternsToSearch);
+
+        MavenIntegrationInfo info = new MavenIntegrationInfo(
+                foldersToSearch,
+                pomPath,
+                slInfo,
+                testingFramework
+        );
 
         MavenIntegration mavenIntegration = new MavenIntegration(listener.getLogger(), info);
         mavenIntegration.integrate();
@@ -244,21 +254,31 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         return env;
     }
 
-    private RestoreBuildFile getOrCreateRestoreBuildFile(AbstractBuild build, PrintStream logger){
+    private void  tryAddRestoreBuildFilePublisher(AbstractBuild build, PrintStream logger){
+        DescribableList publishersList = build.getProject().getPublishersList();
+        boolean found = false;
+        for (Object item : publishersList) {
+            if (item.toString().contains("RestoreBuildFile") ) {
+                found = true;
+                log(logger, "There was no need to add a new RestoreBuildFile since there is one. Current one:" + item.toString());
+                //If found, this was added manually. Remove the check box.
+                break;
+            }
+        }
+
+        if (!found) {
+            RestoreBuildFile restoreBuildFile = new RestoreBuildFile(true, buildFilesFolders, buildFilesPatterns);
+            publishersList.add(restoreBuildFile);
+        }
+    }
+
+    private void configureBuildFilePublisher(AbstractBuild build) {
         DescribableList publishersList = build.getProject().getPublishersList();
         for (Object item : publishersList) {
             if (item.toString().contains("RestoreBuildFile") ) {
-                log(logger, "There was no need to add a new RestoreBuildFile since there is one. Current one:" + item.toString());
-                return (RestoreBuildFile)item;
+                ((RestoreBuildFile)item).setFolders(buildFilesFolders);
+                return;
             }
-        }
-        return new RestoreBuildFile(true, buildFilesFolders, buildFilesPatterns);
-    }
-
-    private void addRestoreBuildFilePublisher(AbstractBuild build, RestoreBuildFile restoreBuildFile, PrintStream logger) {
-        DescribableList publishersList = build.getProject().getPublishersList();
-        if (publishersList != null) {
-            publishersList.add(restoreBuildFile);
         }
     }
 
@@ -420,6 +440,26 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         this.autoRestoreBuildFile = autoRestoreBuildFile;
     }
 
+    public boolean isMultipleBuildFiles() {
+        return multipleBuildFiles;
+    }
+
+    public boolean isOverrideJars() {
+        return overrideJars;
+    }
+
+    public String getBuildFilesPatterns() {
+        return buildFilesPatterns;
+    }
+
+    public String getBuildFilesFolders() {
+        return buildFilesFolders;
+    }
+
+    public void setBuildStrategy(BuildStrategy buildStrategy) {
+        this.buildStrategy = buildStrategy;
+    }
+
     @Extension
     public static final class DescriptorImpl extends BuildWrapperDescriptor {
 
@@ -490,14 +530,6 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
                     return new ComboBoxModel("The One After 909", "Rocker", "Get Back");
             }
         }
-
-//        public ListBoxModel doFillTestingFrameworkItems() {
-//            ListBoxModel items = new ListBoxModel();
-//            items.add("testng");
-//            items.add("junit");
-//            return items;
-//        }
-
 
     }
 }

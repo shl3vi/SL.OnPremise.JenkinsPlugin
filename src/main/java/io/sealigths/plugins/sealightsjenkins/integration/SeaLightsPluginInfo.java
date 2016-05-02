@@ -23,6 +23,28 @@ public class SeaLightsPluginInfo {
     private String proxy;
     private boolean recursive;
     private String environment;
+    private String buildFilesFolders;
+    private String buildFilesPatterns;
+
+    public String getBuildFilesFolders() {
+        return buildFilesFolders;
+    }
+
+    public void setBuildFilesFolders(String buildFilesFolders) {
+        this.buildFilesFolders = buildFilesFolders;
+    }
+
+    public String getBuildFilesPatterns() {
+        return buildFilesPatterns;
+    }
+
+    public void setBuildFilesPatterns(String buildFilesPatterns) {
+        this.buildFilesPatterns = buildFilesPatterns;
+    }
+
+    public BuildStrategy getBuildStrategy() {
+        return buildStrategy;
+    }
 
     public String getProxy() {
         return proxy;

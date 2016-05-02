@@ -6,14 +6,19 @@ import io.sealigths.plugins.sealightsjenkins.TestingFramework;
  * Created by Nadav on 4/19/2016.
  */
 public class MavenIntegrationInfo {
-    private String sourcePomFile;
+    private String sourcePomFiles;
     private String targetPomFile;
     private String profileId;
     private TestingFramework testingFramework;
     private SeaLightsPluginInfo seaLightsPluginInfo;
 
 
-
+    public MavenIntegrationInfo(String sourcePomFiles, String targetPomFile, SeaLightsPluginInfo seaLightsPluginInfo, TestingFramework testingFramework) {
+        this.sourcePomFiles = sourcePomFiles;
+        this.targetPomFile = targetPomFile;
+        this.seaLightsPluginInfo = seaLightsPluginInfo;
+        this.testingFramework = testingFramework;
+    }
 
     public SeaLightsPluginInfo getSeaLightsPluginInfo() {
         return seaLightsPluginInfo;
@@ -39,12 +44,12 @@ public class MavenIntegrationInfo {
         this.testingFramework = testingFramework;
     }
 
-    public String getSourcePomFile() {
-        return sourcePomFile;
+    public String getSourcePomFiles() {
+        return sourcePomFiles;
     }
 
-    public void setSourcePomFile(String sourcePomFile) {
-        this.sourcePomFile = sourcePomFile;
+    public void setSourcePomFiles(String sourcePomFiles) {
+        this.sourcePomFiles = sourcePomFiles;
     }
 
     public String getTargetPomFile() {

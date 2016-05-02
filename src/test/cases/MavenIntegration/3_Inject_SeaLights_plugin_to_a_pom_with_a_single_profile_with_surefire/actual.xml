@@ -49,12 +49,11 @@
 <customerid>fake-customer-id-123</customerid>
 <server>http://fake-server-url.com</server>
 <appName>fake-app-name</appName>
-<moduleName>fake-module-name</moduleName>
 <workspacepath>c:\fake-worakpsacepath</workspacepath>
 <build>1</build>
 <branch>fake-branch</branch>
 <packagesincluded>com.fake.*</packagesincluded>
-<packagesexcluded>com.fake.excluded.*</packagesexcluded>
+<packagesexcluded>*FastClassByGuice*, *ByCGLIB*, *EnhancerByMockitoWithCGLIB*, *EnhancerBySpringCGLIB*, com.fake.excluded.*</packagesexcluded>
 <filesincluded>*.class</filesincluded>
 <buildScannerJar>c:\fake-build-scanner.jar</buildScannerJar>
 <testListenerJar>c:\fake-test-listener.jar</testListenerJar>

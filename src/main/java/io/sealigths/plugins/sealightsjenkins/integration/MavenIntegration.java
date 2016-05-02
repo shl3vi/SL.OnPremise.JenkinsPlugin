@@ -48,46 +48,52 @@ public class MavenIntegration {
         }
 
         return pomFiles;
-
     }
 
     public void integrate() {
 
-        this.log.println("MavenIntegration.integrate - starting");
+        log(log , "MavenIntegration.integrate - starting");
         poms = getPoms();
 
         for (PomFile pomFile : poms) {
-            if (pomFile.isPluginExistInEntriePom(SEALIGHTS_GROUP_ID, SEALIGHTS_ARTIFACT_ID)) {
-                this.log.println("MavenIntegration.integrate - Skipping the integration since SeaLights plugin is already defined in the the POM file.");
-                return;
-            }
+            log(log , "MavenIntegration.integrate - Modifying pom: " + pomFile.getFilename());
+            try {
+                if (pomFile.isPluginExistInEntriePom(SEALIGHTS_GROUP_ID, SEALIGHTS_ARTIFACT_ID)) {
+                    log(log , "MavenIntegration.integrate - Skipping the integration since SeaLights plugin is already defined in the the POM file.");
+                    return;
+                }
 
-            //TODO: Check the SureFire version on the resolved (effective) *.pom file.
-//        if (!pomFile.isPluginExistInEntriePom(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID))
-//        {
-//            //Surefire plugin isn't defined.
-//            throw new RuntimeException("SeaLights plugin requires Maven Surefire Plugin");
-//        }
+//                TODO: Check the SureFire version on the resolved (effective) *.pom file.
+//            if (!pomFile.isPluginExistInEntriePom(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID))
+//            {
+//                //Surefire plugin isn't defined.
+//                throw new RuntimeException("SeaLights plugin requires Maven Surefire Plugin");
+//            }
 //
-//        String version = pomFile.getPluginVersion(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID);
-//        String[] tokens = version.split("\\.");
-//        int majorVersion = Integer.parseInt(tokens[0]);
-//        int minorVersion = Integer.parseInt(tokens[1]);
-//        if ((majorVersion < 2) || (majorVersion == 2 && minorVersion < 9))
-//        {
-//            throw new RuntimeException("Unsupported Maven Surefire plugin. SeaLights requires a version 2.9 or higher.");
-//        }
+//            String version = pomFile.getPluginVersion(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID);
+//            String[] tokens = version.split("\\.");
+//            int majorVersion = Integer.parseInt(tokens[0]);
+//            int minorVersion = Integer.parseInt(tokens[1]);
+//            if ((majorVersion < 2) || (majorVersion == 2 && minorVersion < 9))
+//            {
+//                throw new RuntimeException("Unsupported Maven Surefire plugin. SeaLights requires a version 2.9 or higher.");
+//            }
 
-            String backupFile = this.info.getSourcePomFile() + ".slbak";
-            this.savePom(backupFile);
-            integrateToPomFile(pomFile);
+                String backupFile = pomFile.getFilename() + ".slbak";
+                log(log , "MavenIntegration.integrate - created back up file: " + backupFile);
+                this.savePom(backupFile, pomFile);
+                integrateToPomFile(pomFile);
+            }catch (Exception e){
+                log(log , "MavenIntegration.integrate - Unable to parse pom : " + pomFile.getFilename());
+            }
         }
+
     }
 
     private void integrateToPomFile(PomFile pomFile) {
-        String profileId = info.getProfileId();
+//        String profileId = info.getProfileId();
 
-        integrateToAllProfiles();
+        integrateToAllProfiles(pomFile);
         //TODO: Enable the profile integration once done + tested.
 //        if (profileId == null || profileId.equals("")) {
 //            integrateToAllProfiles();
@@ -106,16 +112,16 @@ public class MavenIntegration {
     }
 
     private void integrateToProfile(String profileId, PomFile pomFile) {
-        List<String> profileIdfiles = pomFile.getProfileIds();
+//        List<String> profileIdfiles = pomFile.getProfileIds();
         if (profileId.length() == 0)
         {
             throw new RuntimeException("The specified POM file does not contain any profiles.");
         }
 
-        if (!profiles.contains(profileId))
-        {
-            throw new RuntimeException("The specified POM file does not contain a profile with id of '" + profileId + "'.");
-        }
+//        if (!profiles.contains(profileId))
+//        {
+//            throw new RuntimeException("The specified POM file does not contain a profile with id of '" + profileId + "'.");
+//        }
 
         SeaLightsPluginInfo seaLightsPluginInfo = this.info.getSeaLightsPluginInfo();
         String xml = seaLightsPluginInfo.toPluginText();
@@ -125,7 +131,7 @@ public class MavenIntegration {
         String testingFrameworkListeners = getEventListenerPackage(info.getTestingFramework());
         pomFile.updateSurefirePlugin(testingFrameworkListeners, apiAgentPath);
 
-        savePom();
+        savePom(pomFile);
 
     }
 
@@ -139,24 +145,29 @@ public class MavenIntegration {
 
         pomFile.updateSurefirePlugin(testingFrameworkListeners, apiAgentPath);
 
-        savePom();
+        savePom(pomFile);
     }
 
-    private void savePom() {
-        String target = info.getTargetPomFile();
-        if (target == null || target.equals(""))
-        {
-            info.setTargetPomFile(info.getSourcePomFile());
-        }
-        savePom(info.getTargetPomFile());
+    private void savePom(PomFile pomFile) {
+//        String target = info.getTargetPomFile();
+//        if (target == null || target.equals(""))
+//        {
+//            info.setTargetPomFile(info.getSourcePomFile());
+//        }
+        savePom(pomFile.getFilename(), pomFile);
     }
 
-    private void savePom(String filename) {
+    private void savePom(String filename, PomFile pomFile) {
         try {
             pomFile.save(filename);
         } catch (TransformerException e) {
             e.printStackTrace();
         }
+    }
+
+    private void log(PrintStream logger, String message) {
+        message = "[SeaLights Jenkins Plugin] " + message;
+        logger.println(message);
     }
 
 }

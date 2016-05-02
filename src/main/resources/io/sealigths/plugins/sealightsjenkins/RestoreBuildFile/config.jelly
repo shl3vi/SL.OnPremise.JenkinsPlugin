@@ -13,4 +13,10 @@
     <f:entry title="Restore Build File" field="shouldRestore" description="Check if we should restore the build file to a version without our plugin.">
         <f:checkbox/>
     </f:entry>
+    <f:entry title="Folders" field="folders" description="Comma separated list of root folders that contains the build files.">
+        <f:textbox/>
+    </f:entry>
+    <f:entry title="Patterns" field="patterns" description="Comma separated list of Wild cards for the files names (e.g 'a?.pom, a_*b.pom').">
+        <f:textbox/>
+    </f:entry>
 </j:jelly>
