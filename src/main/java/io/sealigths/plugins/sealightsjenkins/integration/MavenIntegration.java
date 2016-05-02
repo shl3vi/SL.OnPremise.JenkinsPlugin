@@ -41,12 +41,11 @@ public class MavenIntegration {
         IncludeExcludeFilter filter  = new IncludeExcludeFilter(slInfo.getBuildFilesPatterns(), null);
 
         for (String folder: folders){
-            List<String> matchingPoms = FileAndFolderUtils.findAllFilesWithFilter(folder, true, filter);
+            List<String> matchingPoms = FileAndFolderUtils.findAllFilesWithFilter(folder, slInfo.isRecursiveOnBuildFilesFolders(), filter);
             for (String matchingPom : matchingPoms){
                 pomFiles.add(new PomFile(matchingPom));
             }
         }
-
         return pomFiles;
     }
 

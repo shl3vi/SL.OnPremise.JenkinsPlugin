@@ -93,7 +93,12 @@
                 <f:checkbox default="true"/>
             </f:entry>
 
-            <f:optionalBlock name="multipleBuildFilesOptionalBlock" title="Enable multiple build files" field="${instance.multipleBuildFiles}" inline="true">
+            <f:optionalBlock name="multipleBuildFilesOptionalBlock" title="Multiple build files" inline="true">
+
+                <f:entry title="Enable" field="enableMultipleBuildFiles"
+                         description="Check to enable multiple build files.">
+                    <f:checkbox default="true"/>
+                </f:entry>
 
                 <f:entry title="Folders" field="buildFilesFolders" description="Comma separated list of root folders that contains the build files. The default is the working directory">
                     <f:textbox value="${instance.buildFilesFolders}"/>

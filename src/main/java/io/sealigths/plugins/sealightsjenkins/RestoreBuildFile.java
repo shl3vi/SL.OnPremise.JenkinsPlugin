@@ -25,15 +25,13 @@ import java.util.List;
 public class RestoreBuildFile extends Recorder {
 
     private boolean shouldRestore;
-    private String patterns;
     private String folders;
 
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
-    public RestoreBuildFile(boolean shouldRestore, String folders,String patterns ) {
+    public RestoreBuildFile(boolean shouldRestore, String folders) {
         this.shouldRestore = shouldRestore;
         this.folders = folders;
-        this.patterns = patterns;
     }
 
     private void RestoreAllFilesInFolder(String rootFolder, PrintStream logger){
@@ -85,9 +83,6 @@ public class RestoreBuildFile extends Recorder {
         return shouldRestore;
     }
 
-    public String getPatterns() {
-        return patterns;
-    }
 
     public String getFolders() {
         return folders;
@@ -97,9 +92,6 @@ public class RestoreBuildFile extends Recorder {
         this.shouldRestore = shouldRestore;
     }
 
-    public void setPatterns(String patterns) {
-        this.patterns = patterns;
-    }
 
     public void setFolders(String folders) {
         this.folders = folders;

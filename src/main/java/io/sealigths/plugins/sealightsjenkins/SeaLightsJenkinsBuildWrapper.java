@@ -31,6 +31,8 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
     private final String moduleName;
     private final String branch;
 
+    private final boolean enableMultipleBuildFiles;
+
     private final boolean overrideJars;
     private final boolean multipleBuildFiles;
 
@@ -74,7 +76,8 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
                                         boolean logEnabled, @NonNull LogLevel logLevel, @NonNull LogDestination logDestination, String logFolder,
                                         boolean autoRestoreBuildFile,
                                         String buildFilesPatterns, String buildFilesFolders,
-                                        boolean multipleBuildFiles, boolean overrideJars) throws IOException {
+                                        boolean multipleBuildFiles, boolean overrideJars,
+                                        boolean enableMultipleBuildFiles) throws IOException {
 
         this.appName = appName;
         this.moduleName = moduleName;
@@ -101,6 +104,8 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         this.logLevel = logLevel;
         this.logDestination = logDestination;
         this.logFolder = logFolder;
+
+        this.enableMultipleBuildFiles = enableMultipleBuildFiles;
 
         if (isNullOrEmpty(buildScannerJar)) {
             //The user didn't specify a specify version of the scanner. Use an embedded one.
@@ -136,6 +141,7 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         log(logger, "Recursive: " + recursive);
         log(logger, "Workspace: " + workspacepath);
         log(logger, "Environment: " + environment);
+        log(logger, "enableMultipleBuildFiles: " + enableMultipleBuildFiles);
         log(logger, "Override Jars: " + overrideJars);
         log(logger, "Multiple Build Files: " + multipleBuildFiles);
         log(logger, "Build Files Folders: " + buildFilesFolders  + " buildFilesPatterns: " + buildFilesPatterns);
@@ -170,7 +176,6 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         if (this.autoRestoreBuildFile) {
             tryAddRestoreBuildFilePublisher(build, logger);
         }
-        configureBuildFilePublisher(build);
 
         String workingDir = ws.getRemote();
         String pomPath;
@@ -193,7 +198,6 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         else
             slInfo.setWorkspacepath(workingDir);
 
-
         slInfo.setAppName(appName);
         slInfo.setModuleName(moduleName);
         slInfo.setBranchName(branch);
@@ -213,10 +217,21 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         slInfo.setLogDestination(logDestination);
         slInfo.setLogFolder(logFolder);
 
-        String foldersToSearch = StringUtils.isNullOrEmpty(buildFilesFolders)? workingDir : buildFilesFolders;
-        String patternsToSearch = StringUtils.isNullOrEmpty(buildFilesPatterns)? "*pom.xml" : buildFilesPatterns;
+        String foldersToSearch;
+        String patternsToSearch;
+        if (enableMultipleBuildFiles){
+                foldersToSearch = StringUtils.isNullOrEmpty(buildFilesFolders) ? workingDir : buildFilesFolders;
+                patternsToSearch = StringUtils.isNullOrEmpty(buildFilesPatterns) ? "*pom.xml" : buildFilesPatterns;
+        }else{
+            foldersToSearch = workingDir;
+            patternsToSearch = "*pom.xml";
+        }
+
+        slInfo.setRecursiveOnBuildFilesFolders(enableMultipleBuildFiles);
         slInfo.setBuildFilesFolders(foldersToSearch);
         slInfo.setBuildFilesPatterns(patternsToSearch);
+
+        configureBuildFilePublisher(build, foldersToSearch);
 
         MavenIntegrationInfo info = new MavenIntegrationInfo(
                 foldersToSearch,
@@ -226,6 +241,7 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         );
         MavenIntegration mavenIntegration = new MavenIntegration(listener.getLogger(), info);
         mavenIntegration.integrate();
+
 
         return env;
     }
@@ -243,16 +259,16 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         }
 
         if (!found) {
-            RestoreBuildFile restoreBuildFile = new RestoreBuildFile(true, buildFilesFolders, buildFilesPatterns);
+            RestoreBuildFile restoreBuildFile = new RestoreBuildFile(true, buildFilesFolders);
             publishersList.add(restoreBuildFile);
         }
     }
 
-    private void configureBuildFilePublisher(AbstractBuild build) {
+    private void configureBuildFilePublisher(AbstractBuild build, String foldersToSearch) {
         DescribableList publishersList = build.getProject().getPublishersList();
         for (Object item : publishersList) {
             if (item.toString().contains("RestoreBuildFile") ) {
-                ((RestoreBuildFile)item).setFolders(buildFilesFolders);
+                ((RestoreBuildFile)item).setFolders(foldersToSearch);
                 return;
             }
         }
@@ -416,6 +432,10 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
 
     public void setBuildStrategy(BuildStrategy buildStrategy) {
         this.buildStrategy = buildStrategy;
+    }
+
+    public boolean isEnableMultipleBuildFiles() {
+        return enableMultipleBuildFiles;
     }
 
     @Extension

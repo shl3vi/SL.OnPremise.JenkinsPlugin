@@ -25,6 +25,15 @@ public class SeaLightsPluginInfo {
     private String environment;
     private String buildFilesFolders;
     private String buildFilesPatterns;
+    private boolean recursiveOnBuildFilesFolders;
+
+    public boolean isRecursiveOnBuildFilesFolders() {
+        return recursiveOnBuildFilesFolders;
+    }
+
+    public void setRecursiveOnBuildFilesFolders(boolean recursiveOnBuildFilesFolders) {
+        this.recursiveOnBuildFilesFolders = recursiveOnBuildFilesFolders;
+    }
 
     public String getBuildFilesFolders() {
         return buildFilesFolders;
