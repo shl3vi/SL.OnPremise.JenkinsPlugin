@@ -39,8 +39,6 @@ public class RestoreBuildFile extends Recorder {
     private void RestoreAllFilesInFolder(String rootFolder, PrintStream logger){
         log(logger, "searching in folder: " + rootFolder);
         boolean recursive = true;
-//        File currentDirectory = new File(rootFolder);
-//        List<String> filesToRestore = FileUtils.searchFilesByExtension(currentDirectory, recursive, "slbak");
         IncludeExcludeFilter filter = new IncludeExcludeFilter("*.slbak" , null);
         List<String> filesToRestore = FileAndFolderUtils.findAllFilesWithFilter(rootFolder, recursive, filter);
         for (String currentName : filesToRestore) {

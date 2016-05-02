@@ -1,34 +1,31 @@
 package io.sealigths.plugins.sealightsjenkins;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.*;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
+import hudson.model.Descriptor;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
-import hudson.util.ComboBoxModel;
 import hudson.util.DescribableList;
-import hudson.util.ListBoxModel;
 import io.sealigths.plugins.sealightsjenkins.integration.JarsHelper;
 import io.sealigths.plugins.sealightsjenkins.integration.MavenIntegration;
 import io.sealigths.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
 import io.sealigths.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
-import io.sealigths.plugins.sealightsjenkins.language.Language;
 import io.sealigths.plugins.sealightsjenkins.utils.StringUtils;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
-import edu.umd.cs.findbugs.annotations.NonNull;
 
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Map;
 
 public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
-
-//    private final TechIntegration integrations;
 
     private final String appName;
     private final String moduleName;
@@ -50,7 +47,6 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
     private final String testListenerJar;
     private final String apiJar;
     private final String testListenerConfigFile;
-//  private final boolean inheritedBuild;
     private boolean autoRestoreBuildFile;
 
 
@@ -63,7 +59,6 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
 
     private TestingFramework testingFramework = TestingFramework.TESTNG;
     private LogLevel logLevel = LogLevel.OFF;
-//    private Language language = Language.JAVA;
     private ProjectType projectType = ProjectType.MAVEN;
     private BuildStrategy buildStrategy = BuildStrategy.ONE_BUILD;
 
@@ -81,7 +76,6 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
                                         String buildFilesPatterns, String buildFilesFolders,
                                         boolean multipleBuildFiles, boolean overrideJars) throws IOException {
 
-//        this.integrations = integrations;
         this.appName = appName;
         this.moduleName = moduleName;
         this.branch = branch;
@@ -96,21 +90,13 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         this.testListenerConfigFile = testListenerConfigFile;
         this.buildStrategy = buildStrategy;
         this.autoRestoreBuildFile = autoRestoreBuildFile;
-
         this.environment = environment;
-
         this.testingFramework = testingFramework;
-
         this.projectType = projectType;
-
         this.multipleBuildFiles = multipleBuildFiles;
         this.overrideJars = overrideJars;
-
-//        this.language = language;
-
         this.buildFilesFolders = buildFilesFolders;
         this.buildFilesPatterns = buildFilesPatterns;
-
         this.logEnabled = logEnabled;
         this.logLevel = logLevel;
         this.logDestination = logDestination;
@@ -142,37 +128,32 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
 
         PrintStream logger = listener.getLogger();
 
-        log(logger, "testing framework: " + testingFramework);
         log(logger, "-----------Sealights Jenkins Plugin Configuration--------------");
-        log(logger, "branch: " + branch);
-        log(logger, "appName:" + appName);
-        log(logger, "moduleName:" + moduleName);
-        log(logger, "recursive: " + recursive);
-        log(logger, "workspacepath: " + workspacepath);
-        log(logger, "environment: " + environment);
-        //log(logger, "projectType:" +projectType);
-
-        log(logger, "overrideJars: " + overrideJars);
-        log(logger, "multipleBuildFiles: " + multipleBuildFiles);
-
-        log(logger, "buildFilesFolders: " + buildFilesFolders  + " buildFilesPatterns: " + buildFilesPatterns);
-
-        log(logger, "pomPath:" + pomPath);
-        log(logger, "packagesIncluded:" + packagesIncluded);
-        log(logger, "packagesExcluded:" + packagesExcluded);
-        log(logger, "filesIncluded:" + filesIncluded);
-        log(logger, "filesExcluded:" + filesExcluded);
-        log(logger, "buildScannerJar:" + buildScannerJar);
-        log(logger, "testListenerJar:" + testListenerJar);
-        log(logger, "testListenerConfigFile :" + testListenerConfigFile);
-        log(logger, "strategy: " + buildStrategy);
-        log(logger, "apiJar:" + apiJar);
-        log(logger, "project Type : " + projectType);
-        log(logger, "LogEnabled:" + logEnabled);
-        log(logger, "logDestination:" + logDestination);
-        log(logger, "logLevel:" + logLevel);
-        log(logger, "logFolder:" + logFolder);
-        log(logger, "autoRestoreBuildFile:" + autoRestoreBuildFile);
+        log(logger, "Testing Framework: " + testingFramework);
+        log(logger, "Branch: " + branch);
+        log(logger, "App Name:" + appName);
+        log(logger, "Module Name:" + moduleName);
+        log(logger, "Recursive: " + recursive);
+        log(logger, "Workspace: " + workspacepath);
+        log(logger, "Environment: " + environment);
+        log(logger, "Override Jars: " + overrideJars);
+        log(logger, "Multiple Build Files: " + multipleBuildFiles);
+        log(logger, "Build Files Folders: " + buildFilesFolders  + " buildFilesPatterns: " + buildFilesPatterns);
+        log(logger, "Pom Path:" + pomPath);
+        log(logger, "Packages Included:" + packagesIncluded);
+        log(logger, "Packages Excluded:" + packagesExcluded);
+        log(logger, "Files Included:" + filesIncluded);
+        log(logger, "Files Excluded:" + filesExcluded);
+        log(logger, "Build-Scanner Jar:" + buildScannerJar);
+        log(logger, "Test-Listener Jar:" + testListenerJar);
+        log(logger, "Test-Listener Configuration File :" + testListenerConfigFile);
+        log(logger, "Build Strategy: " + buildStrategy);
+        log(logger, "Api Jar:" + apiJar);
+        log(logger, "Log Enabled:" + logEnabled);
+        log(logger, "Log Destination:" + logDestination);
+        log(logger, "Log Level:" + logLevel);
+        log(logger, "Log Folder:" + logFolder);
+        log(logger, "Auto Restore Build File:" + autoRestoreBuildFile);
         log(logger, "-----------Sealights Jenkins Plugin Configuration--------------");
 
         Environment env = new Environment() {
@@ -221,15 +202,12 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         slInfo.setRecursive(recursive);
         slInfo.setPackagesIncluded(packagesIncluded);
         slInfo.setPackagesExcluded(packagesExcluded);
-
         slInfo.setListenerJar(testListenerJar);
         slInfo.setListenerConfigFile(testListenerConfigFile);
         slInfo.setScannerJar(buildScannerJar);
         slInfo.setApiJar(apiJar);
         slInfo.setBuildStrategy(buildStrategy);
-
         slInfo.setEnvironment(environment);
-
         slInfo.setLogEnabled(!("Off".equalsIgnoreCase(logLevel.getDisplayName())));
         slInfo.setLogLevel(logLevel);
         slInfo.setLogDestination(logDestination);
@@ -237,7 +215,6 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
 
         String foldersToSearch = StringUtils.isNullOrEmpty(buildFilesFolders)? workingDir : buildFilesFolders;
         String patternsToSearch = StringUtils.isNullOrEmpty(buildFilesPatterns)? "*pom.xml" : buildFilesPatterns;
-
         slInfo.setBuildFilesFolders(foldersToSearch);
         slInfo.setBuildFilesPatterns(patternsToSearch);
 
@@ -247,7 +224,6 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
                 slInfo,
                 testingFramework
         );
-
         MavenIntegration mavenIntegration = new MavenIntegration(listener.getLogger(), info);
         mavenIntegration.integrate();
 
@@ -298,10 +274,6 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         return new DescriptorImpl();
     }
 
-//    public TechIntegration getIntegrations() {
-//        return integrations;
-//    }
-
     public String getAppName() {
         return appName;
     }
@@ -317,20 +289,6 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
     public String getBranch() {
         return branch;
     }
-
-//
-//    public String getProjectType() {
-//        return projectType;
-//    }
-
-
-//    public Language getLanguage() {
-//        return language;
-//    }
-//
-//    public void setLanguage(Language language) {
-//        this.language = language;
-//    }
 
     public String getPomPath() {
         return pomPath;
@@ -516,20 +474,6 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
             this.proxy = proxy;
         }
 
-        public ListBoxModel doFillProjectTypesItems() {
-            ListBoxModel items = new ListBoxModel();
-            items.add("MAVEN", "");
-            return items;
-        }
-
-        public ComboBoxModel doFillTheTypeItems(@QueryParameter ProjectType projectType) {
-            switch (projectType.getDisplayName()) {
-                case "maven":
-                    return new ComboBoxModel("Come Together", "Something", "I Want You");
-                default:
-                    return new ComboBoxModel("The One After 909", "Rocker", "Get Back");
-            }
-        }
 
     }
 }
