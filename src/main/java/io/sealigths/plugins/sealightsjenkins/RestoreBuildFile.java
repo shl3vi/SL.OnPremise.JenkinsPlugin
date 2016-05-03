@@ -78,6 +78,7 @@ public class RestoreBuildFile extends Recorder {
 
     /**
      * We'll use this from the <tt>config.jelly</tt>.
+     * @return boolean
      */
     public boolean isShouldRestore() {
         return shouldRestore;

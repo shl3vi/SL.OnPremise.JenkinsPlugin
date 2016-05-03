@@ -20,11 +20,14 @@ import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.export.ExportedBean;
 
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Map;
 
+@ExportedBean
 public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
 
     private final String appName;
@@ -290,150 +293,151 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         return new DescriptorImpl();
     }
 
+    @Exported
     public String getAppName() {
         return appName;
     }
-
+    @Exported
     public String getModuleName() {
         return moduleName;
     }
-
+    @Exported
     public String getEnvironment() {
         return environment;
     }
-
+    @Exported
     public String getBranch() {
         return branch;
     }
-
+    @Exported
     public String getPomPath() {
         return pomPath;
     }
-
+    @Exported
     public String getPackagesIncluded() {
         return packagesIncluded;
     }
-
+    @Exported
     public String getPackagesExcluded() {
         return packagesExcluded;
     }
-
+    @Exported
     public String getFilesIncluded() {
         return filesIncluded;
     }
-
+    @Exported
     public String getFilesExcluded() {
         return filesExcluded;
     }
-
+    @Exported
     public String getRelativePathToEffectivePom() {
         return relativePathToEffectivePom;
     }
-
+    @Exported
     public String getWorkspacepath() {
         return workspacepath;
     }
-
+    @Exported
     public boolean isRecursive() {
         return recursive;
     }
-
+    @Exported
     public String getBuildScannerJar() {
         return buildScannerJar;
     }
-
+    @Exported
     public String getTestListenerJar() {
         return testListenerJar;
     }
-
+    @Exported
     public String getTestListenerConfigFile() {
         return testListenerConfigFile;
     }
-
+    @Exported
     public BuildStrategy getBuildStrategy() {
         return buildStrategy;
     }
-
+    @Exported
     public boolean isLogEnabled() {
         return logEnabled;
     }
-
+    @Exported
     public void setLogEnabled(boolean logEnabled) {
         this.logEnabled = logEnabled;
     }
-
+    @Exported
     public LogLevel getLogLevel() {
         return logLevel;
     }
-
+    @Exported
     public void setLogLevel(LogLevel logLevel) {
         this.logLevel = logLevel;
     }
-
+    @Exported
     public LogDestination getLogDestination() {
         return logDestination;
     }
-
+    @Exported
     public void setLogDestination(LogDestination logDestination) {
         this.logDestination = logDestination;
     }
-
+    @Exported
     public ProjectType getProjectType() {
         return projectType;
     }
-
+    @Exported
     public void setProjectType(ProjectType projectType) {
         this.projectType = projectType;
     }
-
+    @Exported
     public String getLogFolder() {
         return logFolder;
     }
-
+    @Exported
     public String getApiJar() {
         return apiJar;
     }
-
+    @Exported
     public TestingFramework getTestingFramework() {
         return testingFramework;
     }
-
+    @Exported
     public void setTestingFramework(TestingFramework testingFramework) {
         this.testingFramework = testingFramework;
     }
-
+    @Exported
     private boolean isNullOrEmpty(String str) {
         return (str == null || str.equals(""));
     }
-
+    @Exported
     public boolean isAutoRestoreBuildFile() {
         return autoRestoreBuildFile;
     }
-
+    @Exported
     public void setAutoRestoreBuildFile(boolean autoRestoreBuildFile) {
         this.autoRestoreBuildFile = autoRestoreBuildFile;
     }
-
+    @Exported
     public boolean isMultipleBuildFiles() {
         return multipleBuildFiles;
     }
-
+    @Exported
     public boolean isOverrideJars() {
         return overrideJars;
     }
-
+    @Exported
     public String getBuildFilesPatterns() {
         return buildFilesPatterns;
     }
-
+    @Exported
     public String getBuildFilesFolders() {
         return buildFilesFolders;
     }
-
+    @Exported
     public void setBuildStrategy(BuildStrategy buildStrategy) {
         this.buildStrategy = buildStrategy;
     }
-
+    @Exported
     public boolean isEnableMultipleBuildFiles() {
         return enableMultipleBuildFiles;
     }
