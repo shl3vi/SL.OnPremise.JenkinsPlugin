@@ -14,12 +14,12 @@ import java.io.IOException;
 /**
  * Created by shahar on 5/3/2016.
  */
-public class AfterAnalysisBuildStep extends Builder{
+public class EndAnalysisBuildStep extends Builder{
 
     public final RestoreBuildFile restoreBuildFile;
 
     @DataBoundConstructor
-    public AfterAnalysisBuildStep(RestoreBuildFile restoreBuildFile) {
+    public EndAnalysisBuildStep(RestoreBuildFile restoreBuildFile) {
         this.restoreBuildFile = restoreBuildFile;
     }
 
@@ -50,12 +50,8 @@ public class AfterAnalysisBuildStep extends Builder{
         }
 
         public String getDisplayName() {
-            return "SeaLights Continuous Testing Before Analysis";
+            return "SeaLights Continuous Testing - End Analysis";
         }
-
-//        @Override
-//        public Builder newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-//            return req.bindJSON(MavenSealightsBuildStep.class,formData);
-//        }
+        
     }
 }

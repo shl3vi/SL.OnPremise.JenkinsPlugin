@@ -24,17 +24,18 @@ import java.util.List;
 /**
  * Created by shahar on 5/3/2016.
  */
-public class BeforeAnalysisBuildStep extends Builder {
+public class BeginAnalysisBuildStep extends Builder {
 
     public final SeaLightsJenkinsBuildWrapper slJenkinsBuildWrapper;
 
     @DataBoundConstructor
-    public BeforeAnalysisBuildStep(SeaLightsJenkinsBuildWrapper slJenkinsBuildWrapper) {
+    public BeginAnalysisBuildStep(SeaLightsJenkinsBuildWrapper slJenkinsBuildWrapper) {
         this.slJenkinsBuildWrapper = slJenkinsBuildWrapper;
     }
 
     @Override
     public boolean perform(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+
         slJenkinsBuildWrapper.setUp(build,launcher,listener);
         return true;
     }
@@ -60,13 +61,9 @@ public class BeforeAnalysisBuildStep extends Builder {
         }
 
         public String getDisplayName() {
-            return "SeaLights Continuous Testing After Analysis";
+            return "SeaLights Continuous Testing - Begin Analysis";
         }
 
-//        @Override
-//        public Builder newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-//            return req.bindJSON(MavenSealightsBuildStep.class,formData);
-//        }
     }
 
 }

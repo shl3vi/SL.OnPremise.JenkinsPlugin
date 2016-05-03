@@ -235,6 +235,8 @@ public class MavenSealightsBuildStep extends Builder{
 
         int startIndex = 0;
         int endIndex;
+        slJenkinsBuildWrapper.setUp(build,launcher,listener);
+        RestoreBuildFile restoreBuildFile = new RestoreBuildFile(slJenkinsBuildWrapper.isAutoRestoreBuildFile(), slJenkinsBuildWrapper.getBuildFilesFolders());
         do {
             // split targets into multiple invokations of maven separated by |
             endIndex = targets.indexOf('|', startIndex);
@@ -320,6 +322,7 @@ public class MavenSealightsBuildStep extends Builder{
             }
             startIndex = endIndex + 1;
         } while (startIndex < targets.length());
+        restoreBuildFile.perform(build,launcher,listener);
         return true;
     }
 
