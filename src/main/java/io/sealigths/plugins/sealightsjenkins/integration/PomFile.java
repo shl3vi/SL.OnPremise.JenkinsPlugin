@@ -136,7 +136,8 @@ public class PomFile {
             for (Element surefireElement : surefireElements) {
                 List<Element> configurationElements = getOrCreateElements("configuration", "configuration", surefireElement);
                 for (Element configurationElement : configurationElements) {
-                    verifyPropertiesElement(listenerValue, configurationElement);
+                    if (listenerValue != null && !"".equals(listenerValue))
+                        verifyPropertiesElement(listenerValue, configurationElement);
                     verifyAdditionalClasspathElements(apiJarPath, configurationElement);
                     verifyArgLineElement(configurationElement);
                 }

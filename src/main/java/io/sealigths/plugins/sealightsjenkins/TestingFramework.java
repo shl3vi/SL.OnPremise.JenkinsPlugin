@@ -18,6 +18,11 @@ public enum TestingFramework {
         @Override public String getDisplayName() {
             return "JUnit_&_testNG";
         }
+    },
+    AUTO_DETECT() {
+        @Override public String getDisplayName() {
+            return "Auto Detect (requires invoking 'mvn sealights:initialize-test-listener' before build)";
+        }
     };
     public abstract String getDisplayName();
 }

@@ -33,16 +33,16 @@ public class MavenIntegration {
         this.info = info;
     }
 
-    private List<PomFile> getPoms(){
+    private List<PomFile> getPoms() {
         SeaLightsPluginInfo slInfo = info.getSeaLightsPluginInfo();
         List<PomFile> pomFiles = new ArrayList<>();
 
         List<String> folders = Arrays.asList(slInfo.getBuildFilesFolders().split("\\s*,\\s*"));
-        IncludeExcludeFilter filter  = new IncludeExcludeFilter(slInfo.getBuildFilesPatterns(), null);
+        IncludeExcludeFilter filter = new IncludeExcludeFilter(slInfo.getBuildFilesPatterns(), null);
 
-        for (String folder: folders){
+        for (String folder : folders) {
             List<String> matchingPoms = FileAndFolderUtils.findAllFilesWithFilter(folder, slInfo.isRecursiveOnBuildFilesFolders(), filter);
-            for (String matchingPom : matchingPoms){
+            for (String matchingPom : matchingPoms) {
                 pomFiles.add(new PomFile(matchingPom));
             }
         }
@@ -51,14 +51,14 @@ public class MavenIntegration {
 
     public void integrate() {
 
-        log(log , "MavenIntegration.integrate - starting");
+        log(log, "MavenIntegration.integrate - starting");
         poms = getPoms();
 
         for (PomFile pomFile : poms) {
-            log(log , "MavenIntegration.integrate - Modifying pom: " + pomFile.getFilename());
+            log(log, "MavenIntegration.integrate - Modifying pom: " + pomFile.getFilename());
             try {
                 if (pomFile.isPluginExistInEntriePom(SEALIGHTS_GROUP_ID, SEALIGHTS_ARTIFACT_ID)) {
-                    log(log , "MavenIntegration.integrate - Skipping the integration since SeaLights plugin is already defined in the the POM file.");
+                    log(log, "MavenIntegration.integrate - Skipping the integration since SeaLights plugin is already defined in the the POM file.");
                     return;
                 }
 
@@ -79,11 +79,11 @@ public class MavenIntegration {
 //            }
 
                 String backupFile = pomFile.getFilename() + ".slbak";
-                log(log , "MavenIntegration.integrate - created back up file: " + backupFile);
+                log(log, "MavenIntegration.integrate - created back up file: " + backupFile);
                 this.savePom(backupFile, pomFile);
                 integrateToPomFile(pomFile);
-            }catch (Exception e){
-                log(log , "MavenIntegration.integrate - Unable to parse pom : " + pomFile.getFilename() + ". Error:");
+            } catch (Exception e) {
+                log(log, "MavenIntegration.integrate - Unable to parse pom : " + pomFile.getFilename() + ". Error:");
                 e.printStackTrace(log);
             }
         }
@@ -113,8 +113,7 @@ public class MavenIntegration {
 
     private void integrateToProfile(String profileId, PomFile pomFile) {
 //        List<String> profileIdfiles = pomFile.getProfileIds();
-        if (profileId.length() == 0)
-        {
+        if (profileId.length() == 0) {
             throw new RuntimeException("The specified POM file does not contain any profiles.");
         }
 
@@ -123,25 +122,35 @@ public class MavenIntegration {
 //            throw new RuntimeException("The specified POM file does not contain a profile with id of '" + profileId + "'.");
 //        }
 
+        TestingFramework testingFramework = info.getTestingFramework();
         SeaLightsPluginInfo seaLightsPluginInfo = this.info.getSeaLightsPluginInfo();
-        String xml = seaLightsPluginInfo.toPluginText();
+        String xml = toPluginText(seaLightsPluginInfo, testingFramework);
         pomFile.addPlugin(xml);
 
+        String testingFrameworkListeners = getEventListenerPackage(testingFramework);
         String apiAgentPath = info.getSeaLightsPluginInfo().getApiJar();
-        String testingFrameworkListeners = getEventListenerPackage(info.getTestingFramework());
-        pomFile.updateSurefirePlugin(testingFrameworkListeners, apiAgentPath);
 
+        if (testingFramework.equals(TestingFramework.AUTO_DETECT)) {
+            testingFrameworkListeners = null;   //Used to pass control to the maven plugin.
+        }
+
+        pomFile.updateSurefirePlugin(testingFrameworkListeners, apiAgentPath);
         savePom(pomFile);
 
     }
 
     private void integrateToAllProfiles(PomFile pomFile) {
         SeaLightsPluginInfo seaLightsPluginInfo = this.info.getSeaLightsPluginInfo();
-        String xml = seaLightsPluginInfo.toPluginText();
+        TestingFramework testingFramework = info.getTestingFramework();
+        String xml = toPluginText(seaLightsPluginInfo, testingFramework);
         pomFile.addPlugin(xml);
 
-        String testingFrameworkListeners = getEventListenerPackage(info.getTestingFramework());
+        String testingFrameworkListeners = getEventListenerPackage(testingFramework);
         String apiAgentPath = info.getSeaLightsPluginInfo().getApiJar();
+
+        if (testingFramework.equals(TestingFramework.AUTO_DETECT)) {
+            testingFrameworkListeners = null; //Used to pass control to the maven plugin.
+        }
 
         pomFile.updateSurefirePlugin(testingFrameworkListeners, apiAgentPath);
 
@@ -169,6 +178,107 @@ public class MavenIntegration {
     private void log(PrintStream logger, String message) {
         message = "[SeaLights Jenkins Plugin] " + message;
         logger.println(message);
+    }
+
+    public String toPluginText(SeaLightsPluginInfo pluginInfo, TestingFramework testingFramework) {
+
+        StringBuilder plugin = new StringBuilder();
+        plugin.append("<groupId>io.sealights.on-premise.agents.plugin</groupId>");
+        plugin.append("<artifactId>sealights-maven-plugin</artifactId>");
+        plugin.append("<version>1.0.0</version>");
+        plugin.append("<configuration>");
+
+        if (!pluginInfo.isEnabled()) {
+            plugin.append("<enable>false</enable>");
+        }
+
+        tryAppendValue(plugin, pluginInfo.getCustomerId(), "customerid");
+        tryAppendValue(plugin, pluginInfo.getServerUrl(), "server");
+        tryAppendValue(plugin, pluginInfo.getProxy(), "proxy");
+
+
+        if ("Build Per Module".equalsIgnoreCase(pluginInfo.getBuildStrategy().getDisplayName())) {
+            String appName = "[" + pluginInfo.getAppName() + "] - " + pluginInfo.getModuleName();
+            pluginInfo.setAppName(appName);
+        }
+
+        tryAppendValue(plugin, pluginInfo.getAppName(), "appName");
+        tryAppendValue(plugin, pluginInfo.getWorkspacepath(), "workspacepath");
+        tryAppendValue(plugin, pluginInfo.getBuildName(), "build");
+        tryAppendValue(plugin, pluginInfo.getBranchName(), "branch");
+        tryAppendValue(plugin, pluginInfo.getPackagesIncluded(), "packagesincluded");
+
+        if (!isNullOrEmpty(pluginInfo.getPackagesExcluded())) {
+            plugin.append("<packagesexcluded>*FastClassByGuice*, *ByCGLIB*, *EnhancerByMockitoWithCGLIB*, *EnhancerBySpringCGLIB*, " + pluginInfo.getPackagesExcluded() + "</packagesexcluded>");
+        }
+
+        tryAppendValue(plugin, pluginInfo.getFilesIncluded(), "filesincluded");
+        tryAppendValue(plugin, pluginInfo.getApiJar(), "apiJar");
+        tryAppendValue(plugin, pluginInfo.getScannerJar(), "buildScannerJar");
+        tryAppendValue(plugin, pluginInfo.getListenerJar(), "testListenerJar");
+        tryAppendValue(plugin, pluginInfo.getListenerConfigFile(), "testListenerConfigFile");
+
+        if (!pluginInfo.isRecursive()) {
+            plugin.append("<recursive>false</recursive>");
+        }
+
+        if (pluginInfo.isLogEnabled()) {
+            plugin.append("<logEnabled>true</logEnabled>");
+        }
+        String logLevel = pluginInfo.getLogLevel().name();
+        tryAppendValue(plugin, logLevel, "logLevel");
+
+        if (pluginInfo.getLogDestination() != null && "file".equalsIgnoreCase(pluginInfo.getLogDestination().name())) {
+            plugin.append("<logToFile>true</logToFile>");
+        }
+
+        tryAppendValue(plugin, pluginInfo.getLogFolder(), "logFolder");
+        plugin.append("<enableTestListenerInitialization>" + testingFramework.equals(TestingFramework.AUTO_DETECT) + "</enableTestListenerInitialization>");
+
+
+        plugin.append("</configuration>");
+        plugin.append("<executions>");
+        appendExecution(plugin, "a1", "build-scanner");
+        appendExecution(plugin, "a2", "test-listener");
+        appendExecution(plugin, "a3", "initialize-test-listener");
+        plugin.append("</executions>");
+
+        //        if(!isNullOrEmpty(moduleName)){
+//            plugin.append("<moduleName>" + moduleName + "</moduleName>");
+//        }
+
+        //        if(!isNullOrEmpty(environment)){
+//            plugin.append("<environment>" + environment + "</environment>");
+//        }
+
+//        if(!isNullOrEmpty(filesExcluded)){
+//            plugin.append("<filesexcluded>" + filesExcluded + "</filesexcluded>");
+//        }
+
+        return plugin.toString();
+    }
+
+    private void appendExecution(StringBuilder stringBuilder, String executionId, String goal) {
+        stringBuilder.append("<execution>");
+        stringBuilder.append("<id>" + executionId + "</id>");
+        stringBuilder.append("<goals>");
+        stringBuilder.append("<goal>" + goal + "</goal>");
+        stringBuilder.append("</goals>");
+        stringBuilder.append("</execution>");
+    }
+
+    private void tryAppendValue(StringBuilder stringBuilder, String value, String elementName) {
+        if (!isNullOrEmpty(value)) {
+            stringBuilder.append("<" + elementName + ">");
+            stringBuilder.append(value);
+            stringBuilder.append("</" + elementName + ">");
+        }
+    }
+
+    private boolean isNullOrEmpty(String str) {
+        if (str == null || "".equals(str))
+            return true;
+        return false;
     }
 
 }
