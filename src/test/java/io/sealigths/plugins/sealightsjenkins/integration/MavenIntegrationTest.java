@@ -4,10 +4,13 @@ import io.sealigths.plugins.sealightsjenkins.BuildStrategy;
 import io.sealigths.plugins.sealightsjenkins.LogLevel;
 import io.sealigths.plugins.sealightsjenkins.TestingFramework;
 import org.apache.commons.io.FileUtils;
+import org.custommonkey.xmlunit.DetailedDiff;
+import org.custommonkey.xmlunit.XMLUnit;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.*;
+import java.util.List;
 
 public class MavenIntegrationTest {
 
@@ -31,7 +34,7 @@ public class MavenIntegrationTest {
         //Assert
         String expected = readFileAndTrim(testFolder + "/expected.xml");
         String actual = readFileAndTrim(testFolder + "/actual.xml");
-        Assert.assertEquals("Expected to have a different POM file.", expected, actual);
+        assertXMLEquals(expected, actual);
     }
 
     @Test
@@ -52,7 +55,7 @@ public class MavenIntegrationTest {
         //Assert
         String expected = readFileAndTrim(testFolder + "/expected.xml");
         String actual = readFileAndTrim(testFolder + "/actual.xml");
-        Assert.assertEquals("Expected to have a different POM file.", expected, actual);
+        assertXMLEquals(expected, actual);
     }
 
     @Test
@@ -73,7 +76,7 @@ public class MavenIntegrationTest {
         //Assert
         String expected = readFileAndTrim(testFolder + "/expected.xml");
         String actual = readFileAndTrim(testFolder + "/actual.xml");
-        Assert.assertEquals("Expected to have a different POM file.", expected, actual);
+        assertXMLEquals(expected, actual);
     }
 
     @Test
@@ -94,7 +97,7 @@ public class MavenIntegrationTest {
         //Assert
         String expected = readFileAndTrim(testFolder + "/expected.xml");
         String actual = readFileAndTrim(testFolder + "/actual.xml");
-        Assert.assertEquals("Expected to have a different POM file.", expected, actual);
+        assertXMLEquals(expected, actual);
     }
 
     @Test
@@ -115,7 +118,7 @@ public class MavenIntegrationTest {
         //Assert
         String expected = readFileAndTrim(testFolder + "/expected.xml");
         String actual = readFileAndTrim(testFolder + "/actual.xml");
-        Assert.assertEquals("Expected to have a different POM file.", expected, actual);
+        assertXMLEquals(expected, actual);
     }
 
     @Test
@@ -136,7 +139,7 @@ public class MavenIntegrationTest {
         //Assert
         String expected = readFileAndTrim(testFolder + "/expected.xml");
         String actual = readFileAndTrim(testFolder + "/actual.xml");
-        Assert.assertEquals("Expected to have a different POM file.", expected, actual);
+        assertXMLEquals(expected, actual);
     }
 
     @Test
@@ -157,7 +160,7 @@ public class MavenIntegrationTest {
         //Assert
         String expected = readFileAndTrim(testFolder + "/expected.xml");
         String actual = readFileAndTrim(testFolder + "/actual.xml");
-        Assert.assertEquals("Expected to have a different POM file.", expected, actual);
+        assertXMLEquals(expected, actual);
     }
 
     @Test
@@ -178,7 +181,7 @@ public class MavenIntegrationTest {
         //Assert
         String expected = readFileAndTrim(testFolder + "/expected.xml");
         String actual = readFileAndTrim(testFolder + "/actual.xml");
-        Assert.assertEquals("Expected to have a different POM file.", expected, actual);
+        assertXMLEquals(expected, actual);
     }
 
 
@@ -200,7 +203,7 @@ public class MavenIntegrationTest {
         //Assert
         String expected = readFileAndTrim(testFolder + "/expected.xml");
         String actual = readFileAndTrim(testFolder + "/actual.xml");
-        Assert.assertEquals("Expected to have a different POM file.", expected, actual);
+        assertXMLEquals(expected, actual);
     }
 
     @Test
@@ -221,8 +224,20 @@ public class MavenIntegrationTest {
         //Assert
         String expected = readFileAndTrim(testFolder + "/expected.xml");
         String actual = readFileAndTrim(testFolder + "/actual.xml");
-        Assert.assertEquals("Expected to have a different POM file.", expected, actual);
+        
+        assertXMLEquals(expected, actual);
     }
+
+    public static void assertXMLEquals(String expectedXML, String actualXML) throws Exception {
+        XMLUnit.setIgnoreWhitespace(true);
+        XMLUnit.setIgnoreAttributeOrder(true);
+
+        DetailedDiff diff = new DetailedDiff(XMLUnit.compareXML(expectedXML, actualXML));
+
+        List<?> allDifferences = diff.getAllDifferences();
+        Assert.assertEquals("Differences found: "+ diff.toString(), 0, allDifferences.size());
+    }
+
 
     private String readFileAndTrim(String filepath) throws IOException {
         String s = FileUtils.readFileToString(new File(filepath));
@@ -255,6 +270,7 @@ public class MavenIntegrationTest {
         slInfo.setServerUrl("http://fake-server-url.com");
 
         slInfo.setWorkspacepath("c:\\fake-worakpsacepath");
+        slInfo.setBuildFilesFolders("c:\\fake-worakpsacepath");
 
 
         slInfo.setAppName("fake-app-name");
@@ -275,10 +291,12 @@ public class MavenIntegrationTest {
         slInfo.setLogFolder("c:\\fake-log-folder");
 
 
-        MavenIntegrationInfo info = new MavenIntegrationInfo();
+        String source = path + "/pom.xml,";
+        String target = path + "/actual.xml";
+        MavenIntegrationInfo info = new MavenIntegrationInfo(source, target, slInfo, TestingFramework.JUNIT);
         info.setTestingFramework(TestingFramework.TESTNG);
         info.setSeaLightsPluginInfo(slInfo);
-        info.setSourcePomFile(path + "/pom.xml");
+        //info.setSourcePomFile(path + "/pom.xml");
         info.setTargetPomFile(path + "/actual.xml");
 
         return info;
