@@ -4,6 +4,8 @@ import hudson.*;
 import hudson.Launcher;
 import hudson.model.*;
 import hudson.remoting.*;
+import hudson.slaves.NodeDescriptor;
+import hudson.slaves.NodePropertyDescriptor;
 import hudson.slaves.NodeSpecific;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
@@ -23,6 +25,10 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
@@ -225,6 +231,7 @@ public class MavenSealightsBuildStep extends Builder {
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+
         try {
             slJenkinsBuildWrapper.setUp(build, launcher, listener);
             if (AUTO_DETECT.equals(slJenkinsBuildWrapper.getTestingFramework())) {
@@ -465,8 +472,11 @@ public class MavenSealightsBuildStep extends Builder {
         private volatile MavenInstallation[] installations = new MavenInstallation[0];
 
         public DescriptorImpl() {
-            DESCRIPTOR = this;
-            load();
+            if (this.installations.length == 0){
+                getOriginalMavenInstallations();
+            }
+//            DESCRIPTOR = this;
+//            load();
         }
 
         public boolean isApplicable(Class<? extends AbstractProject> jobType) {
@@ -492,23 +502,48 @@ public class MavenSealightsBuildStep extends Builder {
         }
 
         public MavenInstallation[] getInstallations() {
-            return installations;
+            return this.installations;
         }
 
-        public void setInstallations(MavenInstallation... installations) {
-            List<MavenInstallation> tmpList = new ArrayList<MavenSealightsBuildStep.MavenInstallation>();
-            // remote empty Maven installation :
-            if (installations != null) {
-                Collections.addAll(tmpList, installations);
-                for (MavenInstallation installation : installations) {
-                    if (Util.fixEmptyAndTrim(installation.getName()) == null) {
-                        tmpList.remove(installation);
+        private void getOriginalMavenInstallations(){
+            Object mavenDescriptor = Jenkins.getInstance().getDescriptorByName("hudson.tasks.Maven");
+            Method[] methods = mavenDescriptor.getClass().getMethods();
+            ToolInstallation[] mavenOriginalDescInstallations;
+
+            for(Method method: methods){
+                if ("getInstallations".equals(method.getName())){
+                    try {
+                        mavenOriginalDescInstallations = (ToolInstallation[])method.invoke(mavenDescriptor);
+                        this.installations = new MavenInstallation[mavenOriginalDescInstallations.length];
+                        for (int i=0; i< mavenOriginalDescInstallations.length; i++){
+                            this.installations[i] =
+                                    new MavenInstallation(
+                                            mavenOriginalDescInstallations[i].getName(),
+                                            mavenOriginalDescInstallations[i].getHome(),
+                                            mavenOriginalDescInstallations[i].getProperties());
+                        }
+                    } catch (IllegalAccessException |InvocationTargetException  e) {
+                        e.printStackTrace();
                     }
+                    break;
                 }
             }
-            this.installations = tmpList.toArray(new MavenInstallation[tmpList.size()]);
-            save();
         }
+
+//        public void setInstallations(MavenInstallation... installations) {
+//            List<MavenInstallation> tmpList = new ArrayList<MavenSealightsBuildStep.MavenInstallation>();
+//            // remote empty Maven installation :
+//            if (installations != null) {
+//                Collections.addAll(tmpList, installations);
+//                for (MavenInstallation installation : installations) {
+//                    if (Util.fixEmptyAndTrim(installation.getName()) == null) {
+//                        tmpList.remove(installation);
+//                    }
+//                }
+//            }
+//            this.installations = tmpList.toArray(new MavenInstallation[tmpList.size()]);
+//            save();
+//        }
 
         @Override
         public Builder newInstance(StaplerRequest req, JSONObject formData) throws FormException {
@@ -725,10 +760,10 @@ public class MavenSealightsBuildStep extends Builder {
 
             // overriding them for backward compatibility.
             // newer code need not do this
-            @Override
-            public void setInstallations(MavenInstallation... installations) {
-                Jenkins.getInstance().getDescriptorByType(MavenSealightsBuildStep.DescriptorImpl.class).setInstallations(installations);
-            }
+//            @Override
+//            public void setInstallations(MavenInstallation... installations) {
+//                Jenkins.getInstance().getDescriptorByType(MavenSealightsBuildStep.DescriptorImpl.class).setInstallations(installations);
+//            }
 
             /**
              * Checks if the MAVEN_HOME is valid.
