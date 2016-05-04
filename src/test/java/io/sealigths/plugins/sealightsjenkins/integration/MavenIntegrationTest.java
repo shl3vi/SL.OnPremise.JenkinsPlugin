@@ -270,7 +270,7 @@ public class MavenIntegrationTest {
         slInfo.setServerUrl("http://fake-server-url.com");
 
         slInfo.setWorkspacepath("c:\\fake-worakpsacepath");
-        slInfo.setBuildFilesFolders("c:\\fake-worakpsacepath");
+        slInfo.setBuildFilesFolders(path);
 
 
         slInfo.setAppName("fake-app-name");
@@ -280,6 +280,7 @@ public class MavenIntegrationTest {
         slInfo.setRecursive(true);
         slInfo.setPackagesIncluded("com.fake.*");
         slInfo.setPackagesExcluded("com.fake.excluded.*");
+        slInfo.setBuildFilesPatterns("*pom.xml");
 
         slInfo.setListenerJar("c:\\fake-test-listener.jar");
         slInfo.setScannerJar("c:\\fake-build-scanner.jar");
@@ -296,6 +297,7 @@ public class MavenIntegrationTest {
         MavenIntegrationInfo info = new MavenIntegrationInfo(source, target, slInfo, TestingFramework.JUNIT);
         info.setTestingFramework(TestingFramework.TESTNG);
         info.setSeaLightsPluginInfo(slInfo);
+
         //info.setSourcePomFile(path + "/pom.xml");
         info.setTargetPomFile(path + "/actual.xml");
 
