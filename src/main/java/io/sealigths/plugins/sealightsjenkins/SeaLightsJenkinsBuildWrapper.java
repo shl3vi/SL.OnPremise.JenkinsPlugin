@@ -11,10 +11,10 @@ import hudson.model.Descriptor;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 import hudson.util.DescribableList;
-import io.sealigths.plugins.sealightsjenkins.integration.JarsHelper;
-import io.sealigths.plugins.sealightsjenkins.integration.MavenIntegration;
-import io.sealigths.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
-import io.sealigths.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
+import io.sealigths.plugins.sealightsjenkins.entities.FileBackupInfo;
+import io.sealigths.plugins.sealightsjenkins.integration.*;
+import io.sealigths.plugins.sealightsjenkins.utils.FileAndFolderUtils;
+import io.sealigths.plugins.sealightsjenkins.utils.IncludeExcludeFilter;
 import io.sealigths.plugins.sealightsjenkins.utils.StringUtils;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
@@ -25,6 +25,9 @@ import org.kohsuke.stapler.export.ExportedBean;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 @ExportedBean
@@ -147,7 +150,7 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         log(logger, "enableMultipleBuildFiles: " + enableMultipleBuildFiles);
         log(logger, "Override Jars: " + overrideJars);
         log(logger, "Multiple Build Files: " + multipleBuildFiles);
-        log(logger, "Build Files Folders: " + buildFilesFolders  + " buildFilesPatterns: " + buildFilesPatterns);
+        log(logger, "Build Files Folders: " + buildFilesFolders + " buildFilesPatterns: " + buildFilesPatterns);
         log(logger, "Pom Path:" + pomPath);
         log(logger, "Packages Included:" + packagesIncluded);
         log(logger, "Packages Excluded:" + packagesExcluded);
@@ -222,10 +225,10 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
 
         String foldersToSearch;
         String patternsToSearch;
-        if (enableMultipleBuildFiles){
-                foldersToSearch = StringUtils.isNullOrEmpty(buildFilesFolders) ? workingDir : buildFilesFolders;
-                patternsToSearch = StringUtils.isNullOrEmpty(buildFilesPatterns) ? "*pom.xml" : buildFilesPatterns;
-        }else{
+        if (enableMultipleBuildFiles) {
+            foldersToSearch = StringUtils.isNullOrEmpty(buildFilesFolders) ? workingDir : buildFilesFolders;
+            patternsToSearch = StringUtils.isNullOrEmpty(buildFilesPatterns) ? "*pom.xml" : buildFilesPatterns;
+        } else {
             foldersToSearch = workingDir;
             patternsToSearch = "*pom.xml";
         }
@@ -236,9 +239,11 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
 
         configureBuildFilePublisher(build, foldersToSearch);
 
+        List<String> folders = Arrays.asList(slInfo.getBuildFilesFolders().split("\\s*,\\s*"));
+        List<FileBackupInfo> pomFiles = getPomFiles(folders, slInfo.getBuildFilesPatterns(), slInfo.isRecursiveOnBuildFilesFolders());
+
         MavenIntegrationInfo info = new MavenIntegrationInfo(
-                foldersToSearch,
-                pomPath,
+                pomFiles,
                 slInfo,
                 testingFramework
         );
@@ -249,11 +254,25 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         return env;
     }
 
-    private void  tryAddRestoreBuildFilePublisher(AbstractBuild build, PrintStream logger){
+    private List<FileBackupInfo> getPomFiles(List<String> folders, String patterns, boolean recursiveSearch) {
+        List<FileBackupInfo> pomFiles = new ArrayList<>();
+        IncludeExcludeFilter filter = new IncludeExcludeFilter(patterns, null);
+
+        for (String folder : folders) {
+            List<String> matchingPoms = FileAndFolderUtils.findAllFilesWithFilter(folder, recursiveSearch, filter);
+            for (String matchingPom : matchingPoms) {
+                pomFiles.add(new FileBackupInfo(matchingPom, null));
+            }
+        }
+
+        return pomFiles;
+    }
+
+    private void tryAddRestoreBuildFilePublisher(AbstractBuild build, PrintStream logger) {
         DescribableList publishersList = build.getProject().getPublishersList();
         boolean found = false;
         for (Object item : publishersList) {
-            if (item.toString().contains("RestoreBuildFile") ) {
+            if (item.toString().contains("RestoreBuildFile")) {
                 found = true;
                 log(logger, "There was no need to add a new RestoreBuildFile since there is one. Current one:" + item.toString());
                 //If found, this was added manually. Remove the check box.
@@ -270,8 +289,8 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
     private void configureBuildFilePublisher(AbstractBuild build, String foldersToSearch) {
         DescribableList publishersList = build.getProject().getPublishersList();
         for (Object item : publishersList) {
-            if (item.toString().contains("RestoreBuildFile") ) {
-                ((RestoreBuildFile)item).setFolders(foldersToSearch);
+            if (item.toString().contains("RestoreBuildFile")) {
+                ((RestoreBuildFile) item).setFolders(foldersToSearch);
                 return;
             }
         }
@@ -297,146 +316,182 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
     public String getAppName() {
         return appName;
     }
+
     @Exported
     public String getModuleName() {
         return moduleName;
     }
+
     @Exported
     public String getEnvironment() {
         return environment;
     }
+
     @Exported
     public String getBranch() {
         return branch;
     }
+
     @Exported
     public String getPomPath() {
         return pomPath;
     }
+
     @Exported
     public String getPackagesIncluded() {
         return packagesIncluded;
     }
+
     @Exported
     public String getPackagesExcluded() {
         return packagesExcluded;
     }
+
     @Exported
     public String getFilesIncluded() {
         return filesIncluded;
     }
+
     @Exported
     public String getFilesExcluded() {
         return filesExcluded;
     }
+
     @Exported
     public String getRelativePathToEffectivePom() {
         return relativePathToEffectivePom;
     }
+
     @Exported
     public String getWorkspacepath() {
         return workspacepath;
     }
+
     @Exported
     public boolean isRecursive() {
         return recursive;
     }
+
     @Exported
     public String getBuildScannerJar() {
         return buildScannerJar;
     }
+
     @Exported
     public String getTestListenerJar() {
         return testListenerJar;
     }
+
     @Exported
     public String getTestListenerConfigFile() {
         return testListenerConfigFile;
     }
+
     @Exported
     public BuildStrategy getBuildStrategy() {
         return buildStrategy;
     }
+
     @Exported
     public boolean isLogEnabled() {
         return logEnabled;
     }
+
     @Exported
     public void setLogEnabled(boolean logEnabled) {
         this.logEnabled = logEnabled;
     }
+
     @Exported
     public LogLevel getLogLevel() {
         return logLevel;
     }
+
     @Exported
     public void setLogLevel(LogLevel logLevel) {
         this.logLevel = logLevel;
     }
+
     @Exported
     public LogDestination getLogDestination() {
         return logDestination;
     }
+
     @Exported
     public void setLogDestination(LogDestination logDestination) {
         this.logDestination = logDestination;
     }
+
     @Exported
     public ProjectType getProjectType() {
         return projectType;
     }
+
     @Exported
     public void setProjectType(ProjectType projectType) {
         this.projectType = projectType;
     }
+
     @Exported
     public String getLogFolder() {
         return logFolder;
     }
+
     @Exported
     public String getApiJar() {
         return apiJar;
     }
+
     @Exported
     public TestingFramework getTestingFramework() {
         return testingFramework;
     }
+
     @Exported
     public void setTestingFramework(TestingFramework testingFramework) {
         this.testingFramework = testingFramework;
     }
+
     @Exported
     private boolean isNullOrEmpty(String str) {
         return (str == null || str.equals(""));
     }
+
     @Exported
     public boolean isAutoRestoreBuildFile() {
         return autoRestoreBuildFile;
     }
+
     @Exported
     public void setAutoRestoreBuildFile(boolean autoRestoreBuildFile) {
         this.autoRestoreBuildFile = autoRestoreBuildFile;
     }
+
     @Exported
     public boolean isMultipleBuildFiles() {
         return multipleBuildFiles;
     }
+
     @Exported
     public boolean isOverrideJars() {
         return overrideJars;
     }
+
     @Exported
     public String getBuildFilesPatterns() {
         return buildFilesPatterns;
     }
+
     @Exported
     public String getBuildFilesFolders() {
         return buildFilesFolders;
     }
+
     @Exported
     public void setBuildStrategy(BuildStrategy buildStrategy) {
         this.buildStrategy = buildStrategy;
     }
+
     @Exported
     public boolean isEnableMultipleBuildFiles() {
         return enableMultipleBuildFiles;

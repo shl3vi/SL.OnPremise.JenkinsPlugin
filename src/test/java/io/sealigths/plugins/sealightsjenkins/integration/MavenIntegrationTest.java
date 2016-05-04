@@ -3,6 +3,7 @@ package io.sealigths.plugins.sealightsjenkins.integration;
 import io.sealigths.plugins.sealightsjenkins.BuildStrategy;
 import io.sealigths.plugins.sealightsjenkins.LogLevel;
 import io.sealigths.plugins.sealightsjenkins.TestingFramework;
+import io.sealigths.plugins.sealightsjenkins.entities.FileBackupInfo;
 import org.apache.commons.io.FileUtils;
 import org.custommonkey.xmlunit.DetailedDiff;
 import org.custommonkey.xmlunit.XMLUnit;
@@ -10,6 +11,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MavenIntegrationTest {
@@ -270,7 +272,7 @@ public class MavenIntegrationTest {
         slInfo.setServerUrl("http://fake-server-url.com");
 
         slInfo.setWorkspacepath("c:\\fake-worakpsacepath");
-        slInfo.setBuildFilesFolders("c:\\fake-worakpsacepath");
+        slInfo.setBuildFilesFolders(path);
 
 
         slInfo.setAppName("fake-app-name");
@@ -280,6 +282,7 @@ public class MavenIntegrationTest {
         slInfo.setRecursive(true);
         slInfo.setPackagesIncluded("com.fake.*");
         slInfo.setPackagesExcluded("com.fake.excluded.*");
+        slInfo.setBuildFilesPatterns("*pom.xml");
 
         slInfo.setListenerJar("c:\\fake-test-listener.jar");
         slInfo.setScannerJar("c:\\fake-build-scanner.jar");
@@ -290,14 +293,13 @@ public class MavenIntegrationTest {
         slInfo.setLogLevel(LogLevel.INFO);
         slInfo.setLogFolder("c:\\fake-log-folder");
 
-
-        String source = path + "/pom.xml,";
+        String source = path + "/pom.xml";
         String target = path + "/actual.xml";
-        MavenIntegrationInfo info = new MavenIntegrationInfo(source, target, slInfo, TestingFramework.JUNIT);
+        List<FileBackupInfo> files = new ArrayList<>();
+        files.add(new FileBackupInfo(source, target));
+        MavenIntegrationInfo info = new MavenIntegrationInfo(files, slInfo, TestingFramework.JUNIT);
         info.setTestingFramework(TestingFramework.TESTNG);
         info.setSeaLightsPluginInfo(slInfo);
-        //info.setSourcePomFile(path + "/pom.xml");
-        info.setTargetPomFile(path + "/actual.xml");
 
         return info;
     }

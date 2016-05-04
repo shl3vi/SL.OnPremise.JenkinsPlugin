@@ -43,16 +43,19 @@
 <customerid>fake-customer-id-123</customerid>
 <server>http://fake-server-url.com</server>
 <appName>fake-app-name</appName>
+<moduleName>fake-module-name</moduleName>
 <workspacepath>c:\fake-worakpsacepath</workspacepath>
 <build>1</build>
 <branch>fake-branch</branch>
 <packagesincluded>com.fake.*</packagesincluded>
 <packagesexcluded>*FastClassByGuice*, *ByCGLIB*, *EnhancerByMockitoWithCGLIB*, *EnhancerBySpringCGLIB*, com.fake.excluded.*</packagesexcluded>
 <filesincluded>*.class</filesincluded>
+<apiJar>c:\fake-api.jar</apiJar>
 <buildScannerJar>c:\fake-build-scanner.jar</buildScannerJar>
 <testListenerJar>c:\fake-test-listener.jar</testListenerJar>
 <logLevel>INFO</logLevel>
 <logFolder>c:\fake-log-folder</logFolder>
+<enableTestListenerInitialization>false</enableTestListenerInitialization>
 </configuration>
 <executions>
 <execution>
@@ -65,6 +68,12 @@
 <id>a2</id>
 <goals>
 <goal>test-listener</goal>
+</goals>
+</execution>
+<execution>
+<id>a3</id>
+<goals>
+<goal>initialize-test-listener</goal>
 </goals>
 </execution>
 </executions>
@@ -96,16 +105,19 @@
 <customerid>fake-customer-id-123</customerid>
 <server>http://fake-server-url.com</server>
 <appName>fake-app-name</appName>
+<moduleName>fake-module-name</moduleName>
 <workspacepath>c:\fake-worakpsacepath</workspacepath>
 <build>1</build>
 <branch>fake-branch</branch>
 <packagesincluded>com.fake.*</packagesincluded>
 <packagesexcluded>*FastClassByGuice*, *ByCGLIB*, *EnhancerByMockitoWithCGLIB*, *EnhancerBySpringCGLIB*, com.fake.excluded.*</packagesexcluded>
 <filesincluded>*.class</filesincluded>
+<apiJar>c:\fake-api.jar</apiJar>
 <buildScannerJar>c:\fake-build-scanner.jar</buildScannerJar>
 <testListenerJar>c:\fake-test-listener.jar</testListenerJar>
 <logLevel>INFO</logLevel>
 <logFolder>c:\fake-log-folder</logFolder>
+<enableTestListenerInitialization>false</enableTestListenerInitialization>
 </configuration>
 <executions>
 <execution>
@@ -118,6 +130,12 @@
 <id>a2</id>
 <goals>
 <goal>test-listener</goal>
+</goals>
+</execution>
+<execution>
+<id>a3</id>
+<goals>
+<goal>initialize-test-listener</goal>
 </goals>
 </execution>
 </executions>
