@@ -41,12 +41,11 @@ public class MavenIntegration {
         IncludeExcludeFilter filter = new IncludeExcludeFilter(slInfo.getBuildFilesPatterns(), null);
 
         for (String folder : folders) {
-            List<String> matchingPoms = FileAndFolderUtils.findAllFilesWithFilter(folder, true, filter);
+            List<String> matchingPoms = FileAndFolderUtils.findAllFilesWithFilter(folder, slInfo.isRecursiveOnBuildFilesFolders(), filter);
             for (String matchingPom : matchingPoms) {
                 pomFiles.add(new PomFile(matchingPom));
             }
         }
-
         return pomFiles;
     }
 
@@ -198,12 +197,12 @@ public class MavenIntegration {
         tryAppendValue(plugin, pluginInfo.getProxy(), "proxy");
 
 
+        String appName = pluginInfo.getAppName();
         if ("Build Per Module".equalsIgnoreCase(pluginInfo.getBuildStrategy().getDisplayName())) {
-            String appName = "[" + pluginInfo.getAppName() + "] - " + pluginInfo.getModuleName();
-            pluginInfo.setAppName(appName);
+            appName = "[" + pluginInfo.getAppName() + "] - " + pluginInfo.getModuleName();
         }
 
-        tryAppendValue(plugin, pluginInfo.getAppName(), "appName");
+        tryAppendValue(plugin, appName, "appName");
         tryAppendValue(plugin, pluginInfo.getWorkspacepath(), "workspacepath");
         tryAppendValue(plugin, pluginInfo.getBuildName(), "build");
         tryAppendValue(plugin, pluginInfo.getBranchName(), "branch");

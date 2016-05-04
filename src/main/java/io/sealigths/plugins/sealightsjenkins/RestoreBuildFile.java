@@ -25,22 +25,18 @@ import java.util.List;
 public class RestoreBuildFile extends Recorder {
 
     private boolean shouldRestore;
-    private String patterns;
     private String folders;
 
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
-    public RestoreBuildFile(boolean shouldRestore, String folders,String patterns ) {
+    public RestoreBuildFile(boolean shouldRestore, String folders) {
         this.shouldRestore = shouldRestore;
         this.folders = folders;
-        this.patterns = patterns;
     }
 
     private void RestoreAllFilesInFolder(String rootFolder, PrintStream logger){
         log(logger, "searching in folder: " + rootFolder);
         boolean recursive = true;
-//        File currentDirectory = new File(rootFolder);
-//        List<String> filesToRestore = FileUtils.searchFilesByExtension(currentDirectory, recursive, "slbak");
         IncludeExcludeFilter filter = new IncludeExcludeFilter("*.slbak" , null);
         List<String> filesToRestore = FileAndFolderUtils.findAllFilesWithFilter(rootFolder, recursive, filter);
         for (String currentName : filesToRestore) {
@@ -82,14 +78,12 @@ public class RestoreBuildFile extends Recorder {
 
     /**
      * We'll use this from the <tt>config.jelly</tt>.
+     * @return boolean
      */
     public boolean isShouldRestore() {
         return shouldRestore;
     }
 
-    public String getPatterns() {
-        return patterns;
-    }
 
     public String getFolders() {
         return folders;
@@ -99,9 +93,6 @@ public class RestoreBuildFile extends Recorder {
         this.shouldRestore = shouldRestore;
     }
 
-    public void setPatterns(String patterns) {
-        this.patterns = patterns;
-    }
 
     public void setFolders(String folders) {
         this.folders = folders;

@@ -16,7 +16,4 @@
     <f:entry title="Folders" field="folders" description="Comma separated list of root folders that contains the build files.">
         <f:textbox/>
     </f:entry>
-    <f:entry title="Patterns" field="patterns" description="Comma separated list of Wild cards for the files names (e.g 'a?.pom, a_*b.pom').">
-        <f:textbox/>
-    </f:entry>
 </j:jelly>
