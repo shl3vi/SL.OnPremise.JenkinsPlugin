@@ -22,14 +22,16 @@ import java.util.List;
  */
 public class PomFile {
 
+    private PrintStream log;
     private String filename;
     private Document document;
     private final static String SUREFIRE_GROUP_ID = "org.apache.maven.plugins";
     private final static String SUREFIRE_ARTIFACT_ID = "maven-surefire-plugin";
     private final static String SUREFIRE_XML = "<groupId>org.apache.maven.plugins</groupId><artifactId>maven-surefire-plugin</artifactId><version>2.19</version>";
 
-    public PomFile(String filename) {
+    public PomFile(String filename, PrintStream log) {
         this.filename = filename;
+        this.log = log;
     }
 
 
@@ -80,14 +82,14 @@ public class PomFile {
         for (Element buildElement : buildElements) {
             verifyPluginsElement(pluginBodyAsXml, buildElement);
             if (isNodeExist(buildElement, "./pluginManagement")) {
-                List<Element> pluginManagementElements = getOrCreateElements("pluginManagement", "pluginManagement", buildElement);
+                List<Element> pluginManagementElements = getOrCreateElements("pluginManagement", buildElement);
                 verifyPluginsElement(pluginBodyAsXml, pluginManagementElements.get(0));
             }
         }
     }
 
     private void verifyPluginsElement(String pluginBodyAsXml, Element parentElement) throws XPathExpressionException {
-        List<Element> pluginsElements = getOrCreateElements("plugins", "plugins", parentElement);
+        List<Element> pluginsElements = getOrCreateElements("plugins", parentElement);
         try {
 
             for (int i = 0; i < pluginsElements.size(); i++) {
@@ -134,8 +136,27 @@ public class PomFile {
         try {
             List<Element> surefireElements = getOrCreateElements("plugin", SUREFIRE_PLUGIN, parentElement);
             for (Element surefireElement : surefireElements) {
-                List<Element> configurationElements = getOrCreateElements("configuration", "configuration", surefireElement);
+                List<Element> configurationElements = getOrCreateElements("configuration", surefireElement);
                 for (Element configurationElement : configurationElements) {
+                    if (isNodeExist(configurationElement, "forkMode"))
+                    {
+                        if (!isValidForkMode(configurationElement)) {
+                            log.println("WARNING - Skipping SeaLights integration due to unsupported 'forkMode' value of SureFire. Value cannot be 'never' or 'always'. Recommended value is 'once'.");
+                            continue;
+                        }
+                    }
+
+                    if (isNodeExist(configurationElement, "forkCount"))
+                    {
+                        if (!isValidForkCount(configurationElement)) {
+                            log.println("WARNING - Skipping SeaLights integration due to unsupported 'forkCount' value of SureFire. Value cannot be '0'.");
+                            continue;
+                        }
+                    }
+
+
+
+
                     if (listenerValue != null && !"".equals(listenerValue))
                         verifyPropertiesElement(listenerValue, configurationElement);
                     verifyAdditionalClasspathElements(apiJarPath, configurationElement);
@@ -147,11 +168,27 @@ public class PomFile {
         }
     }
 
+    private boolean isValidForkMode(Element configurationElement) throws XPathExpressionException {
+        List<Element> forkModeElements = getOrCreateElements("forkMode", configurationElement);
+        Element forkMode = forkModeElements.get(0);
+        String currentValue = forkMode.getTextContent();
+        boolean isValid = !("never".equalsIgnoreCase(currentValue) || "always".equalsIgnoreCase(currentValue));
+        return  isValid;
+    }
+
+    private boolean isValidForkCount(Element configurationElement) throws XPathExpressionException {
+        List<Element> forkCountElements = getOrCreateElements("forkCount", configurationElement);
+        Element forkCount = forkCountElements.get(0);
+        String currentValue = forkCount.getTextContent();
+        boolean isValid = !("0".equalsIgnoreCase(currentValue));
+        return  isValid;
+    }
+
     private void verifyArgLineElement(Element configurationElement) throws XPathExpressionException {
         if (isNodeExist(configurationElement, "./argLine")) {
             //We have argLine node. If that's the case, we must make sure that it contains ${argLine}
             // or else it will not invoke our Test Listener and customers will get ClassNotFoundException on our classes.
-            List<Element> argLineElements = getOrCreateElements("argLine", "argLine", configurationElement);
+            List<Element> argLineElements = getOrCreateElements("argLine", configurationElement);
             Element argLine = argLineElements.get(0);
             String currentValue = argLine.getTextContent();
             if (!currentValue.contains("${argLine}"))
@@ -163,10 +200,10 @@ public class PomFile {
     }
 
     private void verifyPropertiesElement(String listenerValue, Element configurationElement) throws XPathExpressionException {
-        List<Element> propertiesElements = getOrCreateElements("properties", "properties", configurationElement);
+        List<Element> propertiesElements = getOrCreateElements("properties", configurationElement);
         boolean foundListenerProperty = false;
         for (Element propertiesElement : propertiesElements) {
-            List<Element> propertyElements = getOrCreateElements("property", "property", propertiesElement);
+            List<Element> propertyElements = getOrCreateElements("property", propertiesElement);
             foundListenerProperty = isFoundListenerProperty(listenerValue, propertiesElements, foundListenerProperty);
 
             if (!foundListenerProperty) {
@@ -186,10 +223,10 @@ public class PomFile {
     }
 
     private void verifyAdditionalClasspathElements(String apiJarPath, Element configurationElement) throws XPathExpressionException {
-        List<Element> additionalClasspathElements = getOrCreateElements("additionalClasspathElements", "additionalClasspathElements", configurationElement);
+        List<Element> additionalClasspathElements = getOrCreateElements("additionalClasspathElements", configurationElement);
         boolean foundApiJar = false;
         for (Element additionalClasspathElement : additionalClasspathElements) {
-            List<Element> additionalClasspathElementList = getOrCreateElements("additionalClasspathElement", "additionalClasspathElement", additionalClasspathElement);
+            List<Element> additionalClasspathElementList = getOrCreateElements("additionalClasspathElement", additionalClasspathElement);
             foundApiJar = isFoundAdditonalClasspathElementWithApiJar(apiJarPath, additionalClasspathElements, foundApiJar);
 
             if (!foundApiJar) {
@@ -254,6 +291,10 @@ public class PomFile {
         DOMSource domSource = new DOMSource(getDocument());
         StreamResult streamResult = new StreamResult(new File(filename));
         transformer.transform(domSource, streamResult);
+    }
+
+    private List<Element> getOrCreateElements(String nameAndXpath, Element parent) throws XPathExpressionException {
+        return getOrCreateElements(nameAndXpath, nameAndXpath, parent);
     }
 
     private List<Element> getOrCreateElements(String name, String xpath, Element parent) throws XPathExpressionException {
