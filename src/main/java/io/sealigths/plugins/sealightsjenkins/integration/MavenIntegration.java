@@ -26,8 +26,11 @@ public class MavenIntegration {
         this.mavenIntegrationInfo = mavenIntegrationInfo;
     }
 
-
     public void integrate() {
+        this.integrate(true);
+    }
+
+    public void integrate(boolean shouldBackup) {
 
         log(log, "MavenIntegration.integrate - starting");
 
@@ -35,7 +38,7 @@ public class MavenIntegration {
             log(log, "MavenIntegration.integrate - Modifying pom: " + fileBackupInfo.getSourceFile());
 
             String sourceFile = fileBackupInfo.getSourceFile();
-            PomFile pomFile = new PomFile(sourceFile);
+            PomFile pomFile = new PomFile(sourceFile, log);
 
             try {
                 if (pomFile.isPluginExistInEntriePom(SEALIGHTS_GROUP_ID, SEALIGHTS_ARTIFACT_ID)) {
@@ -59,9 +62,10 @@ public class MavenIntegration {
 //                throw new RuntimeException("Unsupported Maven Surefire plugin. SeaLights requires a version 2.9 or higher.");
 //            }
 
-                String backupFile = sourceFile + ".slbak";
-                log(log, "MavenIntegration.integrate - created back up file: " + backupFile);
-                this.savePom(backupFile);
+                if (shouldBackup)
+                {
+                    backupPom(sourceFile);
+                }
                 integrateToPomFile(fileBackupInfo, pomFile);
             } catch (Exception e) {
                 log(log, "MavenIntegration.integrate - Unable to parse pom : " + sourceFile + ". Error:");
@@ -69,6 +73,12 @@ public class MavenIntegration {
             }
         }
 
+    }
+
+    private void backupPom(String sourceFile) {
+        String backupFile = sourceFile + ".slbak";
+        log(log, "MavenIntegration.integrate - created back up file: " + backupFile);
+        this.savePom(backupFile);
     }
 
     private void integrateToPomFile(FileBackupInfo fileBackupInfo, PomFile pomFile) {
@@ -140,7 +150,7 @@ public class MavenIntegration {
 
 
     private void savePom(String filename) {
-        savePom(filename, new PomFile(filename));
+        savePom(filename, new PomFile(filename, this.log));
     }
 
     private void savePom(FileBackupInfo fileBackupInfo, PomFile pomFile) {

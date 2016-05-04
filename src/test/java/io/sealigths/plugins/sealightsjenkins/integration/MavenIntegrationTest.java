@@ -31,11 +31,11 @@ public class MavenIntegrationTest {
         MavenIntegration mavenIntegration = new MavenIntegration(new PrintStream(System.out),mavenIntegrationInfo);
 
         //Act
-        mavenIntegration.integrate();
+        mavenIntegration.integrate(false);
 
         //Assert
-        String expected = readFileAndTrim(testFolder + "/expected.xml");
-        String actual = readFileAndTrim(testFolder + "/actual.xml");
+        String expected = readFile(testFolder + "/expected.xml");
+        String actual = readFile(testFolder + "/actual.xml");
         assertXMLEquals(expected, actual);
     }
 
@@ -52,11 +52,11 @@ public class MavenIntegrationTest {
         MavenIntegration mavenIntegration = new MavenIntegration(new PrintStream(System.out),mavenIntegrationInfo);
 
         //Act
-        mavenIntegration.integrate();
+        mavenIntegration.integrate(false);
 
         //Assert
-        String expected = readFileAndTrim(testFolder + "/expected.xml");
-        String actual = readFileAndTrim(testFolder + "/actual.xml");
+        String expected = readFile(testFolder + "/expected.xml");
+        String actual = readFile(testFolder + "/actual.xml");
         assertXMLEquals(expected, actual);
     }
 
@@ -73,11 +73,11 @@ public class MavenIntegrationTest {
         MavenIntegration mavenIntegration = new MavenIntegration(new PrintStream(System.out),mavenIntegrationInfo);
 
         //Act
-        mavenIntegration.integrate();
+        mavenIntegration.integrate(false);
 
         //Assert
-        String expected = readFileAndTrim(testFolder + "/expected.xml");
-        String actual = readFileAndTrim(testFolder + "/actual.xml");
+        String expected = readFile(testFolder + "/expected.xml");
+        String actual = readFile(testFolder + "/actual.xml");
         assertXMLEquals(expected, actual);
     }
 
@@ -94,11 +94,11 @@ public class MavenIntegrationTest {
         MavenIntegration mavenIntegration = new MavenIntegration(new PrintStream(System.out),mavenIntegrationInfo);
 
         //Act
-        mavenIntegration.integrate();
+        mavenIntegration.integrate(false);
 
         //Assert
-        String expected = readFileAndTrim(testFolder + "/expected.xml");
-        String actual = readFileAndTrim(testFolder + "/actual.xml");
+        String expected = readFile(testFolder + "/expected.xml");
+        String actual = readFile(testFolder + "/actual.xml");
         assertXMLEquals(expected, actual);
     }
 
@@ -115,11 +115,11 @@ public class MavenIntegrationTest {
         MavenIntegration mavenIntegration = new MavenIntegration(new PrintStream(System.out),mavenIntegrationInfo);
 
         //Act
-        mavenIntegration.integrate();
+        mavenIntegration.integrate(false);
 
         //Assert
-        String expected = readFileAndTrim(testFolder + "/expected.xml");
-        String actual = readFileAndTrim(testFolder + "/actual.xml");
+        String expected = readFile(testFolder + "/expected.xml");
+        String actual = readFile(testFolder + "/actual.xml");
         assertXMLEquals(expected, actual);
     }
 
@@ -136,11 +136,11 @@ public class MavenIntegrationTest {
         MavenIntegration mavenIntegration = new MavenIntegration(new PrintStream(System.out),mavenIntegrationInfo);
 
         //Act
-        mavenIntegration.integrate();
+        mavenIntegration.integrate(false);
 
         //Assert
-        String expected = readFileAndTrim(testFolder + "/expected.xml");
-        String actual = readFileAndTrim(testFolder + "/actual.xml");
+        String expected = readFile(testFolder + "/expected.xml");
+        String actual = readFile(testFolder + "/actual.xml");
         assertXMLEquals(expected, actual);
     }
 
@@ -157,11 +157,11 @@ public class MavenIntegrationTest {
         MavenIntegration mavenIntegration = new MavenIntegration(new PrintStream(System.out),mavenIntegrationInfo);
 
         //Act
-        mavenIntegration.integrate();
+        mavenIntegration.integrate(false);
 
         //Assert
-        String expected = readFileAndTrim(testFolder + "/expected.xml");
-        String actual = readFileAndTrim(testFolder + "/actual.xml");
+        String expected = readFile(testFolder + "/expected.xml");
+        String actual = readFile(testFolder + "/actual.xml");
         assertXMLEquals(expected, actual);
     }
 
@@ -178,11 +178,11 @@ public class MavenIntegrationTest {
         MavenIntegration mavenIntegration = new MavenIntegration(new PrintStream(System.out),mavenIntegrationInfo);
 
         //Act
-        mavenIntegration.integrate();
+        mavenIntegration.integrate(false);
 
         //Assert
-        String expected = readFileAndTrim(testFolder + "/expected.xml");
-        String actual = readFileAndTrim(testFolder + "/actual.xml");
+        String expected = readFile(testFolder + "/expected.xml");
+        String actual = readFile(testFolder + "/actual.xml");
         assertXMLEquals(expected, actual);
     }
 
@@ -200,11 +200,11 @@ public class MavenIntegrationTest {
         MavenIntegration mavenIntegration = new MavenIntegration(new PrintStream(System.out),mavenIntegrationInfo);
 
         //Act
-        mavenIntegration.integrate();
+        mavenIntegration.integrate(false);
 
         //Assert
-        String expected = readFileAndTrim(testFolder + "/expected.xml");
-        String actual = readFileAndTrim(testFolder + "/actual.xml");
+        String expected = readFile(testFolder + "/expected.xml");
+        String actual = readFile(testFolder + "/actual.xml");
         assertXMLEquals(expected, actual);
     }
 
@@ -221,14 +221,36 @@ public class MavenIntegrationTest {
         MavenIntegration mavenIntegration = new MavenIntegration(new PrintStream(System.out),mavenIntegrationInfo);
 
         //Act
-        mavenIntegration.integrate();
+        mavenIntegration.integrate(false);
 
         //Assert
-        String expected = readFileAndTrim(testFolder + "/expected.xml");
-        String actual = readFileAndTrim(testFolder + "/actual.xml");
+        String expected = readFile(testFolder + "/expected.xml");
+        String actual = readFile(testFolder + "/actual.xml");
         
         assertXMLEquals(expected, actual);
     }
+
+//    @Test
+//    public void gsBug() throws Exception {
+//
+//        //Arrange
+//        TestingFramework TESTING_FRAMEWORK=TestingFramework.AUTO_DETECT;
+//        String TEST_CASE = "11_gs_bug";
+//        String testFolder = getTestFolder(TEST_CASE);
+//
+//        MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
+//        mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
+//        MavenIntegration mavenIntegration = new MavenIntegration(new PrintStream(System.out),mavenIntegrationInfo);
+//
+//        //Act
+//        mavenIntegration.integrate(false);
+//
+//        //Assert
+//        String expected = readFile(testFolder + "/expected.xml");
+//        String actual = readFile(testFolder + "/actual.xml");
+//
+//        assertXMLEquals(expected, actual);
+//    }
 
     public static void assertXMLEquals(String expectedXML, String actualXML) throws Exception {
         XMLUnit.setIgnoreWhitespace(true);
@@ -241,26 +263,12 @@ public class MavenIntegrationTest {
     }
 
 
-    private String readFileAndTrim(String filepath) throws IOException {
+    private String readFile(String filepath) throws IOException {
         String s = FileUtils.readFileToString(new File(filepath));
-        return trim(s);
+        return s;
     }
 
-    public static String trim(String input) {
-        BufferedReader reader = new BufferedReader(new StringReader(input));
-        StringBuffer result = new StringBuffer();
-        try {
-            String line;
-            while ( (line = reader.readLine() ) != null) {
-                String trim = line.trim();
-                trim = trim.replaceAll(">\\s*<", "><").trim();
-                result.append(trim);
-            }
-            return result.toString().trim().replaceAll(">\\s*<", "><");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+
 
     private MavenIntegrationInfo createDefaultMavenIntegrationInfo(String path){
 
