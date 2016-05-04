@@ -506,7 +506,12 @@ public class MavenSealightsBuildStep extends Builder {
         }
 
         private void getOriginalMavenInstallations(){
-            Object mavenDescriptor = Jenkins.getInstance().getDescriptorByName("hudson.tasks.Maven");
+            Object mavenDescriptor;
+            try {
+                mavenDescriptor = Jenkins.getInstance().getDescriptorByName("hudson.tasks.Maven");
+            }catch (Exception e){
+                return;
+            }
             Method[] methods = mavenDescriptor.getClass().getMethods();
             ToolInstallation[] mavenOriginalDescInstallations;
 
@@ -516,11 +521,12 @@ public class MavenSealightsBuildStep extends Builder {
                         mavenOriginalDescInstallations = (ToolInstallation[])method.invoke(mavenDescriptor);
                         this.installations = new MavenInstallation[mavenOriginalDescInstallations.length];
                         for (int i=0; i< mavenOriginalDescInstallations.length; i++){
+                            ToolInstallation ti = mavenOriginalDescInstallations[i];
                             this.installations[i] =
                                     new MavenInstallation(
-                                            mavenOriginalDescInstallations[i].getName(),
-                                            mavenOriginalDescInstallations[i].getHome(),
-                                            mavenOriginalDescInstallations[i].getProperties());
+                                            ti.getName(),
+                                            ti.getHome(),
+                                            ti.getProperties());
                         }
                     } catch (IllegalAccessException |InvocationTargetException  e) {
                         e.printStackTrace();
