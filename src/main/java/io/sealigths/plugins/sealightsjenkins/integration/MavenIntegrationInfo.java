@@ -1,21 +1,22 @@
 package io.sealigths.plugins.sealightsjenkins.integration;
 
 import io.sealigths.plugins.sealightsjenkins.TestingFramework;
+import io.sealigths.plugins.sealightsjenkins.entities.FileBackupInfo;
+
+import java.util.List;
 
 /**
  * Created by Nadav on 4/19/2016.
  */
 public class MavenIntegrationInfo {
-    private String sourcePomFiles;
-    private String targetPomFile;
+    private List<FileBackupInfo> pomFiles;
     private String profileId;
     private TestingFramework testingFramework;
     private SeaLightsPluginInfo seaLightsPluginInfo;
 
 
-    public MavenIntegrationInfo(String sourcePomFiles, String targetPomFile, SeaLightsPluginInfo seaLightsPluginInfo, TestingFramework testingFramework) {
-        this.sourcePomFiles = sourcePomFiles;
-        this.targetPomFile = targetPomFile;
+    public MavenIntegrationInfo(List<FileBackupInfo> pomFiles, SeaLightsPluginInfo seaLightsPluginInfo, TestingFramework testingFramework) {
+        this.pomFiles = pomFiles;
         this.seaLightsPluginInfo = seaLightsPluginInfo;
         this.testingFramework = testingFramework;
     }
@@ -31,11 +32,6 @@ public class MavenIntegrationInfo {
     public String getProfileId() {
         return profileId;
     }
-
-    public void setProfileId(String profileId) {
-        this.profileId = profileId;
-    }
-
     public TestingFramework getTestingFramework() {
         return testingFramework;
     }
@@ -44,19 +40,8 @@ public class MavenIntegrationInfo {
         this.testingFramework = testingFramework;
     }
 
-    public String getSourcePomFiles() {
-        return sourcePomFiles;
-    }
 
-    public void setSourcePomFiles(String sourcePomFiles) {
-        this.sourcePomFiles = sourcePomFiles;
-    }
-
-    public String getTargetPomFile() {
-        return targetPomFile;
-    }
-
-    public void setTargetPomFile(String targetPomFile) {
-        this.targetPomFile = targetPomFile;
+    public List<FileBackupInfo> getPomFiles() {
+        return pomFiles;
     }
 }

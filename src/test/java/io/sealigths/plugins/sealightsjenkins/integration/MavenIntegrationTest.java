@@ -3,6 +3,7 @@ package io.sealigths.plugins.sealightsjenkins.integration;
 import io.sealigths.plugins.sealightsjenkins.BuildStrategy;
 import io.sealigths.plugins.sealightsjenkins.LogLevel;
 import io.sealigths.plugins.sealightsjenkins.TestingFramework;
+import io.sealigths.plugins.sealightsjenkins.entities.FileBackupInfo;
 import org.apache.commons.io.FileUtils;
 import org.custommonkey.xmlunit.DetailedDiff;
 import org.custommonkey.xmlunit.XMLUnit;
@@ -10,6 +11,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MavenIntegrationTest {
@@ -291,15 +293,13 @@ public class MavenIntegrationTest {
         slInfo.setLogLevel(LogLevel.INFO);
         slInfo.setLogFolder("c:\\fake-log-folder");
 
-
-        String source = path + "/pom.xml,";
+        String source = path + "/pom.xml";
         String target = path + "/actual.xml";
-        MavenIntegrationInfo info = new MavenIntegrationInfo(source, target, slInfo, TestingFramework.JUNIT);
+        List<FileBackupInfo> files = new ArrayList<>();
+        files.add(new FileBackupInfo(source, target));
+        MavenIntegrationInfo info = new MavenIntegrationInfo(files, slInfo, TestingFramework.JUNIT);
         info.setTestingFramework(TestingFramework.TESTNG);
         info.setSeaLightsPluginInfo(slInfo);
-
-        //info.setSourcePomFile(path + "/pom.xml");
-        info.setTargetPomFile(path + "/actual.xml");
 
         return info;
     }
