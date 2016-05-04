@@ -739,24 +739,24 @@ public class MavenSealightsBuildStep extends Builder {
             return new MavenInstallation(getName(), translateFor(node, log), getProperties().toList());
         }
 
-        @Extension
-        public static class DescriptorImpl extends ToolDescriptor<MavenInstallation> {
-            @Override
-            public String getDisplayName() {
-                return "Maven with Sealights";
-            }
-
-            @Override
-            public List<? extends ToolInstaller> getDefaultInstallers() {
-                return Collections.singletonList(new MavenInstaller(null));
-            }
-
-            // overriding them for backward compatibility.
-            // newer code need not do this
-            @Override
-            public MavenInstallation[] getInstallations() {
-                return Jenkins.getInstance().getDescriptorByType(MavenSealightsBuildStep.DescriptorImpl.class).getInstallations();
-            }
+//        @Extension
+//        public static class DescriptorImpl extends ToolDescriptor<MavenInstallation> {
+//            @Override
+//            public String getDisplayName() {
+//                return "Maven with Sealights";
+//            }
+//
+//            @Override
+//            public List<? extends ToolInstaller> getDefaultInstallers() {
+//                return Collections.singletonList(new MavenInstaller(null));
+//            }
+//
+//            // overriding them for backward compatibility.
+//            // newer code need not do this
+//            @Override
+//            public MavenInstallation[] getInstallations() {
+//                return Jenkins.getInstance().getDescriptorByType(MavenSealightsBuildStep.DescriptorImpl.class).getInstallations();
+//            }
 
             // overriding them for backward compatibility.
             // newer code need not do this
@@ -765,32 +765,32 @@ public class MavenSealightsBuildStep extends Builder {
 //                Jenkins.getInstance().getDescriptorByType(MavenSealightsBuildStep.DescriptorImpl.class).setInstallations(installations);
 //            }
 
-            /**
-             * Checks if the MAVEN_HOME is valid.
-             */
-            @Override
-            protected FormValidation checkHomeDirectory(File value) {
-                File maven1File = new File(value, MAVEN_1_INSTALLATION_COMMON_FILE);
-                File maven2File = new File(value, MAVEN_2_INSTALLATION_COMMON_FILE);
-
-                if (!maven1File.exists() && !maven2File.exists())
-                    return FormValidation.error(value + " doesn't look like a Maven directory" /*Messages.Maven_NotMavenDirectory(value)*/);
-
-                return FormValidation.ok();
-            }
-
-        }
-
-        public static class ConverterImpl extends ToolConverter {
-            public ConverterImpl(XStream2 xstream) {
-                super(xstream);
-            }
-
-            @Override
-            protected String oldHomeField(ToolInstallation obj) {
-                return ((MavenInstallation) obj).mavenHome;
-            }
-        }
+//            /**
+//             * Checks if the MAVEN_HOME is valid.
+//             */
+//            @Override
+//            protected FormValidation checkHomeDirectory(File value) {
+//                File maven1File = new File(value, MAVEN_1_INSTALLATION_COMMON_FILE);
+//                File maven2File = new File(value, MAVEN_2_INSTALLATION_COMMON_FILE);
+//
+//                if (!maven1File.exists() && !maven2File.exists())
+//                    return FormValidation.error(value + " doesn't look like a Maven directory" /*Messages.Maven_NotMavenDirectory(value)*/);
+//
+//                return FormValidation.ok();
+//            }
+//
+//        }
+//
+//        public static class ConverterImpl extends ToolConverter {
+//            public ConverterImpl(XStream2 xstream) {
+//                super(xstream);
+//            }
+//
+//            @Override
+//            protected String oldHomeField(ToolInstallation obj) {
+//                return ((MavenInstallation) obj).mavenHome;
+//            }
+//        }
     }
 
     /**
