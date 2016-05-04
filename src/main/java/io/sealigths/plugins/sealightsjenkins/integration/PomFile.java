@@ -144,12 +144,18 @@ public class PomFile {
                             log.println("WARNING - Skipping SeaLights integration due to unsupported 'forkMode' value of SureFire. Value cannot be 'never' or 'always'. Recommended value is 'once'.");
                             continue;
                         }
+                    }
 
+                    if (isNodeExist(configurationElement, "forkCount"))
+                    {
                         if (!isValidForkCount(configurationElement)) {
                             log.println("WARNING - Skipping SeaLights integration due to unsupported 'forkCount' value of SureFire. Value cannot be '0'.");
                             continue;
                         }
                     }
+
+
+
 
                     if (listenerValue != null && !"".equals(listenerValue))
                         verifyPropertiesElement(listenerValue, configurationElement);
