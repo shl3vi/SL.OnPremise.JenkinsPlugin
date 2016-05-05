@@ -35,8 +35,6 @@ public class MavenIntegration {
         log(log, "MavenIntegration.integrate - starting");
 
         for (FileBackupInfo fileBackupInfo : mavenIntegrationInfo.getPomFiles()) {
-            log(log, "MavenIntegration.integrate - Modifying pom: " + fileBackupInfo.getSourceFile());
-
             String sourceFile = fileBackupInfo.getSourceFile();
             PomFile pomFile = new PomFile(sourceFile, log);
 
@@ -82,15 +80,15 @@ public class MavenIntegration {
     }
 
     private void integrateToPomFile(FileBackupInfo fileBackupInfo, PomFile pomFile) {
-//        String profileId = info.getProfileId();
+        if (!pomFile.isValidPom())
+        {
+            log(log, "MavenIntegration.integrateToPomFile - Skipping SeaLights integration due to invalid pom. Pom: " + fileBackupInfo.getSourceFile());
+            return;
+        }
+        else
+            log(log, "MavenIntegration.integrateToPomFile - About to modify pom: " + fileBackupInfo.getSourceFile());
 
         integrateToAllProfiles(fileBackupInfo, pomFile);
-        //TODO: Enable the profile integration once done + tested.
-//        if (profileId == null || profileId.equals("")) {
-//            integrateToAllProfiles();
-//        } else {
-//            integrateToProfile(profileId);
-//        }
     }
 
     private String getEventListenerPackage(TestingFramework testingFramework) {
@@ -102,38 +100,12 @@ public class MavenIntegration {
         return "";
     }
 
-    private void integrateToProfile(String profileId, PomFile pomFile, FileBackupInfo fileBackupInfo) {
-//        List<String> profileIdfiles = pomFile.getProfileIds();
-        if (profileId.length() == 0) {
-            throw new RuntimeException("The specified POM file does not contain any profiles.");
-        }
-
-//        if (!profiles.contains(profileId))
-//        {
-//            throw new RuntimeException("The specified POM file does not contain a profile with id of '" + profileId + "'.");
-//        }
-
-        TestingFramework testingFramework = mavenIntegrationInfo.getTestingFramework();
-        SeaLightsPluginInfo seaLightsPluginInfo = this.mavenIntegrationInfo.getSeaLightsPluginInfo();
-        String xml = toPluginText(seaLightsPluginInfo, testingFramework);
-        pomFile.addPlugin(xml);
-
-        String testingFrameworkListeners = getEventListenerPackage(testingFramework);
-        String apiAgentPath = mavenIntegrationInfo.getSeaLightsPluginInfo().getApiJar();
-
-        if (testingFramework.equals(TestingFramework.AUTO_DETECT)) {
-            testingFrameworkListeners = null;   //Used to pass control to the maven plugin.
-        }
-
-        pomFile.updateSurefirePlugin(testingFrameworkListeners, apiAgentPath);
-        savePom(fileBackupInfo, pomFile);
-
-    }
 
     private void integrateToAllProfiles(FileBackupInfo fileBackupInfo, PomFile pomFile) {
         SeaLightsPluginInfo seaLightsPluginInfo = this.mavenIntegrationInfo.getSeaLightsPluginInfo();
         TestingFramework testingFramework = mavenIntegrationInfo.getTestingFramework();
         String xml = toPluginText(seaLightsPluginInfo, testingFramework);
+
         pomFile.addPlugin(xml);
 
         String testingFrameworkListeners = getEventListenerPackage(testingFramework);
