@@ -8,7 +8,7 @@ import java.io.StringWriter;
  * Created by Nadav on 5/5/2016.
  */
 public class Logger {
-    private final String PREFIX = "[SeaLights] ";
+    private final String PREFIX = "[SeaLights Jenkins Plugin] ";
     private PrintStream printStream;
 
     public Logger(PrintStream printStream)

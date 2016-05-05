@@ -1,5 +1,6 @@
 package io.sealigths.plugins.sealightsjenkins.integration;
 
+import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import org.w3c.dom.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -22,14 +23,14 @@ import java.util.List;
  */
 public class PomFile {
 
-    private PrintStream log;
+    private Logger log;
     private String filename;
     private Document document;
     private final static String SUREFIRE_GROUP_ID = "org.apache.maven.plugins";
     private final static String SUREFIRE_ARTIFACT_ID = "maven-surefire-plugin";
     private final static String SUREFIRE_XML = "<groupId>org.apache.maven.plugins</groupId><artifactId>maven-surefire-plugin</artifactId><version>2.19</version>";
 
-    public PomFile(String filename, PrintStream log) {
+    public PomFile(String filename, Logger log) {
         this.filename = filename;
         this.log = log;
     }
@@ -142,6 +143,7 @@ public class PomFile {
                 for (Element configurationElement : configurationElements) {
                     if (isNodeExist(configurationElement, "forkMode")) {
                         if (!isValidForkMode(configurationElement)) {
+                            log.warning("Skipping SeaLights integration due to unsupported 'forkMode' value of SureFire. Value cannot be 'never' or 'always'. Recommended value is 'once'.");
                             System.err.println("[SeaLights Jenkins Plugin] - WARNING - Skipping SeaLights integration due to unsupported 'forkMode' value of SureFire. Value cannot be 'never' or 'always'. Recommended value is 'once'.");
                             continue;
                         }
@@ -149,7 +151,7 @@ public class PomFile {
 
                     if (isNodeExist(configurationElement, "forkCount")) {
                         if (!isValidForkCount(configurationElement)) {
-                            log.println("[SeaLights Jenkins Plugin] - WARNING - Skipping SeaLights integration due to unsupported 'forkCount' value of SureFire. Value cannot be '0'.");
+                            log.warning("Skipping SeaLights integration due to unsupported 'forkCount' value of SureFire. Value cannot be '0'.");
                             System.err.println("[SeaLights Jenkins Plugin] - WARNING - Skipping SeaLights integration due to unsupported 'forkCount' value of SureFire. Value cannot be '0'.");
                             continue;
                         }
@@ -180,21 +182,21 @@ public class PomFile {
                 for (Element configurationElement : configurationElements) {
                     if (isNodeExist(configurationElement, "forkMode")) {
                         if (!isValidForkMode(configurationElement)) {
-                            log.println("[SeaLights Jenkins Plugin] - WARNING - Found an unsupported 'forkMode' value of SureFire. Value cannot be 'never' or 'always'. Recommended value is 'once'.");
+                            log.warning("Found an unsupported 'forkMode' value of SureFire. Value cannot be 'never' or 'always'. Recommended value is 'once'.");
                             System.err.println("[SeaLights Jenkins Plugin] - WARNING - Found an unsupported 'forkMode' value of SureFire. Value cannot be 'never' or 'always'. Recommended value is 'once'.");
                         }
                     }
 
                     if (isNodeExist(configurationElement, "forkCount")) {
                         if (!isValidForkCount(configurationElement)) {
-                            log.println("[SeaLights Jenkins Plugin] - WARNING - Found an unsupported 'forkCount' value of SureFire. Value cannot be '0'.");
+                            log.warning("Found an unsupported 'forkCount' value of SureFire. Value cannot be '0'.");
                             System.err.println("[SeaLights Jenkins Plugin] - WARNING - Found an unsupported 'forkCount' value of SureFire. Value cannot be '0'.");
                         }
                     }
                 }
             }
         } catch (Exception e) {
-            log.println("Failed while trying to validate the pom.");
+            log.error("Failed while trying to validate the pom. Error:", e);
             return false;
         }
 
