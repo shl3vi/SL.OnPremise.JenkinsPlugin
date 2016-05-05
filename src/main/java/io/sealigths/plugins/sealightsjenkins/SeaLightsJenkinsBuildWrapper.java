@@ -250,6 +250,9 @@ public class SeaLightsJenkinsBuildWrapper extends BuildWrapper {
         MavenIntegration mavenIntegration = new MavenIntegration(listener.getLogger(), info);
         mavenIntegration.integrate();
 
+        //executes 'mvn sealights:initialize-test-listener'
+        MavenSealightsBuildStep mavenSealightsBuildStep = new MavenSealightsBuildStep();
+        mavenSealightsBuildStep.runInitializeTestListenerGoal(build,launcher,listener);
 
         return env;
     }

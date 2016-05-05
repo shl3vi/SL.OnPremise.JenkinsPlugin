@@ -21,7 +21,7 @@ public enum TestingFramework {
     },
     AUTO_DETECT() {
         @Override public String getDisplayName() {
-            return "Auto Detect (requires invoking 'mvn sealights:initialize-test-listener' before build)";
+            return "Auto Detect";
         }
     };
     public abstract String getDisplayName();

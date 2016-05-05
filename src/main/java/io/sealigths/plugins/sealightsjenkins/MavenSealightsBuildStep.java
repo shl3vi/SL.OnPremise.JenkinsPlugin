@@ -134,6 +134,10 @@ public class MavenSealightsBuildStep extends Builder {
         this.globalSettings = globalSettings != null ? globalSettings : GlobalMavenConfig.get().getGlobalSettingsProvider();
     }
 
+    public MavenSealightsBuildStep() {
+        this(null,null,null,null,null,null,false,null,null);
+    }
+
     public SeaLightsJenkinsBuildWrapper getSlJenkinsBuildWrapper() {
         return slJenkinsBuildWrapper;
     }
@@ -338,7 +342,7 @@ public class MavenSealightsBuildStep extends Builder {
         restoreBuildFile.perform(build, launcher, listener);
     }
 
-    private boolean runInitializeTestListenerGoal(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+    public boolean runInitializeTestListenerGoal(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         VariableResolver<String> vr = build.getBuildVariableResolver();
         EnvVars env = build.getEnvironment(listener);
         String pom = env.expand(this.pom);

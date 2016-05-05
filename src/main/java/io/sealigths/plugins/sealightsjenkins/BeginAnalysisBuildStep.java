@@ -36,7 +36,10 @@ public class BeginAnalysisBuildStep extends Builder {
     @Override
     public boolean perform(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 
+        MavenSealightsBuildStep mavenSealightsBuildStep = new MavenSealightsBuildStep();
+
         slJenkinsBuildWrapper.setUp(build,launcher,listener);
+        mavenSealightsBuildStep.runInitializeTestListenerGoal(build,launcher,listener);
         return true;
     }
 
