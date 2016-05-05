@@ -144,7 +144,7 @@ public class BeginAnalysisBuildStep extends Builder {
     public boolean isEnableSeaLights() {
         return enableSeaLights;
     }
-    
+
     @Exported
     public String getAppName() {
         return appName;
@@ -441,14 +441,30 @@ public class BeginAnalysisBuildStep extends Builder {
 
     private void setGlobalConfiguration(SeaLightsPluginInfo slInfo) {
 
-        slInfo.setCustomerId(StringUtils.isNullOrEmpty(override_customerId) ?
-                getDescriptor().getCustomerId() : override_customerId);
+        if (StringUtils.isNullOrEmpty(override_customerId))
+        {
+            slInfo.setCustomerId(getDescriptor().getCustomerId());
+        }
+        else{
+            slInfo.setCustomerId(override_customerId);
+        }
 
-        slInfo.setServerUrl(StringUtils.isNullOrEmpty(override_url) ?
-                getDescriptor().getUrl() : override_url);
+        if (StringUtils.isNullOrEmpty(override_url))
+        {
+            slInfo.setServerUrl(getDescriptor().getUrl());
+        }
+        else{
+            slInfo.setServerUrl(override_url);
+        }
 
-        slInfo.setProxy(StringUtils.isNullOrEmpty(override_proxy) ?
-                getDescriptor().getProxy() : override_proxy);
+        if (StringUtils.isNullOrEmpty(override_proxy))
+        {
+            slInfo.setProxy(getDescriptor().getProxy());
+        }
+        else{
+            slInfo.setProxy(override_proxy);
+        }
+
     }
 
     private List<FileBackupInfo> getPomFiles(List<String> folders, String patterns, boolean recursiveSearch) {
