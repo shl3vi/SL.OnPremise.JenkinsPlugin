@@ -1,5 +1,6 @@
 package io.sealigths.plugins.sealightsjenkins;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.*;
 import hudson.Launcher;
 import hudson.model.*;
@@ -117,12 +118,15 @@ public class MavenSealightsBuildStep extends Builder {
 
     @DataBoundConstructor
     public MavenSealightsBuildStep(BeginAnalysisBuildStep beginAnalysisBuildStep,
-                                   boolean enableSeaLights,
                                    String targets, String name, String pom, String properties,
                                    String jvmOptions, boolean usePrivateRepository,
                                    SettingsProvider settings, GlobalSettingsProvider globalSettings) {
         this.beginAnalysisBuildStep = beginAnalysisBuildStep;
-        this.enableSeaLights = enableSeaLights;
+
+        if (beginAnalysisBuildStep != null)
+            this.enableSeaLights = beginAnalysisBuildStep.isEnableSeaLights();
+        else
+            this.enableSeaLights = true;
 
         this.targets = targets;
         this.mavenName = name;
@@ -135,7 +139,7 @@ public class MavenSealightsBuildStep extends Builder {
     }
 
     public MavenSealightsBuildStep() {
-        this(null,false,null,null,null,null,null,false,null,null);
+        this(null,null,null,null,null,null,false,null,null);
     }
 
     public BeginAnalysisBuildStep getBeginAnalysisBuildStep() {
@@ -177,6 +181,8 @@ public class MavenSealightsBuildStep extends Builder {
     public void setUsePrivateRepository(boolean usePrivateRepository) {
         this.usePrivateRepository = usePrivateRepository;
     }
+
+
 
     public boolean usesPrivateRepository() {
         return usePrivateRepository;

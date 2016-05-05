@@ -64,7 +64,7 @@ public class BeginAnalysisBuildStep extends Builder {
     private boolean logEnabled;
     private LogDestination logDestination = LogDestination.CONSOLE;
     private final String logFolder;
-    private TestingFramework testingFramework = TestingFramework.TESTNG;
+    private TestingFramework testingFramework = TestingFramework.AUTO_DETECT;
     private LogLevel logLevel = LogLevel.OFF;
     private ProjectType projectType = ProjectType.MAVEN;
     private BuildStrategy buildStrategy = BuildStrategy.ONE_BUILD;
