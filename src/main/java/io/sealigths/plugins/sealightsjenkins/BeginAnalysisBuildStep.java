@@ -39,7 +39,6 @@ import java.util.List;
 public class BeginAnalysisBuildStep extends Builder {
 
     private final boolean enableSeaLights;
-    private final boolean disableJacoco;
     private final String appName;
     private final String moduleName;
     private final String branch;
@@ -75,7 +74,7 @@ public class BeginAnalysisBuildStep extends Builder {
     private final String override_proxy;
 
     @DataBoundConstructor
-    public BeginAnalysisBuildStep(LogLevel logLevel, boolean enableSeaLights, boolean disableJacoco,
+    public BeginAnalysisBuildStep(LogLevel logLevel, boolean enableSeaLights,
                                   String appName, String moduleName, String branch, boolean enableMultipleBuildFiles,
                                   boolean overrideJars, boolean multipleBuildFiles, String pomPath, String environment,
                                   String packagesIncluded, String packagesExcluded, String filesIncluded,
@@ -88,7 +87,6 @@ public class BeginAnalysisBuildStep extends Builder {
                                   String override_customerId, String override_url, String override_proxy) throws IOException {
 
         this.enableSeaLights = enableSeaLights;
-        this.disableJacoco = disableJacoco;
 
         this.override_customerId = override_customerId;
         this.override_url = override_url;
@@ -145,11 +143,6 @@ public class BeginAnalysisBuildStep extends Builder {
     @Exported
     public boolean isEnableSeaLights() {
         return enableSeaLights;
-    }
-
-    @Exported
-    public boolean isDisableJacoco() {
-        return disableJacoco;
     }
 
     @Exported
@@ -448,14 +441,30 @@ public class BeginAnalysisBuildStep extends Builder {
 
     private void setGlobalConfiguration(SeaLightsPluginInfo slInfo) {
 
-        slInfo.setCustomerId(StringUtils.isNullOrEmpty(override_customerId) ?
-                getDescriptor().getCustomerId() : override_customerId);
+        if (StringUtils.isNullOrEmpty(override_customerId))
+        {
+            slInfo.setCustomerId(getDescriptor().getCustomerId());
+        }
+        else{
+            slInfo.setCustomerId(override_customerId);
+        }
 
-        slInfo.setServerUrl(StringUtils.isNullOrEmpty(override_url) ?
-                getDescriptor().getUrl() : override_url);
+        if (StringUtils.isNullOrEmpty(override_url))
+        {
+            slInfo.setServerUrl(getDescriptor().getUrl());
+        }
+        else{
+            slInfo.setServerUrl(override_url);
+        }
 
-        slInfo.setProxy(StringUtils.isNullOrEmpty(override_proxy) ?
-                getDescriptor().getProxy() : override_proxy);
+        if (StringUtils.isNullOrEmpty(override_proxy))
+        {
+            slInfo.setProxy(getDescriptor().getProxy());
+        }
+        else{
+            slInfo.setProxy(override_proxy);
+        }
+
     }
 
     private List<FileBackupInfo> getPomFiles(List<String> folders, String patterns, boolean recursiveSearch) {
@@ -531,7 +540,6 @@ public class BeginAnalysisBuildStep extends Builder {
         logger.debug("Log Level:" + logLevel);
         logger.debug("Log Folder:" + logFolder);
         logger.debug("Auto Restore Build File:" + autoRestoreBuildFile);
-        logger.debug("Disable Jacoco: " + testingFramework);
         logger.debug("-----------Sealights Jenkins Plugin Configuration--------------");
     }
 
