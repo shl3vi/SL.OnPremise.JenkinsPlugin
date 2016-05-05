@@ -4,8 +4,6 @@ import hudson.*;
 import hudson.Launcher;
 import hudson.model.*;
 import hudson.remoting.*;
-import hudson.slaves.NodeDescriptor;
-import hudson.slaves.NodePropertyDescriptor;
 import hudson.slaves.NodeSpecific;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
@@ -26,7 +24,6 @@ import org.kohsuke.stapler.StaplerRequest;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -43,8 +40,8 @@ import static io.sealigths.plugins.sealightsjenkins.TestingFramework.AUTO_DETECT
 public class MavenSealightsBuildStep extends Builder {
 
 
-    public final SeaLightsJenkinsBuildWrapper slJenkinsBuildWrapper;
-
+    public final BeginAnalysisBuildStep beginAnalysisBuildStep;
+    public final boolean enableSeaLights;
     /**
      * The targets and other maven options.
      * Can be separated by SP or NL.
@@ -119,11 +116,14 @@ public class MavenSealightsBuildStep extends Builder {
 //    }
 
     @DataBoundConstructor
-    public MavenSealightsBuildStep(SeaLightsJenkinsBuildWrapper slJenkinsBuildWrapper,
+    public MavenSealightsBuildStep(BeginAnalysisBuildStep beginAnalysisBuildStep,
+                                   boolean enableSeaLights,
                                    String targets, String name, String pom, String properties,
                                    String jvmOptions, boolean usePrivateRepository,
                                    SettingsProvider settings, GlobalSettingsProvider globalSettings) {
-        this.slJenkinsBuildWrapper = slJenkinsBuildWrapper;
+        this.beginAnalysisBuildStep = beginAnalysisBuildStep;
+        this.enableSeaLights = enableSeaLights;
+
         this.targets = targets;
         this.mavenName = name;
         this.pom = Util.fixEmptyAndTrim(pom);
@@ -135,11 +135,15 @@ public class MavenSealightsBuildStep extends Builder {
     }
 
     public MavenSealightsBuildStep() {
-        this(null,null,null,null,null,null,false,null,null);
+        this(null,false,null,null,null,null,null,false,null,null);
     }
 
-    public SeaLightsJenkinsBuildWrapper getSlJenkinsBuildWrapper() {
-        return slJenkinsBuildWrapper;
+    public BeginAnalysisBuildStep getBeginAnalysisBuildStep() {
+        return beginAnalysisBuildStep;
+    }
+
+    public boolean isEnableSeaLights() {
+        return enableSeaLights;
     }
 
     public String getTargets() {
@@ -233,20 +237,32 @@ public class MavenSealightsBuildStep extends Builder {
         }
     }
 
+    private boolean beginAnalysisBuildStep(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+        beginAnalysisBuildStep.perform(build, launcher, listener);
+        if (AUTO_DETECT.equals(beginAnalysisBuildStep.getTestingFramework())) {
+            if (!runInitializeTestListenerGoal(build, launcher, listener)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 
+        PrintStream logger = listener.getLogger();
         try {
-            slJenkinsBuildWrapper.setUp(build, launcher, listener);
-            if (AUTO_DETECT.equals(slJenkinsBuildWrapper.getTestingFramework())) {
-                if (!runInitializeTestListenerGoal(build, launcher, listener)) {
+            if (enableSeaLights) {
+                if (!beginAnalysisBuildStep(build, launcher, listener)) {
+                    logger.println("[SeaLights] Begin Analysis step returned false. This likely due to an Exit Code > 0 from Maven.");
                     return false;
                 }
+            }else{
+                logger .println("'Enable SeaLights' is set to false. Skipping...");
             }
 
             VariableResolver<String> vr = build.getBuildVariableResolver();
             EnvVars env = build.getEnvironment(listener);
-
             String targets = Util.replaceMacro(this.targets, vr);
             targets = env.expand(targets);
             String pom = env.expand(this.pom);
@@ -331,14 +347,14 @@ public class MavenSealightsBuildStep extends Builder {
                 startIndex = endIndex + 1;
             } while (startIndex < targets.length());
         } finally {
-            if (slJenkinsBuildWrapper.isAutoRestoreBuildFile())
+            if (enableSeaLights && beginAnalysisBuildStep.isAutoRestoreBuildFile())
                 restoreBuildFile(build, launcher, listener);
         }
         return true;
     }
 
     private void restoreBuildFile(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
-        RestoreBuildFile restoreBuildFile = new RestoreBuildFile(slJenkinsBuildWrapper.isAutoRestoreBuildFile(), slJenkinsBuildWrapper.getBuildFilesFolders());
+        RestoreBuildFile restoreBuildFile = new RestoreBuildFile(beginAnalysisBuildStep.isAutoRestoreBuildFile(), beginAnalysisBuildStep.getBuildFilesFolders());
         restoreBuildFile.perform(build, launcher, listener);
     }
 

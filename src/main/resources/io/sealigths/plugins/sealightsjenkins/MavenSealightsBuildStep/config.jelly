@@ -53,8 +53,10 @@ THE SOFTWARE.
     
     <f:dropdownDescriptorSelector title="${%Settings file}"  field="settings" default="${descriptor.defaultSettingsProvider}"/>
 	<f:dropdownDescriptorSelector title="${%Global Settings file}" field="globalSettings"  default="${descriptor.defaultGlobalSettingsProvider}"/>
-    <f:entry>
-      <f:property field="slJenkinsBuildWrapper"/>
-    </f:entry>
+    <f:advanced title="Sealights">
+      <f:entry>
+        <f:property field="beginAnalysisBuildStep"/>
+      </f:entry>
+    </f:advanced>
   </f:advanced>
 </j:jelly>
