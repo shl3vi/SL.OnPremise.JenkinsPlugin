@@ -4,6 +4,7 @@ import io.sealigths.plugins.sealightsjenkins.BuildStrategy;
 import io.sealigths.plugins.sealightsjenkins.LogLevel;
 import io.sealigths.plugins.sealightsjenkins.TestingFramework;
 import io.sealigths.plugins.sealightsjenkins.entities.FileBackupInfo;
+import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import org.apache.commons.io.FileUtils;
 import org.custommonkey.xmlunit.DetailedDiff;
 import org.custommonkey.xmlunit.XMLUnit;
@@ -28,7 +29,7 @@ public class MavenIntegrationTest {
 
         MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
         mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new PrintStream(System.out),mavenIntegrationInfo);
+        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo);
 
         //Act
         mavenIntegration.integrate(false);
@@ -49,7 +50,7 @@ public class MavenIntegrationTest {
 
         MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
         mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new PrintStream(System.out),mavenIntegrationInfo);
+        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo);
 
         //Act
         mavenIntegration.integrate(false);
@@ -70,7 +71,7 @@ public class MavenIntegrationTest {
 
         MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
         mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new PrintStream(System.out),mavenIntegrationInfo);
+        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo);
 
         //Act
         mavenIntegration.integrate(false);
@@ -91,7 +92,7 @@ public class MavenIntegrationTest {
 
         MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
         mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new PrintStream(System.out),mavenIntegrationInfo);
+        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo);
 
         //Act
         mavenIntegration.integrate(false);
@@ -112,7 +113,7 @@ public class MavenIntegrationTest {
 
         MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
         mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new PrintStream(System.out),mavenIntegrationInfo);
+        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo);
 
         //Act
         mavenIntegration.integrate(false);
@@ -133,7 +134,7 @@ public class MavenIntegrationTest {
 
         MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
         mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new PrintStream(System.out),mavenIntegrationInfo);
+        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo);
 
         //Act
         mavenIntegration.integrate(false);
@@ -154,7 +155,7 @@ public class MavenIntegrationTest {
 
         MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
         mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new PrintStream(System.out),mavenIntegrationInfo);
+        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo);
 
         //Act
         mavenIntegration.integrate(false);
@@ -175,7 +176,7 @@ public class MavenIntegrationTest {
 
         MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
         mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new PrintStream(System.out),mavenIntegrationInfo);
+        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo);
 
         //Act
         mavenIntegration.integrate(false);
@@ -197,7 +198,7 @@ public class MavenIntegrationTest {
 
         MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
         mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new PrintStream(System.out),mavenIntegrationInfo);
+        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo);
 
         //Act
         mavenIntegration.integrate(false);
@@ -218,7 +219,7 @@ public class MavenIntegrationTest {
 
         MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
         mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new PrintStream(System.out),mavenIntegrationInfo);
+        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo);
 
         //Act
         mavenIntegration.integrate(false);
@@ -230,27 +231,6 @@ public class MavenIntegrationTest {
         assertXMLEquals(expected, actual);
     }
 
-//    @Test
-//    public void gsBug() throws Exception {
-//
-//        //Arrange
-//        TestingFramework TESTING_FRAMEWORK=TestingFramework.AUTO_DETECT;
-//        String TEST_CASE = "11_gs_bug";
-//        String testFolder = getTestFolder(TEST_CASE);
-//
-//        MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
-//        mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-//        MavenIntegration mavenIntegration = new MavenIntegration(new PrintStream(System.out),mavenIntegrationInfo);
-//
-//        //Act
-//        mavenIntegration.integrate(false);
-//
-//        //Assert
-//        String expected = readFile(testFolder + "/expected.xml");
-//        String actual = readFile(testFolder + "/actual.xml");
-//
-//        assertXMLEquals(expected, actual);
-//    }
 
     public static void assertXMLEquals(String expectedXML, String actualXML) throws Exception {
         XMLUnit.setIgnoreWhitespace(true);

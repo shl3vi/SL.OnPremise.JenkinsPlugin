@@ -17,6 +17,7 @@ import io.sealigths.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
 import io.sealigths.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
 import io.sealigths.plugins.sealightsjenkins.utils.FileAndFolderUtils;
 import io.sealigths.plugins.sealightsjenkins.utils.IncludeExcludeFilter;
+import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import io.sealigths.plugins.sealightsjenkins.utils.StringUtils;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -349,7 +350,7 @@ public class BeginAnalysisBuildStep extends Builder {
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 
-        PrintStream logger = listener.getLogger();
+        Logger logger = new Logger(listener.getLogger());
         FilePath ws = build.getWorkspace();
         if (ws == null) {
             return false;
@@ -365,15 +366,14 @@ public class BeginAnalysisBuildStep extends Builder {
 
         configureBuildFilePublisher(build, slInfo.getBuildFilesFolders());
 
-        doMavenIntegration(listener, slInfo);
+        doMavenIntegration(logger, listener, slInfo);
 
         MavenSealightsBuildStep mavenSealightsBuildStep = new MavenSealightsBuildStep();
         return mavenSealightsBuildStep.runInitializeTestListenerGoal(build, launcher, listener);
 
     }
 
-    private void doMavenIntegration(
-            BuildListener listener, SeaLightsPluginInfo slInfo) throws IOException, InterruptedException {
+    private void doMavenIntegration(Logger logger, BuildListener listener, SeaLightsPluginInfo slInfo) throws IOException, InterruptedException {
 
         List<String> folders = Arrays.asList(slInfo.getBuildFilesFolders().split("\\s*,\\s*"));
         List<FileBackupInfo> pomFiles = getPomFiles(folders, slInfo.getBuildFilesPatterns(), slInfo.isRecursiveOnBuildFilesFolders());
@@ -383,12 +383,12 @@ public class BeginAnalysisBuildStep extends Builder {
                 slInfo,
                 testingFramework
         );
-        MavenIntegration mavenIntegration = new MavenIntegration(listener.getLogger(), info);
+        MavenIntegration mavenIntegration = new MavenIntegration(logger, info);
         mavenIntegration.integrate();
 
     }
 
-    private SeaLightsPluginInfo createSeaLightsPluginInfo(AbstractBuild build, FilePath ws, PrintStream logger) {
+    private SeaLightsPluginInfo createSeaLightsPluginInfo(AbstractBuild build, FilePath ws, Logger logger) {
 
         SeaLightsPluginInfo slInfo = new SeaLightsPluginInfo();
         setGlobalConfiguration(slInfo);
@@ -400,7 +400,7 @@ public class BeginAnalysisBuildStep extends Builder {
         else
             pomPath = workingDir + "/pom.xml";
 
-        log(logger, "Absolute path to effective file: " + pomPath);
+        logger.info("Absolute path to effective file: " + pomPath);
 
         slInfo.setEnabled(true);
         slInfo.setBuildName(String.valueOf(build.getNumber()));
@@ -472,13 +472,13 @@ public class BeginAnalysisBuildStep extends Builder {
         return pomFiles;
     }
 
-    private void tryAddRestoreBuildFilePublisher(AbstractBuild build, PrintStream logger) {
+    private void tryAddRestoreBuildFilePublisher(AbstractBuild build, Logger logger) {
         DescribableList publishersList = build.getProject().getPublishersList();
         boolean found = false;
         for (Object item : publishersList) {
             if (item.toString().contains("RestoreBuildFile")) {
                 found = true;
-                log(logger, "There was no need to add a new RestoreBuildFile since there is one. Current one:" + item.toString());
+                logger.debug("There was no need to add a new RestoreBuildFile since there is one. Current one:" + item.toString());
                 //If found, this was added manually. Remove the check box.
                 break;
             }
@@ -500,44 +500,39 @@ public class BeginAnalysisBuildStep extends Builder {
         }
     }
 
-    private void printFields(PrintStream logger) {
-        log(logger, "-----------Sealights Jenkins Plugin Configuration--------------");
-        log(logger, "Override CustomerId : " + override_customerId);
-        log(logger, "Override Url: " + override_url);
-        log(logger, "Override proxy:" + override_proxy);
-        log(logger, "Testing Framework: " + testingFramework);
-        log(logger, "Branch: " + branch);
-        log(logger, "App Name:" + appName);
-        log(logger, "Module Name:" + moduleName);
-        log(logger, "Recursive: " + recursive);
-        log(logger, "Workspace: " + workspacepath);
-        log(logger, "Environment: " + environment);
-        log(logger, "enableMultipleBuildFiles: " + enableMultipleBuildFiles);
-        log(logger, "Override Jars: " + overrideJars);
-        log(logger, "Multiple Build Files: " + multipleBuildFiles);
-        log(logger, "Build Files Folders: " + buildFilesFolders + " buildFilesPatterns: " + buildFilesPatterns);
-        log(logger, "Pom Path:" + pomPath);
-        log(logger, "Packages Included:" + packagesIncluded);
-        log(logger, "Packages Excluded:" + packagesExcluded);
-        log(logger, "Files Included:" + filesIncluded);
-        log(logger, "Files Excluded:" + filesExcluded);
-        log(logger, "Build-Scanner Jar:" + buildScannerJar);
-        log(logger, "Test-Listener Jar:" + testListenerJar);
-        log(logger, "Test-Listener Configuration File :" + testListenerConfigFile);
-        log(logger, "Build Strategy: " + buildStrategy);
-        log(logger, "Api Jar:" + apiJar);
-        log(logger, "Log Enabled:" + logEnabled);
-        log(logger, "Log Destination:" + logDestination);
-        log(logger, "Log Level:" + logLevel);
-        log(logger, "Log Folder:" + logFolder);
-        log(logger, "Auto Restore Build File:" + autoRestoreBuildFile);
-        log(logger, "Disable Jacoco: " + testingFramework);
-        log(logger, "-----------Sealights Jenkins Plugin Configuration--------------");
-    }
-
-    private void log(PrintStream logger, String message) {
-        message = "[SeaLights Jenkins Plugin] " + message;
-        logger.println(message);
+    private void printFields(Logger logger) {
+        logger.debug("-----------Sealights Jenkins Plugin Configuration--------------");
+        logger.debug("Override CustomerId : " + override_customerId);
+        logger.debug("Override Url: " + override_url);
+        logger.debug("Override proxy:" + override_proxy);
+        logger.debug("Testing Framework: " + testingFramework);
+        logger.debug("Branch: " + branch);
+        logger.debug("App Name:" + appName);
+        logger.debug("Module Name:" + moduleName);
+        logger.debug("Recursive: " + recursive);
+        logger.debug("Workspace: " + workspacepath);
+        logger.debug("Environment: " + environment);
+        logger.debug("enableMultipleBuildFiles: " + enableMultipleBuildFiles);
+        logger.debug("Override Jars: " + overrideJars);
+        logger.debug("Multiple Build Files: " + multipleBuildFiles);
+        logger.debug("Build Files Folders: " + buildFilesFolders + " buildFilesPatterns: " + buildFilesPatterns);
+        logger.debug("Pom Path:" + pomPath);
+        logger.debug("Packages Included:" + packagesIncluded);
+        logger.debug("Packages Excluded:" + packagesExcluded);
+        logger.debug("Files Included:" + filesIncluded);
+        logger.debug("Files Excluded:" + filesExcluded);
+        logger.debug("Build-Scanner Jar:" + buildScannerJar);
+        logger.debug("Test-Listener Jar:" + testListenerJar);
+        logger.debug("Test-Listener Configuration File :" + testListenerConfigFile);
+        logger.debug("Build Strategy: " + buildStrategy);
+        logger.debug("Api Jar:" + apiJar);
+        logger.debug("Log Enabled:" + logEnabled);
+        logger.debug("Log Destination:" + logDestination);
+        logger.debug("Log Level:" + logLevel);
+        logger.debug("Log Folder:" + logFolder);
+        logger.debug("Auto Restore Build File:" + autoRestoreBuildFile);
+        logger.debug("Disable Jacoco: " + testingFramework);
+        logger.debug("-----------Sealights Jenkins Plugin Configuration--------------");
     }
 
     @Override

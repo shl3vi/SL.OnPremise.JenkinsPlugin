@@ -11,6 +11,7 @@ import hudson.tasks.Builder;
 import hudson.tasks._maven.MavenConsoleAnnotator;
 import hudson.tools.*;
 import hudson.util.*;
+import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import jenkins.MasterToSlaveFileCallable;
 import jenkins.model.Jenkins;
 import jenkins.mvn.GlobalMavenConfig;
@@ -256,15 +257,15 @@ public class MavenSealightsBuildStep extends Builder {
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 
-        PrintStream logger = listener.getLogger();
+        Logger logger = new Logger(listener.getLogger());
         try {
             if (enableSeaLights) {
                 if (!beginAnalysisBuildStep(build, launcher, listener)) {
-                    logger.println("[SeaLights] Begin Analysis step returned false. This likely due to an Exit Code > 0 from Maven.");
+                    logger.error("Begin Analysis step returned false. This likely due to an Exit Code > 0 from Maven.");
                     return false;
                 }
             }else{
-                logger .println("'Enable SeaLights' is set to false. Skipping...");
+                logger.info("'Enable SeaLights' is set to false. Skipping...");
             }
 
             VariableResolver<String> vr = build.getBuildVariableResolver();

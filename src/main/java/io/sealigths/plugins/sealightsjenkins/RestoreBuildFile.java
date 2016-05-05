@@ -11,6 +11,7 @@ import hudson.model.AbstractProject;
 import io.sealigths.plugins.sealightsjenkins.utils.FileAndFolderUtils;
 import io.sealigths.plugins.sealightsjenkins.utils.FileUtils;
 import io.sealigths.plugins.sealightsjenkins.utils.IncludeExcludeFilter;
+import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.File;
@@ -34,8 +35,8 @@ public class RestoreBuildFile extends Recorder {
         this.folders = folders;
     }
 
-    private void RestoreAllFilesInFolder(String rootFolder, PrintStream logger){
-        log(logger, "searching in folder: " + rootFolder);
+    private void RestoreAllFilesInFolder(String rootFolder, Logger logger){
+        logger.info("searching in folder: " + rootFolder);
         boolean recursive = true;
         IncludeExcludeFilter filter = new IncludeExcludeFilter("*.slbak" , null);
         List<String> filesToRestore = FileAndFolderUtils.findAllFilesWithFilter(rootFolder, recursive, filter);
@@ -43,22 +44,22 @@ public class RestoreBuildFile extends Recorder {
             String newName = currentName.replace(".slbak","");
             boolean isSuccess = FileUtils.renameFileOrFolder(currentName, newName);
             if (isSuccess)
-                log(logger, "Restored '" + currentName + "' to '" + newName + "'.");
+                logger.info("Restored '" + currentName + "' to '" + newName + "'.");
             else
-                log(logger, "Failed restoring '" + currentName + "' to '" + newName + "'.");
+                logger.error("Failed restoring '" + currentName + "' to '" + newName + "'.");
         }
     }
 
     @Override
     public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
 
-        PrintStream logger = listener.getLogger();
+        Logger logger = new Logger(listener.getLogger());
 
         if (this.shouldRestore) {
-            log(logger, "Searching for files to restore...");
+            logger.info("Searching for files to restore...");
             FilePath ws = build.getWorkspace();
             if (ws == null) {
-                log(logger, "Failed to retrieve workspace path.");
+                logger.error("Failed to retrieve workspace path.");
                 return false;
             }
 
@@ -70,7 +71,7 @@ public class RestoreBuildFile extends Recorder {
             }
 
         } else {
-            log(logger, "No need to restore any files.");
+            logger.info("No need to restore any files.");
         }
 
         return true;
@@ -151,8 +152,4 @@ public class RestoreBuildFile extends Recorder {
 
     }
 
-    private void log(PrintStream logger, String message) {
-        message = "[SeaLights Jenkins Plugin] " + message;
-        logger.println(message);
-    }
 }

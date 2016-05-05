@@ -2,6 +2,7 @@ package io.sealigths.plugins.sealightsjenkins.integration;
 
 import io.sealigths.plugins.sealightsjenkins.TestingFramework;
 import io.sealigths.plugins.sealightsjenkins.entities.FileBackupInfo;
+import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 
 import javax.xml.transform.TransformerException;
 import java.io.PrintStream;
@@ -19,9 +20,9 @@ public class MavenIntegration {
 
 
     private MavenIntegrationInfo mavenIntegrationInfo;
-    private PrintStream log;
+    private Logger log;
 
-    public MavenIntegration(PrintStream log, MavenIntegrationInfo mavenIntegrationInfo) {
+    public MavenIntegration(Logger log, MavenIntegrationInfo mavenIntegrationInfo) {
         this.log = log;
         this.mavenIntegrationInfo = mavenIntegrationInfo;
     }
@@ -32,17 +33,15 @@ public class MavenIntegration {
 
     public void integrate(boolean shouldBackup) {
 
-        log(log, "MavenIntegration.integrate - starting");
+        log.info("MavenIntegration.integrate - starting");
 
         for (FileBackupInfo fileBackupInfo : mavenIntegrationInfo.getPomFiles()) {
-            log(log, "MavenIntegration.integrate - Modifying pom: " + fileBackupInfo.getSourceFile());
-
             String sourceFile = fileBackupInfo.getSourceFile();
             PomFile pomFile = new PomFile(sourceFile, log);
 
             try {
                 if (pomFile.isPluginExistInEntriePom(SEALIGHTS_GROUP_ID, SEALIGHTS_ARTIFACT_ID)) {
-                    log(log, "MavenIntegration.integrate - Skipping the integration since SeaLights plugin is already defined in the the POM file.");
+                    log.info("MavenIntegration.integrate - Skipping the integration since SeaLights plugin is already defined in the the POM file.");
                     return;
                 }
 
@@ -68,8 +67,7 @@ public class MavenIntegration {
                 }
                 integrateToPomFile(fileBackupInfo, pomFile);
             } catch (Exception e) {
-                log(log, "MavenIntegration.integrate - Unable to parse pom : " + sourceFile + ". Error:");
-                e.printStackTrace(log);
+                log.error("MavenIntegration.integrate - Unable to parse pom : " + sourceFile + ". Error:", e);
             }
         }
 
@@ -77,20 +75,20 @@ public class MavenIntegration {
 
     private void backupPom(String sourceFile) {
         String backupFile = sourceFile + ".slbak";
-        log(log, "MavenIntegration.integrate - created back up file: " + backupFile);
+        log.info("MavenIntegration.integrate - created back up file: " + backupFile);
         this.savePom(backupFile);
     }
 
     private void integrateToPomFile(FileBackupInfo fileBackupInfo, PomFile pomFile) {
-//        String profileId = info.getProfileId();
+        if (!pomFile.isValidPom())
+        {
+            log.info("MavenIntegration.integrateToPomFile - Skipping SeaLights integration due to invalid pom. Pom: " + fileBackupInfo.getSourceFile());
+            return;
+        }
+        else
+            log.info("MavenIntegration.integrateToPomFile - About to modify pom: " + fileBackupInfo.getSourceFile());
 
         integrateToAllProfiles(fileBackupInfo, pomFile);
-        //TODO: Enable the profile integration once done + tested.
-//        if (profileId == null || profileId.equals("")) {
-//            integrateToAllProfiles();
-//        } else {
-//            integrateToProfile(profileId);
-//        }
     }
 
     private String getEventListenerPackage(TestingFramework testingFramework) {
@@ -102,38 +100,12 @@ public class MavenIntegration {
         return "";
     }
 
-    private void integrateToProfile(String profileId, PomFile pomFile, FileBackupInfo fileBackupInfo) {
-//        List<String> profileIdfiles = pomFile.getProfileIds();
-        if (profileId.length() == 0) {
-            throw new RuntimeException("The specified POM file does not contain any profiles.");
-        }
-
-//        if (!profiles.contains(profileId))
-//        {
-//            throw new RuntimeException("The specified POM file does not contain a profile with id of '" + profileId + "'.");
-//        }
-
-        TestingFramework testingFramework = mavenIntegrationInfo.getTestingFramework();
-        SeaLightsPluginInfo seaLightsPluginInfo = this.mavenIntegrationInfo.getSeaLightsPluginInfo();
-        String xml = toPluginText(seaLightsPluginInfo, testingFramework);
-        pomFile.addPlugin(xml);
-
-        String testingFrameworkListeners = getEventListenerPackage(testingFramework);
-        String apiAgentPath = mavenIntegrationInfo.getSeaLightsPluginInfo().getApiJar();
-
-        if (testingFramework.equals(TestingFramework.AUTO_DETECT)) {
-            testingFrameworkListeners = null;   //Used to pass control to the maven plugin.
-        }
-
-        pomFile.updateSurefirePlugin(testingFrameworkListeners, apiAgentPath);
-        savePom(fileBackupInfo, pomFile);
-
-    }
 
     private void integrateToAllProfiles(FileBackupInfo fileBackupInfo, PomFile pomFile) {
         SeaLightsPluginInfo seaLightsPluginInfo = this.mavenIntegrationInfo.getSeaLightsPluginInfo();
         TestingFramework testingFramework = mavenIntegrationInfo.getTestingFramework();
         String xml = toPluginText(seaLightsPluginInfo, testingFramework);
+
         pomFile.addPlugin(xml);
 
         String testingFrameworkListeners = getEventListenerPackage(testingFramework);
@@ -165,8 +137,7 @@ public class MavenIntegration {
         try {
             pomFile.save(filename);
         } catch (TransformerException e) {
-            log.println("Failed saving POM file. Error:");
-            e.printStackTrace(this.log);
+            log.error("Failed saving POM file. Error:", e);
         }
     }
 
@@ -213,6 +184,8 @@ public class MavenIntegration {
         tryAppendValue(plugin, pluginInfo.getScannerJar(), "buildScannerJar");
         tryAppendValue(plugin, pluginInfo.getListenerJar(), "testListenerJar");
         tryAppendValue(plugin, pluginInfo.getListenerConfigFile(), "testListenerConfigFile");
+        tryAppendValue(plugin, pluginInfo.getEnvironment(), "environment");
+        tryAppendValue(plugin, pluginInfo.getFilesExcluded(), "filesexcluded");
 
         if (!pluginInfo.isRecursive()) {
             plugin.append("<recursive>false</recursive>");
@@ -239,14 +212,6 @@ public class MavenIntegration {
         appendExecution(plugin, "a3", "initialize-test-listener");
         plugin.append("</executions>");
 
-
-        //        if(!isNullOrEmpty(environment)){
-//            plugin.append("<environment>" + environment + "</environment>");
-//        }
-
-//        if(!isNullOrEmpty(filesExcluded)){
-//            plugin.append("<filesexcluded>" + filesExcluded + "</filesexcluded>");
-//        }
 
         return plugin.toString();
     }

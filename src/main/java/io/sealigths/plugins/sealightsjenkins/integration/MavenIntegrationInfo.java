@@ -10,7 +10,6 @@ import java.util.List;
  */
 public class MavenIntegrationInfo {
     private List<FileBackupInfo> pomFiles;
-    private String profileId;
     private TestingFramework testingFramework;
     private SeaLightsPluginInfo seaLightsPluginInfo;
 
@@ -29,9 +28,6 @@ public class MavenIntegrationInfo {
         this.seaLightsPluginInfo = seaLightsPluginInfo;
     }
 
-    public String getProfileId() {
-        return profileId;
-    }
     public TestingFramework getTestingFramework() {
         return testingFramework;
     }

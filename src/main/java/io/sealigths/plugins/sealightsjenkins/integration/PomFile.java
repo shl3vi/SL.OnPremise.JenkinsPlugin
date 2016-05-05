@@ -1,5 +1,6 @@
 package io.sealigths.plugins.sealightsjenkins.integration;
 
+import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import org.w3c.dom.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -22,14 +23,14 @@ import java.util.List;
  */
 public class PomFile {
 
-    private PrintStream log;
+    private Logger log;
     private String filename;
     private Document document;
     private final static String SUREFIRE_GROUP_ID = "org.apache.maven.plugins";
     private final static String SUREFIRE_ARTIFACT_ID = "maven-surefire-plugin";
     private final static String SUREFIRE_XML = "<groupId>org.apache.maven.plugins</groupId><artifactId>maven-surefire-plugin</artifactId><version>2.19</version>";
 
-    public PomFile(String filename, PrintStream log) {
+    public PomFile(String filename, Logger log) {
         this.filename = filename;
         this.log = log;
     }
@@ -124,8 +125,8 @@ public class PomFile {
         pluginsElement.appendChild(pluginElement);
     }
 
-    //String SUREFIRE_PLUGIN = "//build/plugins/plugin/artifactId[.='maven-surefire-plugin']/parent::plugin";
     String SUREFIRE_PLUGIN = "//plugin/artifactId[.='maven-surefire-plugin']/parent::plugin";
+    String SUREFIRE_PLUGIN_IN_PLUGIN_MGMT = "//pluginManagement/plugins/plugin/artifactId[.='maven-surefire-plugin']/parent::plugin";
 
     public void updateSurefirePlugin(String listenerValue, String apiJarPath) {
         Element documentElement = getDocument().getDocumentElement();
@@ -134,27 +135,27 @@ public class PomFile {
 
     private void updateSurefirePlugin(Element parentElement, String listenerValue, String apiJarPath) {
         try {
+
+
             List<Element> surefireElements = getOrCreateElements("plugin", SUREFIRE_PLUGIN, parentElement);
             for (Element surefireElement : surefireElements) {
                 List<Element> configurationElements = getOrCreateElements("configuration", surefireElement);
                 for (Element configurationElement : configurationElements) {
-                    if (isNodeExist(configurationElement, "forkMode"))
-                    {
+                    if (isNodeExist(configurationElement, "forkMode")) {
                         if (!isValidForkMode(configurationElement)) {
-                            log.println("WARNING - Skipping SeaLights integration due to unsupported 'forkMode' value of SureFire. Value cannot be 'never' or 'always'. Recommended value is 'once'.");
+                            log.warning("Skipping SeaLights integration due to unsupported 'forkMode' value of SureFire. Value cannot be 'never' or 'always'. Recommended value is 'once'.");
+                            System.err.println("[SeaLights Jenkins Plugin] - WARNING - Skipping SeaLights integration due to unsupported 'forkMode' value of SureFire. Value cannot be 'never' or 'always'. Recommended value is 'once'.");
                             continue;
                         }
                     }
 
-                    if (isNodeExist(configurationElement, "forkCount"))
-                    {
+                    if (isNodeExist(configurationElement, "forkCount")) {
                         if (!isValidForkCount(configurationElement)) {
-                            log.println("WARNING - Skipping SeaLights integration due to unsupported 'forkCount' value of SureFire. Value cannot be '0'.");
+                            log.warning("Skipping SeaLights integration due to unsupported 'forkCount' value of SureFire. Value cannot be '0'.");
+                            System.err.println("[SeaLights Jenkins Plugin] - WARNING - Skipping SeaLights integration due to unsupported 'forkCount' value of SureFire. Value cannot be '0'.");
                             continue;
                         }
                     }
-
-
 
 
                     if (listenerValue != null && !"".equals(listenerValue))
@@ -168,12 +169,46 @@ public class PomFile {
         }
     }
 
+    public boolean isValidPom() {
+
+        //TODO: Don't delete. Work in progress!!! (Nadav)
+        Element documentElement = getDocument().getDocumentElement();
+        try {
+            if (!isNodeExist(documentElement, SUREFIRE_PLUGIN_IN_PLUGIN_MGMT))
+                return true;
+            List<Element> surefireElements = getOrCreateElements("plugin", SUREFIRE_PLUGIN_IN_PLUGIN_MGMT, documentElement);
+            for (Element surefireElement : surefireElements) {
+                List<Element> configurationElements = getOrCreateElements("configuration", surefireElement);
+                for (Element configurationElement : configurationElements) {
+                    if (isNodeExist(configurationElement, "forkMode")) {
+                        if (!isValidForkMode(configurationElement)) {
+                            log.warning("Found an unsupported 'forkMode' value of SureFire. Value cannot be 'never' or 'always'. Recommended value is 'once'.");
+                            System.err.println("[SeaLights Jenkins Plugin] - WARNING - Found an unsupported 'forkMode' value of SureFire. Value cannot be 'never' or 'always'. Recommended value is 'once'.");
+                        }
+                    }
+
+                    if (isNodeExist(configurationElement, "forkCount")) {
+                        if (!isValidForkCount(configurationElement)) {
+                            log.warning("Found an unsupported 'forkCount' value of SureFire. Value cannot be '0'.");
+                            System.err.println("[SeaLights Jenkins Plugin] - WARNING - Found an unsupported 'forkCount' value of SureFire. Value cannot be '0'.");
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed while trying to validate the pom. Error:", e);
+            return false;
+        }
+
+        return true;
+    }
+
     private boolean isValidForkMode(Element configurationElement) throws XPathExpressionException {
         List<Element> forkModeElements = getOrCreateElements("forkMode", configurationElement);
         Element forkMode = forkModeElements.get(0);
         String currentValue = forkMode.getTextContent();
         boolean isValid = !("never".equalsIgnoreCase(currentValue) || "always".equalsIgnoreCase(currentValue));
-        return  isValid;
+        return isValid;
     }
 
     private boolean isValidForkCount(Element configurationElement) throws XPathExpressionException {
@@ -181,7 +216,7 @@ public class PomFile {
         Element forkCount = forkCountElements.get(0);
         String currentValue = forkCount.getTextContent();
         boolean isValid = !("0".equalsIgnoreCase(currentValue));
-        return  isValid;
+        return isValid;
     }
 
     private void verifyArgLineElement(Element configurationElement) throws XPathExpressionException {
@@ -191,8 +226,7 @@ public class PomFile {
             List<Element> argLineElements = getOrCreateElements("argLine", configurationElement);
             Element argLine = argLineElements.get(0);
             String currentValue = argLine.getTextContent();
-            if (!currentValue.contains("${argLine}"))
-            {
+            if (!currentValue.contains("${argLine}")) {
                 currentValue = "${argLine} " + currentValue;
                 argLine.setTextContent(currentValue);
             }
@@ -274,8 +308,8 @@ public class PomFile {
         for (Element propertyElement : propertiesElements) {
             {
                 //Does the current property is a listener property.
-                if (isNodeExist(propertyElement, "/additionalClasspathElement[text() = '"+apiJarPath+"']")) {
-                   return true;
+                if (isNodeExist(propertyElement, "/additionalClasspathElement[text() = '" + apiJarPath + "']")) {
+                    return true;
                 }
             }
         }
@@ -320,7 +354,8 @@ public class PomFile {
     }
 
 
-    String PLUGIN_TEMPLATE = "plugin[artifactId='#ARTIFACT_ID#' and groupId='#GROUP_ID#']";
+    //String PLUGIN_TEMPLATE = "plugin[artifactId='#ARTIFACT_ID#' and groupId='#GROUP_ID#']";
+    String PLUGIN_TEMPLATE = "plugin[artifactId='#ARTIFACT_ID#']";
 
     private boolean isPluginExistInElement(String groupId, String artifactId, Element parent) throws XPathExpressionException {
         String xpath = PLUGIN_TEMPLATE.replace("#GROUP_ID#", groupId).replace("#ARTIFACT_ID#", artifactId);
