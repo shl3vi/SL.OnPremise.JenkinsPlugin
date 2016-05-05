@@ -77,9 +77,9 @@
             <f:checkbox default="true"/>
         </f:entry>
 
-        <f:entry field="disableJacoco" title="Disable Jacoco">
-            <f:checkbox checked="${it.disableJacoco}" />
-        </f:entry>
+        <!--<f:entry field="disableJacoco" title="Disable Jacoco">-->
+            <!--<f:checkbox checked="${it.disableJacoco}" />-->
+        <!--</f:entry>-->
 
         <f:optionalBlock name="multipleBuildFilesOptionalBlock" title="Multiple build files" inline="true">
 
