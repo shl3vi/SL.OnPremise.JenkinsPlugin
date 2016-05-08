@@ -173,6 +173,11 @@ public class PomFile {
 
         //TODO: Don't delete. Work in progress!!! (Nadav)
         Element documentElement = getDocument().getDocumentElement();
+        if (documentElement == null) {
+         log.warning("Couldn't read pom file (documentElement is null).");
+            return false;
+        }
+
         try {
             if (!isNodeExist(documentElement, SUREFIRE_PLUGIN_IN_PLUGIN_MGMT))
                 return true;
