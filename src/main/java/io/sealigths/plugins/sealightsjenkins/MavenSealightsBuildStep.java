@@ -772,12 +772,13 @@ public class MavenSealightsBuildStep extends Builder {
             return new MavenInstallation(getName(), translateFor(node, log), getProperties().toList());
         }
 
-//        @Extension
-//        public static class DescriptorImpl extends ToolDescriptor<MavenInstallation> {
-//            @Override
-//            public String getDisplayName() {
-//                return "Maven with Sealights";
-//            }
+        @Extension
+        public static class DescriptorImpl extends Descriptor/*ToolDescriptor<MavenInstallation>*/ {
+            @Override
+            public String getDisplayName() {
+                return "";
+            }
+        }
 //
 //            @Override
 //            public List<? extends ToolInstaller> getDefaultInstallers() {
