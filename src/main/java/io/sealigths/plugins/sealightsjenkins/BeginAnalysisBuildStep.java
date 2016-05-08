@@ -359,14 +359,14 @@ public class BeginAnalysisBuildStep extends Builder {
 
         configureBuildFilePublisher(build, slInfo.getBuildFilesFolders());
 
-        doMavenIntegration(logger, listener, slInfo);
+        doMavenIntegration(logger, slInfo);
 
         MavenSealightsBuildStep mavenSealightsBuildStep = new MavenSealightsBuildStep();
         return mavenSealightsBuildStep.runInitializeTestListenerGoal(build, launcher, listener);
 
     }
 
-    private void doMavenIntegration(Logger logger, BuildListener listener, SeaLightsPluginInfo slInfo) throws IOException, InterruptedException {
+    private void doMavenIntegration(Logger logger, SeaLightsPluginInfo slInfo) throws IOException, InterruptedException {
 
         List<String> folders = Arrays.asList(slInfo.getBuildFilesFolders().split("\\s*,\\s*"));
         List<FileBackupInfo> pomFiles = getPomFiles(folders, slInfo.getBuildFilesPatterns(), slInfo.isRecursiveOnBuildFilesFolders());
