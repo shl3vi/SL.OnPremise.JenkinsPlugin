@@ -361,9 +361,7 @@ public class BeginAnalysisBuildStep extends Builder {
 
         doMavenIntegration(logger, slInfo);
 
-        MavenSealightsBuildStep mavenSealightsBuildStep = new MavenSealightsBuildStep();
-        return mavenSealightsBuildStep.runInitializeTestListenerGoal(build, launcher, listener);
-
+        return true;
     }
 
     private void doMavenIntegration(Logger logger, SeaLightsPluginInfo slInfo) throws IOException, InterruptedException {

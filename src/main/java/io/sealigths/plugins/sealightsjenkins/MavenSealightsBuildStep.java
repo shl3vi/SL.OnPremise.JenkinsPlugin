@@ -11,6 +11,7 @@ import hudson.tasks.Builder;
 import hudson.tasks._maven.MavenConsoleAnnotator;
 import hudson.tools.*;
 import hudson.util.*;
+import io.sealigths.plugins.sealightsjenkins.utils.CommandLineHelper;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import jenkins.MasterToSlaveFileCallable;
 import jenkins.model.Jenkins;
@@ -365,13 +366,28 @@ public class MavenSealightsBuildStep extends Builder {
         restoreBuildFile.perform(build, launcher, listener);
     }
 
+    private String getSystemPropertiesArgs(String cmdLine){
+        List<String> argsAsList = CommandLineHelper.toArgsArray(cmdLine);
+        StringBuilder sysProps = new StringBuilder();
+        for (String arg: argsAsList){
+            if (arg.startsWith("-D")){
+                sysProps.append(arg);
+                sysProps.append(" ");
+            }
+        }
+        return  sysProps.toString();
+
+    }
+
+
     public boolean runInitializeTestListenerGoal(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         VariableResolver<String> vr = build.getBuildVariableResolver();
         EnvVars env = build.getEnvironment(listener);
         String pom = env.expand(this.pom);
         ArgumentListBuilder args = new ArgumentListBuilder();
         MavenInstallation mi = getMaven();
-        String normalizedTarget = "sealights:initialize-test-listener";
+        String normalizedTarget = targets.replaceAll("[\t\r\n]+", " ");
+        normalizedTarget = getSystemPropertiesArgs(normalizedTarget) + " sealights:initialize-test-listener -e";
 
         if (mi == null) {
             String execName = build.getWorkspace().act(new DecideDefaultMavenCommand(normalizedTarget));
@@ -421,7 +437,6 @@ public class MavenSealightsBuildStep extends Builder {
         if (!launcher.isUnix()) {
             args = args.toWindowsCommand();
         }
-
         try {
             MavenConsoleAnnotator mca = new MavenConsoleAnnotator(listener.getLogger(), build.getCharset());
             int r = launcher.launch().cmds(args).envs(env).stdout(mca).pwd(build.getModuleRoot()).join();
