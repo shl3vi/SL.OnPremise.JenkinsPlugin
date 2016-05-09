@@ -592,5 +592,17 @@ public class BeginAnalysis extends Builder {
             return FormValidation.ok();
         }
 
+        public FormValidation doCheckAppName(@QueryParameter String appName) {
+            if (StringUtils.isNullOrEmpty(appName))
+                return FormValidation.error("App Name is mandatory.");
+            return FormValidation.ok();
+        }
+
+        public FormValidation doCheckBranch(@QueryParameter String branch) {
+            if (StringUtils.isNullOrEmpty(branch))
+                return FormValidation.error("Branch Name is mandatory.");
+            return FormValidation.ok();
+        }
+
     }
 }
