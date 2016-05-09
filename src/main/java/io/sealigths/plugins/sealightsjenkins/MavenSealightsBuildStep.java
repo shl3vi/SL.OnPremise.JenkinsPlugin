@@ -106,18 +106,6 @@ public class MavenSealightsBuildStep extends Builder {
     private static final Pattern S_PATTERN = Pattern.compile("(^| )-s ");
     private static final Pattern GS_PATTERN = Pattern.compile("(^| )-gs ");
 
-//    public MavenSealightsBuildStep(String targets,String name) {
-//        this(targets,name,null,null,null,false, null, null);
-//    }
-//
-//    public MavenSealightsBuildStep(String targets, String name, String pom, String properties, String jvmOptions) {
-//        this(targets, name, pom, properties, jvmOptions, false, null, null);
-//    }
-//
-//    public MavenSealightsBuildStep(String targets,String name, String pom, String properties, String jvmOptions, boolean usePrivateRepository) {
-//        this(targets, name, pom, properties, jvmOptions, usePrivateRepository, null, null);
-//    }
-
     @DataBoundConstructor
     public MavenSealightsBuildStep(BeginAnalysisBuildStep beginAnalysisBuildStep,
                                    String targets, String name, String pom, String properties,
