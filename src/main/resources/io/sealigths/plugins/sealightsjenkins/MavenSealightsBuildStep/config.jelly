@@ -37,6 +37,9 @@ THE SOFTWARE.
   <f:entry title="${%Goals}">
     <f:expandableTextbox field="targets" />
   </f:entry>
+  <f:entry field="enableSeaLights" title="Enable SeaLights">
+    <f:checkbox checked="${it.enableSeaLights}" />
+  </f:entry>
   <f:advanced>
     <f:entry title="${%POM}" help="/plugin/maven-plugin/root-pom.html">
       <f:textbox field="pom"/>
@@ -56,7 +59,7 @@ THE SOFTWARE.
   </f:advanced>
   <f:advanced title="SeaLights">
     <f:entry>
-      <f:property field="beginAnalysisBuildStep"/>
+      <f:property field="beginAnalysis"/>
     </f:entry>
   </f:advanced>
 

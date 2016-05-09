@@ -1,16 +1,19 @@
 package io.sealigths.plugins.sealightsjenkins;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.*;
-import hudson.Launcher;
 import hudson.model.*;
-import hudson.remoting.*;
+import hudson.remoting.VirtualChannel;
 import hudson.slaves.NodeSpecific;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.tasks._maven.MavenConsoleAnnotator;
-import hudson.tools.*;
-import hudson.util.*;
+import hudson.tools.DownloadFromUrlInstaller;
+import hudson.tools.ToolInstallation;
+import hudson.tools.ToolProperty;
+import hudson.util.ArgumentListBuilder;
+import hudson.util.NullStream;
+import hudson.util.StreamTaskListener;
+import hudson.util.VariableResolver;
 import io.sealigths.plugins.sealightsjenkins.utils.CommandLineHelper;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import jenkins.MasterToSlaveFileCallable;
@@ -26,10 +29,12 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
@@ -43,7 +48,7 @@ import static io.sealigths.plugins.sealightsjenkins.TestingFramework.AUTO_DETECT
 public class MavenSealightsBuildStep extends Builder {
 
 
-    public final BeginAnalysisBuildStep beginAnalysisBuildStep;
+    public final BeginAnalysis beginAnalysis;
     public final boolean enableSeaLights;
     /**
      * The targets and other maven options.
@@ -107,16 +112,12 @@ public class MavenSealightsBuildStep extends Builder {
     private static final Pattern GS_PATTERN = Pattern.compile("(^| )-gs ");
 
     @DataBoundConstructor
-    public MavenSealightsBuildStep(BeginAnalysisBuildStep beginAnalysisBuildStep,
+    public MavenSealightsBuildStep(BeginAnalysis beginAnalysis, boolean enableSeaLights,
                                    String targets, String name, String pom, String properties,
                                    String jvmOptions, boolean usePrivateRepository,
                                    SettingsProvider settings, GlobalSettingsProvider globalSettings) {
-        this.beginAnalysisBuildStep = beginAnalysisBuildStep;
-
-        if (beginAnalysisBuildStep != null)
-            this.enableSeaLights = beginAnalysisBuildStep.isEnableSeaLights();
-        else
-            this.enableSeaLights = true;
+        this.beginAnalysis = beginAnalysis;
+        this.enableSeaLights = enableSeaLights;
 
         this.targets = targets;
         this.mavenName = name;
@@ -128,12 +129,8 @@ public class MavenSealightsBuildStep extends Builder {
         this.globalSettings = globalSettings != null ? globalSettings : GlobalMavenConfig.get().getGlobalSettingsProvider();
     }
 
-    public MavenSealightsBuildStep() {
-        this(null,null,null,null,null,null,false,null,null);
-    }
-
-    public BeginAnalysisBuildStep getBeginAnalysisBuildStep() {
-        return beginAnalysisBuildStep;
+    public BeginAnalysis getBeginAnalysis() {
+        return beginAnalysis;
     }
 
     public boolean isEnableSeaLights() {
@@ -234,8 +231,8 @@ public class MavenSealightsBuildStep extends Builder {
     }
 
     private boolean beginAnalysisBuildStep(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
-        beginAnalysisBuildStep.perform(build, launcher, listener);
-        if (AUTO_DETECT.equals(beginAnalysisBuildStep.getTestingFramework())) {
+        beginAnalysis.perform(build, launcher, listener);
+        if (AUTO_DETECT.equals(beginAnalysis.getTestingFramework())) {
             if (!runInitializeTestListenerGoal(build, launcher, listener)) {
                 return false;
             }
@@ -343,14 +340,14 @@ public class MavenSealightsBuildStep extends Builder {
                 startIndex = endIndex + 1;
             } while (startIndex < targets.length());
         } finally {
-            if (enableSeaLights && beginAnalysisBuildStep.isAutoRestoreBuildFile())
+            if (enableSeaLights && beginAnalysis.isAutoRestoreBuildFile())
                 restoreBuildFile(build, launcher, listener);
         }
         return true;
     }
 
     private void restoreBuildFile(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
-        RestoreBuildFile restoreBuildFile = new RestoreBuildFile(beginAnalysisBuildStep.isAutoRestoreBuildFile(), beginAnalysisBuildStep.getBuildFilesFolders());
+        RestoreBuildFile restoreBuildFile = new RestoreBuildFile(beginAnalysis.isAutoRestoreBuildFile(), beginAnalysis.getBuildFilesFolders());
         restoreBuildFile.perform(build, launcher, listener);
     }
 
