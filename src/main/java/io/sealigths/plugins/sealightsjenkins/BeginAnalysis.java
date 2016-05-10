@@ -118,17 +118,17 @@ public class BeginAnalysis extends Builder {
         this.enableMultipleBuildFiles = enableMultipleBuildFiles;
 
         if (StringUtils.isNullOrEmpty(buildScannerJar)) {
-            //The user didn't specify a specify version of the scanner. Use an embedded one.
+            //The user didn't specify a specific version of the scanner. Use an embedded one.
             buildScannerJar = JarsHelper.loadJarAndSaveAsTempFile("sl-build-scanner");
         }
 
         if (StringUtils.isNullOrEmpty(testListenerJar)) {
-            //The user didn't specify a specify version of the test listener. Use an embedded one.
+            //The user didn't specify a specific version of the test listener. Use an embedded one.
             testListenerJar = JarsHelper.loadJarAndSaveAsTempFile("sl-test-listener");
         }
 
         if (StringUtils.isNullOrEmpty(apiJar)) {
-            //The user didn't specify a specify version of the test listener. Use an embedded one.
+            //The user didn't specify a specific version of the test listener. Use an embedded one.
             apiJar = JarsHelper.loadJarAndSaveAsTempFile("sl-api");
         }
 

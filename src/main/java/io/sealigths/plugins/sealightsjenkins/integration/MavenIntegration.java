@@ -36,8 +36,8 @@ public class MavenIntegration {
         log.info("MavenIntegration.integrate - starting");
 
         for (FileBackupInfo fileBackupInfo : mavenIntegrationInfo.getPomFiles()) {
-            String sourceFile = fileBackupInfo.getSourceFile();
-            PomFile pomFile = new PomFile(sourceFile, log);
+            String sourceFilename = fileBackupInfo.getSourceFile();
+            PomFile pomFile = new PomFile(sourceFilename, log);
 
             try {
                 if (pomFile.isPluginExistInEntriePom(SEALIGHTS_GROUP_ID, SEALIGHTS_ARTIFACT_ID)) {
@@ -63,20 +63,20 @@ public class MavenIntegration {
 
                 if (shouldBackup)
                 {
-                    backupPom(sourceFile);
+                    backupPom(sourceFilename, pomFile);
                 }
                 integrateToPomFile(fileBackupInfo, pomFile);
             } catch (Exception e) {
-                log.error("MavenIntegration.integrate - Unable to parse pom : " + sourceFile + ". Error:", e);
+                log.error("MavenIntegration.integrate - Unable to parse pom : " + sourceFilename + ". Error:", e);
             }
         }
 
     }
 
-    private void backupPom(String sourceFile) {
+    private void backupPom(String sourceFile, PomFile pom) {
         String backupFile = sourceFile + ".slbak";
         log.info("MavenIntegration.integrate - created back up file: " + backupFile);
-        this.savePom(backupFile);
+        this.savePom(backupFile, pom);
     }
 
     private void integrateToPomFile(FileBackupInfo fileBackupInfo, PomFile pomFile) {
