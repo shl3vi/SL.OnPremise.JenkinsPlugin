@@ -27,7 +27,7 @@
              ~ stapler-plugin.version: The Stapler MAVEN plugin version required by the plugin.
         -->
 
-        <sealights.version>1.3.167</sealights.version>
+        <sealights.version>1.3.176</sealights.version>
         <resources.folder>${basedir}/src/main/resources</resources.folder>
         <artifacts.folder>${resources.folder}/artifacts</artifacts.folder>
         <testng.version>6.1.1</testng.version>
@@ -149,8 +149,8 @@
                                     <goal>download-single</goal>
                                 </goals>
                                 <configuration>
-                                    <url>https://s3-us-west-2.amazonaws.com</url>
-                                    <fromFile>sl-agent-repository/sealights-java-${sealights.version}.zip</fromFile>
+                                    <url>https://s3.amazonaws.com</url>
+                                    <fromFile>sl-repo/sealights-java/sealights-java-${sealights.version}.tgz</fromFile>
                                     <toDir>${resources.folder}</toDir>
                                     <toFile>${resources.folder}</toFile>
                                 </configuration>
@@ -171,7 +171,7 @@
                                 <configuration>
                                     <target>
                                         <echo message="Unzipping SeaLights artifacts file."/>
-                                        <unzip src="${resources.folder}/sealights-java-${sealights.version}.zip"
+                                        <unzip src="${resources.folder}/sealights-java-${sealights.version}.tgz"
                                                dest="${resources.folder}/"/>
                                         <echo message="Finished unzipping. Copying the files to the resources folder."/>
                                         <copy file="${artifacts.folder}/sl-api-${sealights.version}.jar"
@@ -205,9 +205,11 @@
                                         <fileset>
                                             <directory>${resources.folder}</directory>
                                             <includes>
+                                                <include>${artifacts.folder}/**/*.*</include>
+                                                <include>${artifacts.folder}</include>
                                                 <include>sealights-java-${sealights.version}/**/*.*</include>
                                                 <include>sealights-java-${sealights.version}/</include>
-                                                <include>sealights-java-${sealights.version}.zip/</include>
+                                                <include>sealights-java-${sealights.version}.tgz/</include>
                                             </includes>
                                         </fileset>
                                     </filesets>
