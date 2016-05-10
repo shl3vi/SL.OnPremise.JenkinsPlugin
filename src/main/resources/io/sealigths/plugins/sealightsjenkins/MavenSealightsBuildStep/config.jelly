@@ -37,6 +37,9 @@ THE SOFTWARE.
   <f:entry title="${%Goals}">
     <f:expandableTextbox field="targets" />
   </f:entry>
+  <f:entry field="enableSeaLights" title="Enable SeaLights">
+    <f:checkbox checked="${it.enableSeaLights}" />
+  </f:entry>
   <f:advanced>
     <f:entry title="${%POM}" help="/plugin/maven-plugin/root-pom.html">
       <f:textbox field="pom"/>
@@ -50,13 +53,14 @@ THE SOFTWARE.
     <f:entry field="usePrivateRepository" title="${%Use private Maven repository}" help="/plugin/maven-plugin/private-repository.html">
       <f:checkbox checked="${it.usesPrivateRepository()}" />
     </f:entry>
-    
+
     <f:dropdownDescriptorSelector title="${%Settings file}"  field="settings" default="${descriptor.defaultSettingsProvider}"/>
-	<f:dropdownDescriptorSelector title="${%Global Settings file}" field="globalSettings"  default="${descriptor.defaultGlobalSettingsProvider}"/>
-    <f:advanced title="Sealights">
-      <f:entry>
-        <f:property field="beginAnalysisBuildStep"/>
-      </f:entry>
-    </f:advanced>
+    <f:dropdownDescriptorSelector title="${%Global Settings file}" field="globalSettings"  default="${descriptor.defaultGlobalSettingsProvider}"/>
   </f:advanced>
+  <f:advanced title="SeaLights">
+    <f:entry>
+      <f:property field="beginAnalysis"/>
+    </f:entry>
+  </f:advanced>
+
 </j:jelly>

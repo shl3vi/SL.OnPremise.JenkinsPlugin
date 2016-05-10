@@ -1,7 +1,7 @@
 <!--
 The MIT License
 
-Copyright (c) 2004-2009, Sun Microsystems, Inc., Kohsuke Kawaguchi
+Copyright (c) 2004-2010, Sun Microsystems, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,15 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 -->
 
+<!--
+  Config page
+-->
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-    <f:advance>
-        <f:entry field="enableSeaLights" title="Enable SeaLights">
-            <f:checkbox checked="${it.enableSeaLights}" />
-        </f:entry>
+    <!--<f:entry title="${%Name}" field="name">-->
+    <!--<f:textbox />-->
+    <!--</f:entry>-->
 
-        <f:entry>
-            <f:property field="beginAnalysis"/>
-        </f:entry>
-    </f:advance>
+    <!--<f:entry title="MAVEN_HOME" field="home">-->
+    <!--<f:textbox />-->
+    <!--</f:entry>-->
 </j:jelly>
