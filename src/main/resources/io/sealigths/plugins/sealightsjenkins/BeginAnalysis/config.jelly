@@ -20,6 +20,11 @@
 
     <f:advanced>
 
+        <f:entry title="Build Name" field="buildNamingStrategy"
+                 description="Build name that will reported to SeaLights">
+            <f:enum>${it.displayName}</f:enum>
+        </f:entry>
+
         <f:entry title="Build Strategy" field="buildStrategy"
                  description="'One Build': all modules in the project appear in SeaLights' dashboard as a single build with aggregated results. , each module appear as a different application.">
             <f:enum>${it.displayName}</f:enum>
