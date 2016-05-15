@@ -77,16 +77,16 @@ public class BeginAnalysis extends Builder {
 
     @DataBoundConstructor
     public BeginAnalysis(LogLevel logLevel,
-                                  String appName, String moduleName, String branch, boolean enableMultipleBuildFiles,
-                                  boolean overrideJars, boolean multipleBuildFiles, String pomPath, String environment,
-                                  String packagesIncluded, String packagesExcluded, String filesIncluded,
-                                  String filesExcluded, String relativePathToEffectivePom, boolean recursive,
-                                  String workspacepath, String buildScannerJar, String testListenerJar, String apiJar,
-                                  String testListenerConfigFile, boolean autoRestoreBuildFile,
-                                  String buildFilesPatterns, String buildFilesFolders,
-                                  boolean logEnabled, LogDestination logDestination, String logFolder,
-                                  TestingFramework testingFramework, ProjectType projectType, BuildStrategy buildStrategy, BuildNamingStrategy buildNamingStrategy,
-                                  String override_customerId, String override_url, String override_proxy) throws IOException {
+                         String appName, String moduleName, String branch, boolean enableMultipleBuildFiles,
+                         boolean overrideJars, boolean multipleBuildFiles, String pomPath, String environment,
+                         String packagesIncluded, String packagesExcluded, String filesIncluded,
+                         String filesExcluded, String relativePathToEffectivePom, boolean recursive,
+                         String workspacepath, String buildScannerJar, String testListenerJar, String apiJar,
+                         String testListenerConfigFile, boolean autoRestoreBuildFile,
+                         String buildFilesPatterns, String buildFilesFolders,
+                         boolean logEnabled, LogDestination logDestination, String logFolder,
+                         TestingFramework testingFramework, ProjectType projectType, BuildStrategy buildStrategy, BuildNamingStrategy buildNamingStrategy,
+                         String override_customerId, String override_url, String override_proxy) throws IOException {
 
 
         this.override_customerId = override_customerId;
@@ -122,20 +122,20 @@ public class BeginAnalysis extends Builder {
 
         this.enableMultipleBuildFiles = enableMultipleBuildFiles;
 
-        if (StringUtils.isNullOrEmpty(buildScannerJar)) {
-            //The user didn't specify a specific version of the scanner. Use an embedded one.
-            buildScannerJar = JarsHelper.loadJarAndSaveAsTempFile("sl-build-scanner");
-        }
-
-        if (StringUtils.isNullOrEmpty(testListenerJar)) {
-            //The user didn't specify a specific version of the test listener. Use an embedded one.
-            testListenerJar = JarsHelper.loadJarAndSaveAsTempFile("sl-test-listener");
-        }
-
-        if (StringUtils.isNullOrEmpty(apiJar)) {
-            //The user didn't specify a specific version of the test listener. Use an embedded one.
-            apiJar = JarsHelper.loadJarAndSaveAsTempFile("sl-api");
-        }
+//        if (StringUtils.isNullOrEmpty(buildScannerJar)) {
+//            //The user didn't specify a specific version of the scanner. Use an embedded one.
+//            buildScannerJar = JarsHelper.loadJarAndSaveAsTempFile("sl-build-scanner");
+//        }
+//
+//        if (StringUtils.isNullOrEmpty(testListenerJar)) {
+//            //The user didn't specify a specific version of the test listener. Use an embedded one.
+//            testListenerJar = JarsHelper.loadJarAndSaveAsTempFile("sl-test-listener");
+//        }
+//
+//        if (StringUtils.isNullOrEmpty(apiJar)) {
+//            //The user didn't specify a specific version of the test listener. Use an embedded one.
+//            apiJar = JarsHelper.loadJarAndSaveAsTempFile("sl-api");
+//        }
 
         this.buildScannerJar = buildScannerJar;
         this.testListenerJar = testListenerJar;
