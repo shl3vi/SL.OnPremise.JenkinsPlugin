@@ -19,6 +19,8 @@ import io.sealigths.plugins.sealightsjenkins.utils.FileAndFolderUtils;
 import io.sealigths.plugins.sealightsjenkins.utils.IncludeExcludeFilter;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import io.sealigths.plugins.sealightsjenkins.utils.StringUtils;
+import jenkins.model.Jenkins;
+import jenkins.model.ProjectNamingStrategy;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -30,6 +32,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by shahar on 5/9/2016.
@@ -66,6 +69,7 @@ public class BeginAnalysis extends Builder {
     private LogLevel logLevel = LogLevel.OFF;
     private ProjectType projectType = ProjectType.MAVEN;
     private BuildStrategy buildStrategy = BuildStrategy.ONE_BUILD;
+    private BuildNamingStrategy buildNamingStrategy = BuildNamingStrategy.JENKINS_BUILD;
 
     private final String override_customerId;
     private final String override_url;
@@ -81,7 +85,7 @@ public class BeginAnalysis extends Builder {
                                   String testListenerConfigFile, boolean autoRestoreBuildFile,
                                   String buildFilesPatterns, String buildFilesFolders,
                                   boolean logEnabled, LogDestination logDestination, String logFolder,
-                                  TestingFramework testingFramework, ProjectType projectType, BuildStrategy buildStrategy,
+                                  TestingFramework testingFramework, ProjectType projectType, BuildStrategy buildStrategy, BuildNamingStrategy buildNamingStrategy,
                                   String override_customerId, String override_url, String override_proxy) throws IOException {
 
 
@@ -102,6 +106,7 @@ public class BeginAnalysis extends Builder {
         this.workspacepath = workspacepath;
         this.testListenerConfigFile = testListenerConfigFile;
         this.buildStrategy = buildStrategy;
+        this.buildNamingStrategy = buildNamingStrategy;
         this.autoRestoreBuildFile = autoRestoreBuildFile;
         this.environment = environment;
         this.testingFramework = testingFramework;
@@ -318,6 +323,12 @@ public class BeginAnalysis extends Builder {
     }
 
     @Exported
+    public BuildNamingStrategy getBuildNamingStrategy() { return buildNamingStrategy; }
+
+    @Exported
+    public void setBuildNamingStrategy(BuildNamingStrategy buildNamingStrategy) { this.buildNamingStrategy = buildNamingStrategy; }
+
+    @Exported
     public String getOverride_customerId() {
         return override_customerId;
     }
@@ -342,6 +353,7 @@ public class BeginAnalysis extends Builder {
         }
 
         printFields(logger);
+        dumpUpstreamBuilds(build, listener);
 
         if (this.autoRestoreBuildFile) {
             tryAddRestoreBuildFilePublisher(build, logger);
@@ -354,6 +366,27 @@ public class BeginAnalysis extends Builder {
         doMavenIntegration(logger, slInfo);
 
         return true;
+    }
+
+    private void dumpUpstreamBuilds(AbstractBuild<?, ?> build, BuildListener listener) {
+        Logger logger = new Logger(listener.getLogger());
+        List<AbstractProject> upstreamProjects = build.getParent().getUpstreamProjects();
+        if (upstreamProjects.size()==0){
+            logger.info("There are no upstream projects");
+        }
+        else
+        {
+            Map<AbstractProject,Integer> builds = build.getUpstreamBuilds();
+            for(AbstractProject upstreamProject : upstreamProjects){
+                if (builds.containsKey(upstreamProject)){
+                    Integer buildNumber = builds.get(upstreamProject);
+                    logger.info("Upstream project: "+upstreamProject.getName()+" # "+buildNumber);
+                }else
+                {
+                    logger.info("Upstream project: "+upstreamProject.getName()+" without build number");
+                }
+            }
+        }
     }
 
     private void doMavenIntegration(Logger logger, SeaLightsPluginInfo slInfo) throws IOException, InterruptedException {
@@ -406,6 +439,7 @@ public class BeginAnalysis extends Builder {
         slInfo.setScannerJar(buildScannerJar);
         slInfo.setApiJar(apiJar);
         slInfo.setBuildStrategy(buildStrategy);
+        slInfo.setBuildNamingStrategy(buildNamingStrategy);
         slInfo.setEnvironment(environment);
         slInfo.setLogEnabled(!("Off".equalsIgnoreCase(logLevel.getDisplayName())));
         slInfo.setLogLevel(logLevel);
@@ -518,6 +552,7 @@ public class BeginAnalysis extends Builder {
         logger.debug("Test-Listener Jar:" + testListenerJar);
         logger.debug("Test-Listener Configuration File :" + testListenerConfigFile);
         logger.debug("Build Strategy: " + buildStrategy);
+        logger.debug("Build Naming Strategy: "+buildNamingStrategy);
         logger.debug("Api Jar:" + apiJar);
         logger.debug("Log Enabled:" + logEnabled);
         logger.debug("Log Destination:" + logDestination);
