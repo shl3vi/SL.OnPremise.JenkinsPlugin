@@ -1,11 +1,13 @@
 package io.sealigths.plugins.sealightsjenkins;
 
+import hudson.DescriptorExtensionList;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.Hudson;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.DescribableList;
@@ -69,7 +71,7 @@ public class BeginAnalysis extends Builder {
     private LogLevel logLevel = LogLevel.OFF;
     private ProjectType projectType = ProjectType.MAVEN;
     private BuildStrategy buildStrategy = BuildStrategy.ONE_BUILD;
-    private BuildNamingStrategy buildNamingStrategy = BuildNamingStrategy.JENKINS_BUILD;
+    private BuildName buildName;
 
     private final String override_customerId;
     private final String override_url;
@@ -85,7 +87,8 @@ public class BeginAnalysis extends Builder {
                          String testListenerConfigFile, boolean autoRestoreBuildFile,
                          String buildFilesPatterns, String buildFilesFolders,
                          boolean logEnabled, LogDestination logDestination, String logFolder,
-                         TestingFramework testingFramework, ProjectType projectType, BuildStrategy buildStrategy, BuildNamingStrategy buildNamingStrategy,
+                         TestingFramework testingFramework, ProjectType projectType, BuildStrategy buildStrategy,
+                         BuildName buildName,
                          String override_customerId, String override_url, String override_proxy) throws IOException {
 
 
@@ -106,7 +109,7 @@ public class BeginAnalysis extends Builder {
         this.workspacepath = workspacepath;
         this.testListenerConfigFile = testListenerConfigFile;
         this.buildStrategy = buildStrategy;
-        this.buildNamingStrategy = buildNamingStrategy;
+        this.buildName = buildName;
         this.autoRestoreBuildFile = autoRestoreBuildFile;
         this.environment = environment;
         this.testingFramework = testingFramework;
@@ -140,6 +143,16 @@ public class BeginAnalysis extends Builder {
         this.buildScannerJar = buildScannerJar;
         this.testListenerJar = testListenerJar;
         this.apiJar = apiJar;
+    }
+
+    @Exported
+    public BuildName getBuildName() {
+        return buildName;
+    }
+
+    @Exported
+    public void setBuildName(BuildName buildName) {
+        this.buildName = buildName;
     }
 
     @Exported
@@ -323,12 +336,6 @@ public class BeginAnalysis extends Builder {
     }
 
     @Exported
-    public BuildNamingStrategy getBuildNamingStrategy() { return buildNamingStrategy; }
-
-    @Exported
-    public void setBuildNamingStrategy(BuildNamingStrategy buildNamingStrategy) { this.buildNamingStrategy = buildNamingStrategy; }
-
-    @Exported
     public String getOverride_customerId() {
         return override_customerId;
     }
@@ -404,6 +411,24 @@ public class BeginAnalysis extends Builder {
 
     }
 
+    private String getFinalBuildName(AbstractBuild<?, ?> build){
+//        if (BuildNamingStrategy.JENKINS_BUILD.equals(buildName.getBuildNamingStrategy())){
+//            return String.valueOf(build.getNumber());
+//        }
+        if (BuildNamingStrategy.MANUAL.equals(buildName.getBuildNamingStrategy())){
+            BuildName.ManualBuildName manual = (BuildName.ManualBuildName)buildName;
+            String insertedBuildName =  manual.getInsertedBuildName();
+            if (!StringUtils.isNullOrEmpty(insertedBuildName)){
+                return insertedBuildName;
+            }
+        }
+//        if (BuildNamingStrategy.JENKINS_BUILD.equals(buildName.getBuildNamingStrategy())){
+//            return String.valueOf(build.getNumber());
+//        }
+
+        return String.valueOf(build.getNumber());
+    }
+
     private SeaLightsPluginInfo createSeaLightsPluginInfo(AbstractBuild build, FilePath ws, Logger logger) {
 
         SeaLightsPluginInfo slInfo = new SeaLightsPluginInfo();
@@ -419,7 +444,8 @@ public class BeginAnalysis extends Builder {
         logger.info("Absolute path to effective file: " + pomPath);
 
         slInfo.setEnabled(true);
-        slInfo.setBuildName(String.valueOf(build.getNumber()));
+
+        slInfo.setBuildName(getFinalBuildName(build));
 
         if (workspacepath != null && !"".equals(workspacepath))
             slInfo.setWorkspacepath(workspacepath);
@@ -439,7 +465,6 @@ public class BeginAnalysis extends Builder {
         slInfo.setScannerJar(buildScannerJar);
         slInfo.setApiJar(apiJar);
         slInfo.setBuildStrategy(buildStrategy);
-        slInfo.setBuildNamingStrategy(buildNamingStrategy);
         slInfo.setEnvironment(environment);
         slInfo.setLogEnabled(!("Off".equalsIgnoreCase(logLevel.getDisplayName())));
         slInfo.setLogLevel(logLevel);
@@ -552,7 +577,7 @@ public class BeginAnalysis extends Builder {
         logger.debug("Test-Listener Jar:" + testListenerJar);
         logger.debug("Test-Listener Configuration File :" + testListenerConfigFile);
         logger.debug("Build Strategy: " + buildStrategy);
-        logger.debug("Build Naming Strategy: "+buildNamingStrategy);
+        logger.debug("Build Naming Strategy (from selection): "+ buildName.getBuildNamingStrategy());
         logger.debug("Api Jar:" + apiJar);
         logger.debug("Log Enabled:" + logEnabled);
         logger.debug("Log Destination:" + logDestination);
@@ -639,5 +664,8 @@ public class BeginAnalysis extends Builder {
             return FormValidation.ok();
         }
 
+        public DescriptorExtensionList<BuildName, BuildName.BuildNameDescriptor> getBuildNameDescriptorList() {
+            return Hudson.getInstance().getDescriptorList(BuildName.class);
+        }
     }
 }

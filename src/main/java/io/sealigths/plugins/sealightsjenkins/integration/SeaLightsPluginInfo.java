@@ -56,8 +56,6 @@ public class SeaLightsPluginInfo {
         return buildStrategy;
     }
 
-    public BuildNamingStrategy getBuildNamingStrategy() { return buildNamingStrategy;}
-
     public String getProxy() {
         return proxy;
     }
@@ -245,12 +243,6 @@ public class SeaLightsPluginInfo {
 
     public void setBuildStrategy(BuildStrategy buildStrategy) {
         this.buildStrategy = buildStrategy;
-    }
-
-    private BuildNamingStrategy buildNamingStrategy;
-
-    public void setBuildNamingStrategy(BuildNamingStrategy buildNamingStrategy) {
-        this.buildNamingStrategy = buildNamingStrategy;
     }
 
     public String getApiJar() {
