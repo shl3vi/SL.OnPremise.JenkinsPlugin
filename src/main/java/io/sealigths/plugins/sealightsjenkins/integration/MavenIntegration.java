@@ -62,8 +62,7 @@ public class MavenIntegration {
 //                throw new RuntimeException("Unsupported Maven Surefire plugin. SeaLights requires a version 2.9 or higher.");
 //            }
 
-                if (shouldBackup)
-                {
+                if (shouldBackup) {
                     backupPom(sourceFilename, pomFile);
                 }
                 integrateToPomFile(fileBackupInfo, pomFile);
@@ -81,12 +80,10 @@ public class MavenIntegration {
     }
 
     private void integrateToPomFile(FileBackupInfo fileBackupInfo, PomFile pomFile) {
-        if (!pomFile.isValidPom())
-        {
+        if (!pomFile.isValidPom()) {
             log.info("MavenIntegration.integrateToPomFile - Skipping SeaLights integration due to invalid pom. Pom: " + fileBackupInfo.getSourceFile());
             return;
-        }
-        else
+        } else
             log.info("MavenIntegration.integrateToPomFile - About to modify pom: " + fileBackupInfo.getSourceFile());
 
         integrateToAllProfiles(fileBackupInfo, pomFile);
@@ -113,12 +110,10 @@ public class MavenIntegration {
 
         String apiAgentPath = mavenIntegrationInfo.getSeaLightsPluginInfo().getApiJar();
 
-        if (!StringUtils.isNullOrEmpty(apiAgentPath)) {
-            if (testingFramework.equals(TestingFramework.AUTO_DETECT)) {
-                testingFrameworkListeners = null; //Used to pass control to the maven plugin.
-            }
-            pomFile.updateSurefirePlugin(testingFrameworkListeners, apiAgentPath);
+        if (testingFramework.equals(TestingFramework.AUTO_DETECT)) {
+            testingFrameworkListeners = null; //Used to pass control to the maven plugin.
         }
+        pomFile.updateSurefirePlugin(testingFrameworkListeners, apiAgentPath);
 
         savePom(fileBackupInfo, pomFile);
     }

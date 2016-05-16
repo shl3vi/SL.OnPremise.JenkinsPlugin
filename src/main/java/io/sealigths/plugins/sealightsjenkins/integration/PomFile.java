@@ -1,6 +1,7 @@
 package io.sealigths.plugins.sealightsjenkins.integration;
 
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
+import io.sealigths.plugins.sealightsjenkins.utils.StringUtils;
 import org.w3c.dom.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -174,7 +175,7 @@ public class PomFile {
         //TODO: Don't delete. Work in progress!!! (Nadav)
         Element documentElement = getDocument().getDocumentElement();
         if (documentElement == null) {
-         log.warning("Couldn't read pom file (documentElement is null).");
+            log.warning("Couldn't read pom file (documentElement is null).");
             return false;
         }
 
@@ -262,7 +263,13 @@ public class PomFile {
     }
 
     private void verifyAdditionalClasspathElements(String apiJarPath, Element configurationElement) throws XPathExpressionException {
+        //verify the existence of 'additionalClasspathElements'.
         List<Element> additionalClasspathElements = getOrCreateElements("additionalClasspathElements", configurationElement);
+
+        //if 'apiJarPath' is null, there is no need to add 'additionalClasspathElement'.
+        if (StringUtils.isNullOrEmpty(apiJarPath))
+            return;
+
         boolean foundApiJar = false;
         for (Element additionalClasspathElement : additionalClasspathElements) {
             List<Element> additionalClasspathElementList = getOrCreateElements("additionalClasspathElement", additionalClasspathElement);

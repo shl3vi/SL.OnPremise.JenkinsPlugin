@@ -127,6 +127,11 @@ public class BeginAnalysis extends Builder {
 
         this.buildScannerJar = buildScannerJar;
         this.testListenerJar = testListenerJar;
+
+        if (StringUtils.isNullOrEmpty(apiJar)) {
+            //The user didn't specify a specific version of the test listener. Use an embedded one.
+            apiJar = JarsHelper.loadJarAndSaveAsTempFile("sl-api");
+        }
         this.apiJar = apiJar;
     }
 
