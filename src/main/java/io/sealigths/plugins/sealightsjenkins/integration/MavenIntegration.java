@@ -3,6 +3,7 @@ package io.sealigths.plugins.sealightsjenkins.integration;
 import io.sealigths.plugins.sealightsjenkins.TestingFramework;
 import io.sealigths.plugins.sealightsjenkins.entities.FileBackupInfo;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
+import io.sealigths.plugins.sealightsjenkins.utils.StringUtils;
 
 import javax.xml.transform.TransformerException;
 import java.io.PrintStream;
@@ -109,13 +110,15 @@ public class MavenIntegration {
         pomFile.addPlugin(xml);
 
         String testingFrameworkListeners = getEventListenerPackage(testingFramework);
+
         String apiAgentPath = mavenIntegrationInfo.getSeaLightsPluginInfo().getApiJar();
 
-        if (testingFramework.equals(TestingFramework.AUTO_DETECT)) {
-            testingFrameworkListeners = null; //Used to pass control to the maven plugin.
+        if (!StringUtils.isNullOrEmpty(apiAgentPath)) {
+            if (testingFramework.equals(TestingFramework.AUTO_DETECT)) {
+                testingFrameworkListeners = null; //Used to pass control to the maven plugin.
+            }
+            pomFile.updateSurefirePlugin(testingFrameworkListeners, apiAgentPath);
         }
-
-        pomFile.updateSurefirePlugin(testingFrameworkListeners, apiAgentPath);
 
         savePom(fileBackupInfo, pomFile);
     }
