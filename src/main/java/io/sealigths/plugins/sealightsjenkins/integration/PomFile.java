@@ -4,14 +4,12 @@ import hudson.FilePath;
 import hudson.model.Computer;
 import hudson.remoting.VirtualChannel;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
-import org.jenkinsci.remoting.RoleChecker;
 import io.sealigths.plugins.sealightsjenkins.utils.StringUtils;
 import org.w3c.dom.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.*;
@@ -335,8 +333,6 @@ public class PomFile {
         DOMSource domSource = new DOMSource(getDocument());
 
         VirtualChannel channel = Computer.currentComputer().getChannel();
-        log.info("save - Current channel: " + channel);
-        log.info("save - filename: " + filename);
         FilePath filePath = new FilePath(channel, filename);
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -346,7 +342,8 @@ public class PomFile {
         String str = new String( outputStream.toByteArray(), "UTF-8");
 
         String result = filePath.act(new SaveFileCallable(str));
-        log.info("save - Result:" + result);
+        if (!StringUtils.isNullOrEmpty(result))
+            log.info("save - Result:" + result);
         //StreamResult streamResult = new StreamResult(new File(filename));
         //transformer.transform(domSource, streamResult);
     }
@@ -419,22 +416,13 @@ public class PomFile {
         try {
 
             VirtualChannel channel = Computer.currentComputer().getChannel();
-            log.info("Current channel: " + channel);
-            log.info("filename: " + filename);
             FilePath fp = new FilePath(channel, this.filename);
             document = fp.act(new GetDocumentFileCallable());
-            log.info("Current document:" + document.toString());
-
             document.getDocumentElement().normalize();
 
         } catch (InterruptedException | IOException e) {
             document = new EmptyDocument();
-            log.info("Current document (inside catch):" + document.toString());
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            e.printStackTrace(pw);
-            String message = sw.toString(); // sta
-            log.info("Exception:" + message);
+            log.error("Failed to get XML document. Error:", e);
         }
         return document;
     }

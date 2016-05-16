@@ -4,10 +4,7 @@ import hudson.DescriptorExtensionList;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
-import hudson.model.Hudson;
+import hudson.model.*;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.SlaveComputer;
 import hudson.tasks.BuildStepDescriptor;
@@ -19,6 +16,7 @@ import io.sealigths.plugins.sealightsjenkins.integration.JarsHelper;
 import io.sealigths.plugins.sealightsjenkins.integration.MavenIntegration;
 import io.sealigths.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
 import io.sealigths.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
+import io.sealigths.plugins.sealightsjenkins.utils.FileUtils;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import io.sealigths.plugins.sealightsjenkins.utils.SearchFileCallable;
 import io.sealigths.plugins.sealightsjenkins.utils.StringUtils;
@@ -130,11 +128,6 @@ public class BeginAnalysis extends Builder {
 
         this.buildScannerJar = buildScannerJar;
         this.testListenerJar = testListenerJar;
-
-        if (StringUtils.isNullOrEmpty(apiJar)) {
-            //The user didn't specify a specific version of the test listener. Use an embedded one.
-            apiJar = JarsHelper.loadJarAndSaveAsTempFile("sl-api");
-        }
         this.apiJar = apiJar;
     }
 
@@ -352,21 +345,6 @@ public class BeginAnalysis extends Builder {
             return false;
         }
 
-
-        if (StringUtils.isNullOrEmpty(buildScannerJar)) {
-            //The user didn't specify a specific version of the scanner. Use an embedded one.
-            buildScannerJar = JarsHelper.loadJarAndSaveAsTempFile("sl-build-scanner");
-        } else {
-            logger.info("--> The user specified a version for the 'buildScannerJar'. Overriding embedded version with:'" + buildScannerJar + "'");
-        }
-
-        if (StringUtils.isNullOrEmpty(testListenerJar)) {
-            //The user didn't specify a specific version of the test listener. Use an embedded one.
-            testListenerJar = JarsHelper.loadJarAndSaveAsTempFile("sl-test-listener");
-        } else {
-            logger.info("The user specified a version for the 'testListenerJar'. Overriding embedded version with:'" + testListenerJar + "'");
-        }
-
         if (StringUtils.isNullOrEmpty(apiJar)) {
             //The user didn't specify a specific version of the test listener. Use an embedded one.
             apiJar = JarsHelper.loadJarAndSaveAsTempFile("sl-api");
@@ -374,9 +352,12 @@ public class BeginAnalysis extends Builder {
             logger.info("The user specified a version for the 'apiJar'. Overriding embedded version with:'" + apiJar + "'");
         }
 
-        tryCopyFileFromLocalToSlave(logger, buildScannerJar);
-        tryCopyFileFromLocalToSlave(logger, testListenerJar);
-        tryCopyFileFromLocalToSlave(logger, apiJar);
+        if (!StringUtils.isNullOrEmpty(buildScannerJar))
+            FileUtils.tryCopyFileFromLocalToSlave(logger, buildScannerJar);
+        if (!StringUtils.isNullOrEmpty(testListenerJar))
+            FileUtils.tryCopyFileFromLocalToSlave(logger, testListenerJar);
+        if (!StringUtils.isNullOrEmpty(apiJar))
+            FileUtils.tryCopyFileFromLocalToSlave(logger, apiJar);
 
 
         printFields(logger);
@@ -399,18 +380,7 @@ public class BeginAnalysis extends Builder {
         return true;
     }
 
-private void tryCopyFileFromLocalToSlave(Logger logger, String filename) throws IOException, InterruptedException {
-        if (Computer.currentComputer() instanceof SlaveComputer) {
-            VirtualChannel channel = Computer.currentComputer().getChannel();
-            logger.info("Current computer is: " + Computer.currentComputer().getName());
-            logger.info("Jenkins current computer is: " + Jenkins.MasterComputer.currentComputer().getName());
 
-            FilePath fpOnRemote = new FilePath(channel, filename);
-            FilePath fpOnMaster = new FilePath(new File(filename));
-            logger.info("fpOnMaster.getChannel(): " + fpOnMaster.getChannel());
-            fpOnMaster.copyTo(fpOnRemote);
-        }
-    }
 
     private List<String> getRemotePoms(Logger logger, FilePath ws) throws IOException, InterruptedException {
         List<String> results = ws.act(new SearchFileCallable("**/pom.xml"));
@@ -423,7 +393,7 @@ private void tryCopyFileFromLocalToSlave(Logger logger, String filename) throws 
         return results;
     }
 
-  private void setParentPomPath(Logger logger, String workingDir) {
+    private void setParentPomPath(Logger logger, String workingDir) {
         if (relativePathToEffectivePom != null && !"".equals(relativePathToEffectivePom))
             this.pomPath = this.joinPaths(workingDir, relativePathToEffectivePom);
         else
@@ -431,28 +401,26 @@ private void tryCopyFileFromLocalToSlave(Logger logger, String filename) throws 
 
         logger.info("Absolute path pom file: " + this.pomPath);
     }
-    
+
     private void dumpUpstreamBuilds(AbstractBuild<?, ?> build, BuildListener listener) {
         Logger logger = new Logger(listener.getLogger());
         List<AbstractProject> upstreamProjects = build.getParent().getUpstreamProjects();
-        if (upstreamProjects.size()==0){
+        if (upstreamProjects.size() == 0) {
             logger.info("There are no upstream projects");
-        }
-        else
-        {
-            Map<AbstractProject,Integer> builds = build.getUpstreamBuilds();
-            for(AbstractProject upstreamProject : upstreamProjects){
-                if (builds.containsKey(upstreamProject)){
+        } else {
+            Map<AbstractProject, Integer> builds = build.getUpstreamBuilds();
+            for (AbstractProject upstreamProject : upstreamProjects) {
+                if (builds.containsKey(upstreamProject)) {
                     Integer buildNumber = builds.get(upstreamProject);
-                    logger.info("Upstream project: "+upstreamProject.getName()+" # "+buildNumber);
-                }else
-                {
-                    logger.info("Upstream project: "+upstreamProject.getName()+" without build number");
+                    logger.info("Upstream project: " + upstreamProject.getName() + " # " + buildNumber);
+                } else {
+                    logger.info("Upstream project: " + upstreamProject.getName() + " without build number");
                 }
             }
         }
     }
-private void doMavenIntegration(FilePath ws, Logger logger, SeaLightsPluginInfo slInfo) throws IOException, InterruptedException {
+
+    private void doMavenIntegration(FilePath ws, Logger logger, SeaLightsPluginInfo slInfo) throws IOException, InterruptedException {
 
 
         List<String> folders = Arrays.asList(slInfo.getBuildFilesFolders().split("\\s*,\\s*"));
@@ -468,24 +436,18 @@ private void doMavenIntegration(FilePath ws, Logger logger, SeaLightsPluginInfo 
 
     }
 
-    private String joinPaths(String path1, String path2){
-        if (path2.startsWith("/") || path2.startsWith("\\")){
-            //Path2 is rooted, so it's not relative
-            return path2;
-        }
-        return Paths.get(path1, path2).toAbsolutePath().toString();
-    }
 
-    private String getFinalBuildName(AbstractBuild<?, ?> build){
-        if (BuildNamingStrategy.MANUAL.equals(buildName.getBuildNamingStrategy())){
-            BuildName.ManualBuildName manual = (BuildName.ManualBuildName)buildName;
-            String insertedBuildName =  manual.getInsertedBuildName();
-            if (!StringUtils.isNullOrEmpty(insertedBuildName)){
+    private String getFinalBuildName(AbstractBuild<?, ?> build) {
+        if (BuildNamingStrategy.MANUAL.equals(buildName.getBuildNamingStrategy())) {
+            BuildName.ManualBuildName manual = (BuildName.ManualBuildName) buildName;
+            String insertedBuildName = manual.getInsertedBuildName();
+            if (!StringUtils.isNullOrEmpty(insertedBuildName)) {
                 return insertedBuildName;
             }
         }
         return String.valueOf(build.getNumber());
     }
+
 
     private SeaLightsPluginInfo createSeaLightsPluginInfo(AbstractBuild build, FilePath ws, Logger logger) {
 
@@ -565,55 +527,30 @@ private void doMavenIntegration(FilePath ws, Logger logger, SeaLightsPluginInfo 
 
         List<String> remotePoms = getRemotePoms(logger, ws);
         boolean isParentPomInList = false;
-        for (String s : remotePoms) {
-            logger.debug("Adding pom:" + s);
-            pomFiles.add(new FileBackupInfo(s, null));
-                if (matchingPom.equalsIgnoreCase(this.pomPath))
-                    isParentPomInList = true;
-                pomFiles.add(new FileBackupInfo(matchingPom, null));
-            }
+        for (String matchingPom : remotePoms) {
+            logger.debug("Adding pom:" + matchingPom);
+            if (matchingPom.equalsIgnoreCase(this.pomPath))
+                isParentPomInList = true;
+            pomFiles.add(new FileBackupInfo(matchingPom, null));
         }
+
+
         if (!isParentPomInList)
         {
             pomFiles.add(new FileBackupInfo(this.pomPath, null));
         }
 
         return pomFiles;
-
-//        IncludeExcludeFilter filter = new IncludeExcludeFilter(patterns, null);
-//
-//        logger.debug("Getting poms. Folders count:" + folders.size() + ", patterns:" + patterns);
-//        for (String folder : folders) {
-//            logger.debug("Getting poms. folder:" + folder);
-//            List<String> matchingPoms = FileAndFolderUtils.findAllFilesWithFilter(folder, recursiveSearch, filter, logger);
-//            logger.debug("Matching poms. size:" + matchingPoms.size());
-//            for (String matchingPom : matchingPoms) {
-//                logger.debug("Adding pom:" + matchingPom);
-//                pomFiles.add(new FileBackupInfo(matchingPom, null));
-//            }
-//        }
-//
-//        return pomFiles;
     }
-    
-     private String joinPaths(String path1, String path2){
-        if (path2.startsWith("/") || path2.startsWith("\\")){
+
+    private String joinPaths(String path1, String path2) {
+        if (path2.startsWith("/") || path2.startsWith("\\")) {
             //Path2 is rooted, so it's not relative
             return path2;
         }
         return Paths.get(path1, path2).toAbsolutePath().toString();
     }
 
-    private String getFinalBuildName(AbstractBuild<?, ?> build){
-        if (BuildNamingStrategy.MANUAL.equals(buildName.getBuildNamingStrategy())){
-            BuildName.ManualBuildName manual = (BuildName.ManualBuildName)buildName;
-            String insertedBuildName =  manual.getInsertedBuildName();
-            if (!StringUtils.isNullOrEmpty(insertedBuildName)){
-                return insertedBuildName;
-            }
-        }
-        return String.valueOf(build.getNumber());
-    }
 
     private void tryAddRestoreBuildFilePublisher(AbstractBuild build, Logger logger) {
         DescribableList publishersList = build.getProject().getPublishersList();
@@ -668,7 +605,7 @@ private void doMavenIntegration(FilePath ws, Logger logger, SeaLightsPluginInfo 
         logger.debug("Test-Listener Jar:" + testListenerJar);
         logger.debug("Test-Listener Configuration File :" + testListenerConfigFile);
         logger.debug("Build Strategy: " + buildStrategy);
-        logger.debug("Build Naming Strategy (from selection): "+ buildName.getBuildNamingStrategy());
+        logger.debug("Build Naming Strategy (from selection): " + buildName.getBuildNamingStrategy());
         logger.debug("Api Jar:" + apiJar);
         logger.debug("Log Enabled:" + logEnabled);
         logger.debug("Log Destination:" + logDestination);
@@ -697,7 +634,7 @@ private void doMavenIntegration(FilePath ws, Logger logger, SeaLightsPluginInfo 
         public DescriptorImpl() {
             super(BeginAnalysis.class);
             load();
-            
+
         }
 
         @Override

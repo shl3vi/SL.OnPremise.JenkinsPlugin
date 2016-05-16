@@ -31,24 +31,18 @@ public class SaveFileCallable implements FilePath.FileCallable<String> {
         String status = "";
         try{
             if (!file.exists()){
-                status += " doesn't exists.";
                 boolean newFile = file.createNewFile();
-                status += "New file: " + newFile;
 
             }
-
-            status += "before write to 'file'. Data.length:" + data.length();
             FilePath fp  = new FilePath(file);
             fp.write(data, "UTF-8");
-
-            status += "All good. File:" + file.getAbsolutePath();
             return status;
         }catch(Exception e)
         {
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
             e.printStackTrace(pw);
-            status += ". Error!!! Exception: " + sw.toString();
+            status += "Failed saving the file. Exception: " + sw.toString();
         }
         return status;
     }
