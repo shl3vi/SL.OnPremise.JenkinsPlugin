@@ -22,7 +22,7 @@
 
         <f:dropdownList name="buildName" title="Build Name">
             <j:forEach var="currentDescriptor" items="${descriptor.buildNameDescriptorList}" varStatus="loop">
-                <f:dropdownListBlock title="${currentDescriptor.displayName}" value="${loop.index}" selected="true" staplerClass="${currentDescriptor.clazz.name}">
+                <f:dropdownListBlock title="${currentDescriptor.displayName}" value="${loop.index}" selected="${currentDescriptor == instance.buildName.descriptor}" staplerClass="${currentDescriptor.clazz.name}">
                     <j:set var="instance" value="${instance.buildName}" />
                     <j:set var="descriptor" value="${instance.descriptor}" />
                     <st:include page="${currentDescriptor.configPage}" from="${currentDescriptor}"/>
