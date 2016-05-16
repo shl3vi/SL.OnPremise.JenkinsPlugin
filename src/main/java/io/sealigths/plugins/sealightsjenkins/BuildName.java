@@ -6,8 +6,11 @@ import hudson.ExtensionPoint;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.Hudson;
+import hudson.util.FormValidation;
+import io.sealigths.plugins.sealightsjenkins.utils.StringUtils;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.export.Exported;
 
 import java.io.Serializable;
@@ -96,20 +99,37 @@ public class BuildName implements Describable<BuildName>, ExtensionPoint, Serial
 
     }
 
-//    public static class UpstreamBuildName extends BuildName {
-//
-//        @DataBoundConstructor
-//        public UpstreamBuildName() {
-//            super(BuildNamingStrategy.JENKINS_UPSTREAM);
-//        }
-//
-//        @Extension
-//        public static class UpstreamBuildNameDescriptor extends BuildNameDescriptor {
-//            public UpstreamBuildNameDescriptor() {
-//                super(UpstreamBuildName.class, BuildNamingStrategy.JENKINS_UPSTREAM.getDisplayName());
-//            }
-//        }
-//
-//    }
+    public static class UpstreamBuildName extends BuildName {
+
+        private String upstreamProjectName;
+
+        @DataBoundConstructor
+        public UpstreamBuildName(String upstreamProjectName) {
+            super(BuildNamingStrategy.JENKINS_UPSTREAM);
+            this.upstreamProjectName = upstreamProjectName;
+        }
+
+        public String getUpstreamProjectName() {
+            return upstreamProjectName;
+        }
+
+        public void setUpstreamProjectName(String upstreamProjectName) {
+            this.upstreamProjectName = upstreamProjectName;
+        }
+
+        @Extension
+        public static class UpstreamBuildNameDescriptor extends BuildNameDescriptor {
+            public UpstreamBuildNameDescriptor() {
+                super(UpstreamBuildName.class, BuildNamingStrategy.JENKINS_UPSTREAM.getDisplayName());
+            }
+
+            public FormValidation doCheckUpstreamProjectName(@QueryParameter String upstreamProjectName) {
+                if (StringUtils.isNullOrEmpty(upstreamProjectName))
+                    return FormValidation.error("Project Name is mandatory.");
+                return FormValidation.ok();
+            }
+        }
+
+    }
 
 }
