@@ -32,10 +32,7 @@ import org.kohsuke.stapler.export.ExportedBean;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by shahar on 5/9/2016.
@@ -361,8 +358,6 @@ public class BeginAnalysis extends Builder {
 
 
         printFields(logger);
-        dumpUpstreamBuilds(build, listener);
-
         String workingDir = ws.getRemote();
 
         setParentPomPath(logger, workingDir);
@@ -402,22 +397,32 @@ public class BeginAnalysis extends Builder {
         logger.info("Absolute path pom file: " + this.pomPath);
     }
 
-    private void dumpUpstreamBuilds(AbstractBuild<?, ?> build, BuildListener listener) {
-        Logger logger = new Logger(listener.getLogger());
-        List<AbstractProject> upstreamProjects = build.getParent().getUpstreamProjects();
-        if (upstreamProjects.size() == 0) {
-            logger.info("There are no upstream projects");
-        } else {
-            Map<AbstractProject, Integer> builds = build.getUpstreamBuilds();
-            for (AbstractProject upstreamProject : upstreamProjects) {
-                if (builds.containsKey(upstreamProject)) {
-                    Integer buildNumber = builds.get(upstreamProject);
-                    logger.info("Upstream project: " + upstreamProject.getName() + " # " + buildNumber);
-                } else {
-                    logger.info("Upstream project: " + upstreamProject.getName() + " without build number");
+    private String getBuildNumberFromUpstreamBuild(List<Cause> causes, String trigger) {
+        String buildNum;
+        for (Cause c : causes) {
+            if (c instanceof Cause.UpstreamCause) {
+                buildNum = checkCauseRecursivelyForBuildNumber((Cause.UpstreamCause) c, trigger);
+                if (StringUtils.isNullOrEmpty(buildNum)){
+                    continue;
                 }
+                return buildNum;
             }
         }
+        return null;
+    }
+
+    private String checkCauseRecursivelyForBuildNumber(Cause.UpstreamCause cause, String trigger){
+
+        if (trigger.equals(cause.getUpstreamProject())) {
+            return String.valueOf(cause.getUpstreamBuild());
+        }
+
+        String recursiveFound = getBuildNumberFromUpstreamBuild(cause.getUpstreamCauses(), trigger);
+        if (StringUtils.isNullOrEmpty(recursiveFound)){
+            return recursiveFound;
+        }
+
+        return null;
     }
 
     private void doMavenIntegration(FilePath ws, Logger logger, SeaLightsPluginInfo slInfo) throws IOException, InterruptedException {
@@ -436,20 +441,51 @@ public class BeginAnalysis extends Builder {
 
     }
 
-
-    private String getFinalBuildName(AbstractBuild<?, ?> build) {
-        if (BuildNamingStrategy.MANUAL.equals(buildName.getBuildNamingStrategy())) {
-            BuildName.ManualBuildName manual = (BuildName.ManualBuildName) buildName;
-            String insertedBuildName = manual.getInsertedBuildName();
-            if (!StringUtils.isNullOrEmpty(insertedBuildName)) {
-                return insertedBuildName;
-            }
+    private String joinPaths(String path1, String path2) {
+        if (path2.startsWith("/") || path2.startsWith("\\")) {
+            //Path2 is rooted, so it's not relative
+            return path2;
         }
-        return String.valueOf(build.getNumber());
+        return Paths.get(path1, path2).toAbsolutePath().toString();
+    }
+  
+
+    private String getManualBuildName(){
+        BuildName.ManualBuildName manual = (BuildName.ManualBuildName) buildName;
+        String insertedBuildName = manual.getInsertedBuildName();
+        return insertedBuildName;
+    }
+    
+    private String getUpstreamBuildName(AbstractBuild<?, ?> build, Logger logger){
+        BuildName.UpstreamBuildName upstream = (BuildName.UpstreamBuildName) buildName;
+        String upstreamProjectName = upstream.getUpstreamProjectName();
+        String finalBuildName = getBuildNumberFromUpstreamBuild(build.getCauses(), upstreamProjectName);
+        if (StringUtils.isNullOrEmpty(finalBuildName)) {
+            logger.warning("Couldn't find build number for " + upstreamProjectName + ". Using this job's build name.");
+            return null;
+        }
+
+        logger.info("Upstream project: " + upstreamProjectName + " # " + finalBuildName);
+        return finalBuildName;
     }
 
+    private String getFinalBuildName(AbstractBuild<?, ?> build, Logger logger) {
+        String finalBuildName = null;
+        if (BuildNamingStrategy.MANUAL.equals(buildName.getBuildNamingStrategy())) {
+            finalBuildName = getManualBuildName();
+        }
+        else if (BuildNamingStrategy.JENKINS_UPSTREAM.equals(buildName.getBuildNamingStrategy())) {
+            finalBuildName = getUpstreamBuildName(build, logger);
+        }
 
-    private SeaLightsPluginInfo createSeaLightsPluginInfo(AbstractBuild build, FilePath ws, Logger logger) {
+        if (StringUtils.isNullOrEmpty(finalBuildName)){
+            return String.valueOf(build.getNumber());
+        }
+
+        return finalBuildName;
+    }
+
+    private SeaLightsPluginInfo createSeaLightsPluginInfo(AbstractBuild<?, ?> build, FilePath ws, Logger logger) {
 
         SeaLightsPluginInfo slInfo = new SeaLightsPluginInfo();
         setGlobalConfiguration(slInfo);
@@ -457,7 +493,7 @@ public class BeginAnalysis extends Builder {
         String workingDir = ws.getRemote();
         slInfo.setEnabled(true);
 
-        slInfo.setBuildName(getFinalBuildName(build));
+        slInfo.setBuildName(getFinalBuildName(build, logger));
 
         if (workspacepath != null && !"".equals(workspacepath))
             slInfo.setWorkspacepath(workspacepath);
@@ -535,22 +571,12 @@ public class BeginAnalysis extends Builder {
         }
 
 
-        if (!isParentPomInList)
-        {
+        if (!isParentPomInList) {
             pomFiles.add(new FileBackupInfo(this.pomPath, null));
         }
 
         return pomFiles;
     }
-
-    private String joinPaths(String path1, String path2) {
-        if (path2.startsWith("/") || path2.startsWith("\\")) {
-            //Path2 is rooted, so it's not relative
-            return path2;
-        }
-        return Paths.get(path1, path2).toAbsolutePath().toString();
-    }
-
 
     private void tryAddRestoreBuildFilePublisher(AbstractBuild build, Logger logger) {
         DescribableList publishersList = build.getProject().getPublishersList();
