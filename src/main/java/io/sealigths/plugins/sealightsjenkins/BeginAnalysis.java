@@ -6,6 +6,9 @@ import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.Computer;
+import hudson.remoting.VirtualChannel;
+import hudson.slaves.SlaveComputer;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.DescribableList;
@@ -15,10 +18,10 @@ import io.sealigths.plugins.sealightsjenkins.integration.JarsHelper;
 import io.sealigths.plugins.sealightsjenkins.integration.MavenIntegration;
 import io.sealigths.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
 import io.sealigths.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
-import io.sealigths.plugins.sealightsjenkins.utils.FileAndFolderUtils;
-import io.sealigths.plugins.sealightsjenkins.utils.IncludeExcludeFilter;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
+import io.sealigths.plugins.sealightsjenkins.utils.SearchFileCallable;
 import io.sealigths.plugins.sealightsjenkins.utils.StringUtils;
+import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -26,6 +29,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,9 +56,9 @@ public class BeginAnalysis extends Builder {
     private final String relativePathToEffectivePom;
     private final boolean recursive;
     private final String workspacepath;
-    private final String buildScannerJar;
-    private final String testListenerJar;
-    private final String apiJar;
+    private String buildScannerJar;
+    private String testListenerJar;
+    private String apiJar;
     private final String testListenerConfigFile;
     private boolean autoRestoreBuildFile;
     private final String buildFilesPatterns;
@@ -73,16 +77,16 @@ public class BeginAnalysis extends Builder {
 
     @DataBoundConstructor
     public BeginAnalysis(LogLevel logLevel,
-                                  String appName, String moduleName, String branch, boolean enableMultipleBuildFiles,
-                                  boolean overrideJars, boolean multipleBuildFiles, String pomPath, String environment,
-                                  String packagesIncluded, String packagesExcluded, String filesIncluded,
-                                  String filesExcluded, String relativePathToEffectivePom, boolean recursive,
-                                  String workspacepath, String buildScannerJar, String testListenerJar, String apiJar,
-                                  String testListenerConfigFile, boolean autoRestoreBuildFile,
-                                  String buildFilesPatterns, String buildFilesFolders,
-                                  boolean logEnabled, LogDestination logDestination, String logFolder,
-                                  TestingFramework testingFramework, ProjectType projectType, BuildStrategy buildStrategy,
-                                  String override_customerId, String override_url, String override_proxy) throws IOException {
+                         String appName, String moduleName, String branch, boolean enableMultipleBuildFiles,
+                         boolean overrideJars, boolean multipleBuildFiles, String pomPath, String environment,
+                         String packagesIncluded, String packagesExcluded, String filesIncluded,
+                         String filesExcluded, String relativePathToEffectivePom, boolean recursive,
+                         String workspacepath, String buildScannerJar, String testListenerJar, String apiJar,
+                         String testListenerConfigFile, boolean autoRestoreBuildFile,
+                         String buildFilesPatterns, String buildFilesFolders,
+                         boolean logEnabled, LogDestination logDestination, String logFolder,
+                         TestingFramework testingFramework, ProjectType projectType, BuildStrategy buildStrategy,
+                         String override_customerId, String override_url, String override_proxy) throws IOException {
 
 
         this.override_customerId = override_customerId;
@@ -116,21 +120,6 @@ public class BeginAnalysis extends Builder {
         this.logFolder = logFolder;
 
         this.enableMultipleBuildFiles = enableMultipleBuildFiles;
-
-        if (StringUtils.isNullOrEmpty(buildScannerJar)) {
-            //The user didn't specify a specific version of the scanner. Use an embedded one.
-            buildScannerJar = JarsHelper.loadJarAndSaveAsTempFile("sl-build-scanner");
-        }
-
-        if (StringUtils.isNullOrEmpty(testListenerJar)) {
-            //The user didn't specify a specific version of the test listener. Use an embedded one.
-            testListenerJar = JarsHelper.loadJarAndSaveAsTempFile("sl-test-listener");
-        }
-
-        if (StringUtils.isNullOrEmpty(apiJar)) {
-            //The user didn't specify a specific version of the test listener. Use an embedded one.
-            apiJar = JarsHelper.loadJarAndSaveAsTempFile("sl-api");
-        }
 
         this.buildScannerJar = buildScannerJar;
         this.testListenerJar = testListenerJar;
@@ -341,6 +330,33 @@ public class BeginAnalysis extends Builder {
             return false;
         }
 
+
+        if (StringUtils.isNullOrEmpty(buildScannerJar)) {
+            //The user didn't specify a specific version of the scanner. Use an embedded one.
+            buildScannerJar = JarsHelper.loadJarAndSaveAsTempFile("sl-build-scanner");
+        } else {
+            logger.info("--> The user specified a version for the 'buildScannerJar'. Overriding embedded version with:'" + buildScannerJar + "'");
+        }
+
+        if (StringUtils.isNullOrEmpty(testListenerJar)) {
+            //The user didn't specify a specific version of the test listener. Use an embedded one.
+            testListenerJar = JarsHelper.loadJarAndSaveAsTempFile("sl-test-listener");
+        } else {
+            logger.info("The user specified a version for the 'testListenerJar'. Overriding embedded version with:'" + testListenerJar + "'");
+        }
+
+        if (StringUtils.isNullOrEmpty(apiJar)) {
+            //The user didn't specify a specific version of the test listener. Use an embedded one.
+            apiJar = JarsHelper.loadJarAndSaveAsTempFile("sl-api");
+        } else {
+            logger.info("The user specified a version for the 'apiJar'. Overriding embedded version with:'" + apiJar + "'");
+        }
+
+        tryCopyFileFromLocalToSlave(logger, buildScannerJar);
+        tryCopyFileFromLocalToSlave(logger, testListenerJar);
+        tryCopyFileFromLocalToSlave(logger, apiJar);
+
+
         printFields(logger);
 
         if (this.autoRestoreBuildFile) {
@@ -351,15 +367,39 @@ public class BeginAnalysis extends Builder {
 
         configureBuildFilePublisher(build, slInfo.getBuildFilesFolders());
 
-        doMavenIntegration(logger, slInfo);
+        doMavenIntegration(ws, logger, slInfo);
 
         return true;
     }
 
-    private void doMavenIntegration(Logger logger, SeaLightsPluginInfo slInfo) throws IOException, InterruptedException {
+    private void tryCopyFileFromLocalToSlave(Logger logger, String filename) throws IOException, InterruptedException {
+        if (Computer.currentComputer() instanceof SlaveComputer) {
+            VirtualChannel channel = Computer.currentComputer().getChannel();
+            logger.info("Current computer is: " + Computer.currentComputer().getName());
+            logger.info("Jenkins current computer is: " + Jenkins.MasterComputer.currentComputer().getName());
+
+            FilePath fpOnRemote = new FilePath(channel, filename);
+            FilePath fpOnMaster = new FilePath(new File(filename));
+            logger.info("fpOnMaster.getChannel(): " + fpOnMaster.getChannel());
+            fpOnMaster.copyTo(fpOnRemote);
+        }
+    }
+
+    private List<String> getRemotePoms(Logger logger, FilePath ws) throws IOException, InterruptedException {
+        List<String> results = ws.act(new SearchFileCallable("**/pom.xml"));
+        logger.info("**********************************");
+        logger.info("Results: " + results.size());
+        for (String s : results) {
+            logger.info("-->" + s);
+        }
+        logger.info("**********************************");
+        return results;
+    }
+
+    private void doMavenIntegration(FilePath ws, Logger logger, SeaLightsPluginInfo slInfo) throws IOException, InterruptedException {
 
         List<String> folders = Arrays.asList(slInfo.getBuildFilesFolders().split("\\s*,\\s*"));
-        List<FileBackupInfo> pomFiles = getPomFiles(folders, slInfo.getBuildFilesPatterns(), slInfo.isRecursiveOnBuildFilesFolders());
+        List<FileBackupInfo> pomFiles = getPomFiles(ws, folders, slInfo.getBuildFilesPatterns(), slInfo.isRecursiveOnBuildFilesFolders(), logger);
 
         MavenIntegrationInfo info = new MavenIntegrationInfo(
                 pomFiles,
@@ -451,18 +491,30 @@ public class BeginAnalysis extends Builder {
 
     }
 
-    private List<FileBackupInfo> getPomFiles(List<String> folders, String patterns, boolean recursiveSearch) {
+    private List<FileBackupInfo> getPomFiles(FilePath ws, List<String> folders, String patterns, boolean recursiveSearch, Logger logger) throws IOException, InterruptedException {
         List<FileBackupInfo> pomFiles = new ArrayList<>();
-        IncludeExcludeFilter filter = new IncludeExcludeFilter(patterns, null);
 
-        for (String folder : folders) {
-            List<String> matchingPoms = FileAndFolderUtils.findAllFilesWithFilter(folder, recursiveSearch, filter);
-            for (String matchingPom : matchingPoms) {
-                pomFiles.add(new FileBackupInfo(matchingPom, null));
-            }
+        List<String> remotePoms = getRemotePoms(logger, ws);
+        for (String s : remotePoms) {
+            logger.debug("Adding pom:" + s);
+            pomFiles.add(new FileBackupInfo(s, null));
         }
-
         return pomFiles;
+
+//        IncludeExcludeFilter filter = new IncludeExcludeFilter(patterns, null);
+//
+//        logger.debug("Getting poms. Folders count:" + folders.size() + ", patterns:" + patterns);
+//        for (String folder : folders) {
+//            logger.debug("Getting poms. folder:" + folder);
+//            List<String> matchingPoms = FileAndFolderUtils.findAllFilesWithFilter(folder, recursiveSearch, filter, logger);
+//            logger.debug("Matching poms. size:" + matchingPoms.size());
+//            for (String matchingPom : matchingPoms) {
+//                logger.debug("Adding pom:" + matchingPom);
+//                pomFiles.add(new FileBackupInfo(matchingPom, null));
+//            }
+//        }
+//
+//        return pomFiles;
     }
 
     private void tryAddRestoreBuildFilePublisher(AbstractBuild build, Logger logger) {
