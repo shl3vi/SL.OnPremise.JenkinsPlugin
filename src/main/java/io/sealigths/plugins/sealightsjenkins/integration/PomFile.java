@@ -263,12 +263,7 @@ public class PomFile {
     }
 
     private void verifyAdditionalClasspathElements(String apiJarPath, Element configurationElement) throws XPathExpressionException {
-        //verify the existence of 'additionalClasspathElements'.
         List<Element> additionalClasspathElements = getOrCreateElements("additionalClasspathElements", configurationElement);
-
-        //if 'apiJarPath' is null, there is no need to add 'additionalClasspathElement'.
-        if (StringUtils.isNullOrEmpty(apiJarPath))
-            return;
 
         boolean foundApiJar = false;
         for (Element additionalClasspathElement : additionalClasspathElements) {
