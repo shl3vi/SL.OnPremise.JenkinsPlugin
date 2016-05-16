@@ -341,7 +341,7 @@ public class MavenSealightsBuildStep extends Builder {
     }
 
     private void restoreBuildFile(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
-        RestoreBuildFile restoreBuildFile = new RestoreBuildFile(beginAnalysis.isAutoRestoreBuildFile(), beginAnalysis.getBuildFilesFolders());
+        RestoreBuildFile restoreBuildFile = new RestoreBuildFile(beginAnalysis.isAutoRestoreBuildFile(), beginAnalysis.getBuildFilesFolders(), beginAnalysis.getPomPath());
         restoreBuildFile.perform(build, launcher, listener);
     }
 

@@ -1,8 +1,15 @@
 package io.sealigths.plugins.sealightsjenkins.utils;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.CopyOption;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 /**
  * Created by Nadav on 4/26/2016.
@@ -41,22 +48,52 @@ public class FileUtils {
         return returnedFiles;
     }
 
-    public static boolean renameFileOrFolder(String currentName, String newName) {
+    public static boolean renameFileOrFolder(String slbackFile, String originalName, Logger logger) {
         // File (or directory) with old name
-        File currentFile = new File(currentName);
+        File backupFile = new File(slbackFile);
+
+
 
         // File (or directory) with new name
-        File newFile = new File(newName);
+       // File newFile = new File(newName);
 
-        if (newFile.exists()) {
-            boolean delete = newFile.delete();
-            if (!delete)
-                return false;
+        Path src = Paths.get(slbackFile);
+        Path target = Paths.get(originalName);
+        try {
+            Files.move(src, target, REPLACE_EXISTING);
+        } catch (IOException e) {
+            logger.error("Failed moving the files.", e);
+            return false;
         }
 
-        // Rename file (or directory)
-        boolean success = currentFile.renameTo(newFile);
-        return success;
+        if (backupFile.exists())  {
+            boolean delete = backupFile.delete();
+            if (!delete)
+            {
+                logger.warning("Failed to delete the file.");
+                return false;
+            }
+            else
+            {
+                logger.info("Deleted " + backupFile.getAbsolutePath());
+            }
+        }
+
+        return true;
+//        if (newFile.exists()) {
+//            logger.info("File exists.");
+//            boolean delete = newFile.delete();
+//            if (!delete) {
+//                logger.warning("Failed to delete.");
+//                return false;
+//            }
+//        }
+//
+//        // Rename file (or directory)
+//        logger.info("About to rename.");
+//        boolean success = currentFile.c
+//        logger.info("Renamed?:" + success);
+//        return success;
     }
 
     public static String getFileExtension(String file) {

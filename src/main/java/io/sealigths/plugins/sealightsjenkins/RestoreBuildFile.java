@@ -8,6 +8,7 @@ import hudson.tasks.*;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.AbstractProject;
+import io.sealigths.plugins.sealightsjenkins.entities.FileBackupInfo;
 import io.sealigths.plugins.sealightsjenkins.utils.FileAndFolderUtils;
 import io.sealigths.plugins.sealightsjenkins.utils.FileUtils;
 import io.sealigths.plugins.sealightsjenkins.utils.IncludeExcludeFilter;
@@ -27,12 +28,14 @@ public class RestoreBuildFile extends Recorder {
 
     private boolean shouldRestore;
     private String folders;
+    private String parentPomFile;
 
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
-    public RestoreBuildFile(boolean shouldRestore, String folders) {
+    public RestoreBuildFile(boolean shouldRestore, String folders, String parentPom) {
         this.shouldRestore = shouldRestore;
         this.folders = folders;
+        this.parentPomFile = parentPom;
     }
 
     private void RestoreAllFilesInFolder(String rootFolder, Logger logger){
@@ -41,13 +44,17 @@ public class RestoreBuildFile extends Recorder {
         IncludeExcludeFilter filter = new IncludeExcludeFilter("*.slbak" , null);
         List<String> filesToRestore = FileAndFolderUtils.findAllFilesWithFilter(rootFolder, recursive, filter);
         for (String currentName : filesToRestore) {
-            String newName = currentName.replace(".slbak","");
-            boolean isSuccess = FileUtils.renameFileOrFolder(currentName, newName);
-            if (isSuccess)
-                logger.info("Restored '" + currentName + "' to '" + newName + "'.");
-            else
-                logger.error("Failed restoring '" + currentName + "' to '" + newName + "'.");
+            restoreSingleFile(currentName, logger);
         }
+    }
+
+    public void restoreSingleFile(String slbackFile, Logger logger) {
+        String originalFile = slbackFile.replace(".slbak","");
+        boolean isSuccess = FileUtils.renameFileOrFolder(slbackFile, originalFile, logger);
+        if (isSuccess)
+            logger.info("Restored '" + slbackFile + "' to '" + originalFile + "'.");
+        else
+            logger.error("Failed restoring '" + slbackFile + "' to '" + originalFile + "'.");
     }
 
     @Override
@@ -69,6 +76,11 @@ public class RestoreBuildFile extends Recorder {
             for (String folder : folders){
                 RestoreAllFilesInFolder(folder, logger);
             }
+
+            logger.info("this.parentPomFile:" + this.parentPomFile);
+            if (this.parentPomFile != null)
+                restoreSingleFile(this.parentPomFile + ".slbak", logger);
+
 
         } else {
             logger.info("No need to restore any files.");
@@ -111,6 +123,7 @@ public class RestoreBuildFile extends Recorder {
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.NONE;
     }
+
 
 
     /**

@@ -8,15 +8,15 @@ package io.sealigths.plugins.sealightsjenkins.utils;
  * */
 public class IncludeExcludeFilter {
 
-    WildcardPattern include = null;
-    WildcardPattern exclude = null;
+    WildCardPattern include = null;
+    WildCardPattern exclude = null;
 
     public IncludeExcludeFilter(String include, String exclude) {
         if (!StringUtils.isNullOrEmpty(include))
-            this.include = new WildcardPattern(include);
+            this.include = new WildCardPattern(include);
 
         if (!StringUtils.isNullOrEmpty(exclude))
-            this.exclude = new WildcardPattern(exclude);
+            this.exclude = new WildCardPattern(exclude);
     }
 
     public boolean filter(String value){
