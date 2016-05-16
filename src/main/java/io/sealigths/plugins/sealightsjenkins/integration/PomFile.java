@@ -5,6 +5,7 @@ import hudson.model.Computer;
 import hudson.remoting.VirtualChannel;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import org.jenkinsci.remoting.RoleChecker;
+import io.sealigths.plugins.sealightsjenkins.utils.StringUtils;
 import org.w3c.dom.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -266,6 +267,7 @@ public class PomFile {
 
     private void verifyAdditionalClasspathElements(String apiJarPath, Element configurationElement) throws XPathExpressionException {
         List<Element> additionalClasspathElements = getOrCreateElements("additionalClasspathElements", configurationElement);
+
         boolean foundApiJar = false;
         for (Element additionalClasspathElement : additionalClasspathElements) {
             List<Element> additionalClasspathElementList = getOrCreateElements("additionalClasspathElement", additionalClasspathElement);

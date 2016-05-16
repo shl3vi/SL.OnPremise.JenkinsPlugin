@@ -11,6 +11,7 @@ import hudson.tasks.Builder;
 import hudson.tasks._maven.MavenConsoleAnnotator;
 import hudson.tools.*;
 import hudson.util.*;
+import io.sealigths.plugins.sealightsjenkins.integration.JarsHelper;
 import io.sealigths.plugins.sealightsjenkins.utils.CommandLineHelper;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import jenkins.MasterToSlaveFileCallable;
@@ -265,8 +266,11 @@ public class MavenSealightsBuildStep extends Builder {
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 
         Logger logger = new Logger(listener.getLogger());
+
         try {
+
             if (enableSeaLights) {
+                installSealightsMavenPlugin(build, launcher, listener);
                 if (!beginAnalysisBuildStep(build, launcher, listener, logger)) {
                     logger.error("Begin Analysis step returned false. This likely due to an Exit Code > 0 from Maven.");
                     return false;
@@ -379,7 +383,6 @@ public class MavenSealightsBuildStep extends Builder {
     }
 
     private void restoreBuildFile(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
-        RestoreBuildFile restoreBuildFile = new RestoreBuildFile(beginAnalysis.isAutoRestoreBuildFile(), beginAnalysis.getBuildFilesFolders());
         restoreBuildFile.perform(build, launcher, listener);
     }
 
@@ -396,15 +399,25 @@ public class MavenSealightsBuildStep extends Builder {
 
     }
 
+    private boolean beginAnalysisBuildStep(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+        beginAnalysis.perform(build, launcher, listener);
+        if (AUTO_DETECT.equals(beginAnalysis.getTestingFramework())) {
+            if (!runInitializeTestListenerGoal(build, launcher, listener)) {
+                return false;
+            }
+        }
+        
+        return true;
+        
+    }
 
-    public boolean runInitializeTestListenerGoal(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Logger logger) throws IOException, InterruptedException {
+    private boolean invokeMavenCommand(
+            AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String normalizedTarget) throws IOException, InterruptedException {
         VariableResolver<String> vr = build.getBuildVariableResolver();
         EnvVars env = build.getEnvironment(listener);
         String pom = env.expand(this.pom);
         ArgumentListBuilder args = new ArgumentListBuilder();
         MavenInstallation mi = getMaven(logger);
-        String normalizedTarget = targets.replaceAll("[\t\r\n]+", " ");
-        normalizedTarget = getSystemPropertiesArgs(normalizedTarget) + " sealights:initialize-test-listener -e";
 
         if (mi == null) {
             String execName = build.getWorkspace().act(new DecideDefaultMavenCommand(normalizedTarget));
@@ -467,6 +480,49 @@ public class MavenSealightsBuildStep extends Builder {
             return false;
         }
         return true;
+    }
+
+    private boolean installSealightsMavenPlugin(
+            AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+
+        String normalizedTarget = getSLMavenPluginInstallationCommand();
+        Logger logger = new Logger(listener.getLogger());
+        logger.info("Installing sealights-maven plugin");
+        logger.info("Command: " + normalizedTarget);
+
+        return invokeMavenCommand(build, launcher, listener, normalizedTarget);
+    }
+
+
+    public boolean runInitializeTestListenerGoal(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+
+        String normalizedTarget = targets.replaceAll("[\t\r\n]+", " ");
+        normalizedTarget = getSystemPropertiesArgs(normalizedTarget) + " sealights:initialize-test-listener -e";
+
+        return invokeMavenCommand(build, launcher, listener, normalizedTarget);
+    }
+
+    private final String SL_MVN_JAR_NAME = "sl-maven-plugin";
+    private final String SL_MVN_GROUP_ID = "io.sealights.on-premise.agents.plugin";
+    private final String SL_MVN_ARTIFACT_ID = "sealights-maven-plugin";
+    private final String SL_MVN_VERSION = "1.0.0";
+
+    private String getSLMavenPluginInstallationCommand() throws IOException {
+
+        String slMavenPluginJar = JarsHelper.loadJarAndSaveAsTempFile(SL_MVN_JAR_NAME);
+
+        StringBuilder command = new StringBuilder();
+        command.append("install:install-file -Dfile=");
+        command.append(slMavenPluginJar);
+        command.append(" -DgroupId=");
+        command.append(SL_MVN_GROUP_ID);
+        command.append(" -DartifactId=");
+        command.append(SL_MVN_ARTIFACT_ID);
+        command.append(" -Dversion=");
+        command.append(SL_MVN_VERSION);
+        command.append(" -Dpackaging=jar");
+
+        return command.toString();
     }
 
     /**
@@ -818,8 +874,8 @@ public class MavenSealightsBuildStep extends Builder {
                 return Collections.singletonList(new MavenInstaller(null));
             }
 
-            // overriding them for backward compatibility.
-            // newer code need not do this
+        // overriding them for backward compatibility.
+        // newer code need not do this
             @Override
             public MavenInstallation[] getInstallations() {
                 return Jenkins.getInstance().getDescriptorByType(MavenSealightsBuildStep.DescriptorImpl.class).getInstallations();

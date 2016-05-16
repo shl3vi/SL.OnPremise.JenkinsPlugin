@@ -1,12 +1,13 @@
 package io.sealigths.plugins.sealightsjenkins;
 
+import hudson.DescriptorExtensionList;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
-import hudson.model.Computer;
+import hudson.model.Hudson;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.SlaveComputer;
 import hudson.tasks.BuildStepDescriptor;
@@ -22,6 +23,7 @@ import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import io.sealigths.plugins.sealightsjenkins.utils.SearchFileCallable;
 import io.sealigths.plugins.sealightsjenkins.utils.StringUtils;
 import jenkins.model.Jenkins;
+import jenkins.model.ProjectNamingStrategy;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -31,9 +33,11 @@ import org.kohsuke.stapler.export.ExportedBean;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by shahar on 5/9/2016.
@@ -47,7 +51,7 @@ public class BeginAnalysis extends Builder {
     private final boolean enableMultipleBuildFiles;
     private final boolean overrideJars;
     private final boolean multipleBuildFiles;
-    private final String pomPath;
+    private String pomPath;
     private final String environment;
     private final String packagesIncluded;
     private final String packagesExcluded;
@@ -70,6 +74,7 @@ public class BeginAnalysis extends Builder {
     private LogLevel logLevel = LogLevel.OFF;
     private ProjectType projectType = ProjectType.MAVEN;
     private BuildStrategy buildStrategy = BuildStrategy.ONE_BUILD;
+    private BuildName buildName;
 
     private final String override_customerId;
     private final String override_url;
@@ -86,6 +91,7 @@ public class BeginAnalysis extends Builder {
                          String buildFilesPatterns, String buildFilesFolders,
                          boolean logEnabled, LogDestination logDestination, String logFolder,
                          TestingFramework testingFramework, ProjectType projectType, BuildStrategy buildStrategy,
+                         BuildName buildName,
                          String override_customerId, String override_url, String override_proxy) throws IOException {
 
 
@@ -106,6 +112,7 @@ public class BeginAnalysis extends Builder {
         this.workspacepath = workspacepath;
         this.testListenerConfigFile = testListenerConfigFile;
         this.buildStrategy = buildStrategy;
+        this.buildName = buildName;
         this.autoRestoreBuildFile = autoRestoreBuildFile;
         this.environment = environment;
         this.testingFramework = testingFramework;
@@ -123,7 +130,22 @@ public class BeginAnalysis extends Builder {
 
         this.buildScannerJar = buildScannerJar;
         this.testListenerJar = testListenerJar;
+
+        if (StringUtils.isNullOrEmpty(apiJar)) {
+            //The user didn't specify a specific version of the test listener. Use an embedded one.
+            apiJar = JarsHelper.loadJarAndSaveAsTempFile("sl-api");
+        }
         this.apiJar = apiJar;
+    }
+
+    @Exported
+    public BuildName getBuildName() {
+        return buildName;
+    }
+
+    @Exported
+    public void setBuildName(BuildName buildName) {
+        this.buildName = buildName;
     }
 
     @Exported
@@ -358,6 +380,11 @@ public class BeginAnalysis extends Builder {
 
 
         printFields(logger);
+        dumpUpstreamBuilds(build, listener);
+
+        String workingDir = ws.getRemote();
+
+        setParentPomPath(logger, workingDir);
 
         if (this.autoRestoreBuildFile) {
             tryAddRestoreBuildFilePublisher(build, logger);
@@ -372,7 +399,7 @@ public class BeginAnalysis extends Builder {
         return true;
     }
 
-    private void tryCopyFileFromLocalToSlave(Logger logger, String filename) throws IOException, InterruptedException {
+private void tryCopyFileFromLocalToSlave(Logger logger, String filename) throws IOException, InterruptedException {
         if (Computer.currentComputer() instanceof SlaveComputer) {
             VirtualChannel channel = Computer.currentComputer().getChannel();
             logger.info("Current computer is: " + Computer.currentComputer().getName());
@@ -396,7 +423,37 @@ public class BeginAnalysis extends Builder {
         return results;
     }
 
-    private void doMavenIntegration(FilePath ws, Logger logger, SeaLightsPluginInfo slInfo) throws IOException, InterruptedException {
+  private void setParentPomPath(Logger logger, String workingDir) {
+        if (relativePathToEffectivePom != null && !"".equals(relativePathToEffectivePom))
+            this.pomPath = this.joinPaths(workingDir, relativePathToEffectivePom);
+        else
+            this.pomPath = this.joinPaths(workingDir, "pom.xml");
+
+        logger.info("Absolute path pom file: " + this.pomPath);
+    }
+    
+    private void dumpUpstreamBuilds(AbstractBuild<?, ?> build, BuildListener listener) {
+        Logger logger = new Logger(listener.getLogger());
+        List<AbstractProject> upstreamProjects = build.getParent().getUpstreamProjects();
+        if (upstreamProjects.size()==0){
+            logger.info("There are no upstream projects");
+        }
+        else
+        {
+            Map<AbstractProject,Integer> builds = build.getUpstreamBuilds();
+            for(AbstractProject upstreamProject : upstreamProjects){
+                if (builds.containsKey(upstreamProject)){
+                    Integer buildNumber = builds.get(upstreamProject);
+                    logger.info("Upstream project: "+upstreamProject.getName()+" # "+buildNumber);
+                }else
+                {
+                    logger.info("Upstream project: "+upstreamProject.getName()+" without build number");
+                }
+            }
+        }
+    }
+private void doMavenIntegration(FilePath ws, Logger logger, SeaLightsPluginInfo slInfo) throws IOException, InterruptedException {
+
 
         List<String> folders = Arrays.asList(slInfo.getBuildFilesFolders().split("\\s*,\\s*"));
         List<FileBackupInfo> pomFiles = getPomFiles(ws, folders, slInfo.getBuildFilesPatterns(), slInfo.isRecursiveOnBuildFilesFolders(), logger);
@@ -411,22 +468,34 @@ public class BeginAnalysis extends Builder {
 
     }
 
+    private String joinPaths(String path1, String path2){
+        if (path2.startsWith("/") || path2.startsWith("\\")){
+            //Path2 is rooted, so it's not relative
+            return path2;
+        }
+        return Paths.get(path1, path2).toAbsolutePath().toString();
+    }
+
+    private String getFinalBuildName(AbstractBuild<?, ?> build){
+        if (BuildNamingStrategy.MANUAL.equals(buildName.getBuildNamingStrategy())){
+            BuildName.ManualBuildName manual = (BuildName.ManualBuildName)buildName;
+            String insertedBuildName =  manual.getInsertedBuildName();
+            if (!StringUtils.isNullOrEmpty(insertedBuildName)){
+                return insertedBuildName;
+            }
+        }
+        return String.valueOf(build.getNumber());
+    }
+
     private SeaLightsPluginInfo createSeaLightsPluginInfo(AbstractBuild build, FilePath ws, Logger logger) {
 
         SeaLightsPluginInfo slInfo = new SeaLightsPluginInfo();
         setGlobalConfiguration(slInfo);
 
         String workingDir = ws.getRemote();
-        String pomPath;
-        if (relativePathToEffectivePom != null && !"".equals(relativePathToEffectivePom))
-            pomPath = workingDir + "/" + relativePathToEffectivePom;
-        else
-            pomPath = workingDir + "/pom.xml";
-
-        logger.info("Absolute path to effective file: " + pomPath);
-
         slInfo.setEnabled(true);
-        slInfo.setBuildName(String.valueOf(build.getNumber()));
+
+        slInfo.setBuildName(getFinalBuildName(build));
 
         if (workspacepath != null && !"".equals(workspacepath))
             slInfo.setWorkspacepath(workspacepath);
@@ -495,10 +564,20 @@ public class BeginAnalysis extends Builder {
         List<FileBackupInfo> pomFiles = new ArrayList<>();
 
         List<String> remotePoms = getRemotePoms(logger, ws);
+        boolean isParentPomInList = false;
         for (String s : remotePoms) {
             logger.debug("Adding pom:" + s);
             pomFiles.add(new FileBackupInfo(s, null));
+                if (matchingPom.equalsIgnoreCase(this.pomPath))
+                    isParentPomInList = true;
+                pomFiles.add(new FileBackupInfo(matchingPom, null));
+            }
         }
+        if (!isParentPomInList)
+        {
+            pomFiles.add(new FileBackupInfo(this.pomPath, null));
+        }
+
         return pomFiles;
 
 //        IncludeExcludeFilter filter = new IncludeExcludeFilter(patterns, null);
@@ -516,6 +595,25 @@ public class BeginAnalysis extends Builder {
 //
 //        return pomFiles;
     }
+    
+     private String joinPaths(String path1, String path2){
+        if (path2.startsWith("/") || path2.startsWith("\\")){
+            //Path2 is rooted, so it's not relative
+            return path2;
+        }
+        return Paths.get(path1, path2).toAbsolutePath().toString();
+    }
+
+    private String getFinalBuildName(AbstractBuild<?, ?> build){
+        if (BuildNamingStrategy.MANUAL.equals(buildName.getBuildNamingStrategy())){
+            BuildName.ManualBuildName manual = (BuildName.ManualBuildName)buildName;
+            String insertedBuildName =  manual.getInsertedBuildName();
+            if (!StringUtils.isNullOrEmpty(insertedBuildName)){
+                return insertedBuildName;
+            }
+        }
+        return String.valueOf(build.getNumber());
+    }
 
     private void tryAddRestoreBuildFilePublisher(AbstractBuild build, Logger logger) {
         DescribableList publishersList = build.getProject().getPublishersList();
@@ -530,7 +628,7 @@ public class BeginAnalysis extends Builder {
         }
 
         if (!found) {
-            RestoreBuildFile restoreBuildFile = new RestoreBuildFile(true, buildFilesFolders);
+            RestoreBuildFile restoreBuildFile = new RestoreBuildFile(true, buildFilesFolders, this.pomPath);
             publishersList.add(restoreBuildFile);
         }
     }
@@ -570,6 +668,7 @@ public class BeginAnalysis extends Builder {
         logger.debug("Test-Listener Jar:" + testListenerJar);
         logger.debug("Test-Listener Configuration File :" + testListenerConfigFile);
         logger.debug("Build Strategy: " + buildStrategy);
+        logger.debug("Build Naming Strategy (from selection): "+ buildName.getBuildNamingStrategy());
         logger.debug("Api Jar:" + apiJar);
         logger.debug("Log Enabled:" + logEnabled);
         logger.debug("Log Destination:" + logDestination);
@@ -598,6 +697,7 @@ public class BeginAnalysis extends Builder {
         public DescriptorImpl() {
             super(BeginAnalysis.class);
             load();
+            
         }
 
         @Override
@@ -656,5 +756,8 @@ public class BeginAnalysis extends Builder {
             return FormValidation.ok();
         }
 
+        public DescriptorExtensionList<BuildName, BuildName.BuildNameDescriptor> getBuildNameDescriptorList() {
+            return Hudson.getInstance().getDescriptorList(BuildName.class);
+        }
     }
 }

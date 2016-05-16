@@ -3,6 +3,7 @@ package io.sealigths.plugins.sealightsjenkins.integration;
 import io.sealigths.plugins.sealightsjenkins.TestingFramework;
 import io.sealigths.plugins.sealightsjenkins.entities.FileBackupInfo;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
+import io.sealigths.plugins.sealightsjenkins.utils.StringUtils;
 
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
@@ -62,8 +63,7 @@ public class MavenIntegration {
 //                throw new RuntimeException("Unsupported Maven Surefire plugin. SeaLights requires a version 2.9 or higher.");
 //            }
 
-                if (shouldBackup)
-                {
+                if (shouldBackup) {
                     backupPom(sourceFilename, pomFile);
                 }
                 integrateToPomFile(fileBackupInfo, pomFile);
@@ -81,12 +81,10 @@ public class MavenIntegration {
     }
 
     private void integrateToPomFile(FileBackupInfo fileBackupInfo, PomFile pomFile) {
-        if (!pomFile.isValidPom())
-        {
+        if (!pomFile.isValidPom()) {
             log.info("MavenIntegration.integrateToPomFile - Skipping SeaLights integration due to invalid pom. Pom: " + fileBackupInfo.getSourceFile());
             return;
-        }
-        else
+        } else
             log.info("MavenIntegration.integrateToPomFile - About to modify pom: " + fileBackupInfo.getSourceFile());
 
         integrateToAllProfiles(fileBackupInfo, pomFile);
@@ -110,12 +108,12 @@ public class MavenIntegration {
         pomFile.addPlugin(xml);
 
         String testingFrameworkListeners = getEventListenerPackage(testingFramework);
+
         String apiAgentPath = mavenIntegrationInfo.getSeaLightsPluginInfo().getApiJar();
 
         if (testingFramework.equals(TestingFramework.AUTO_DETECT)) {
             testingFrameworkListeners = null; //Used to pass control to the maven plugin.
         }
-
         pomFile.updateSurefirePlugin(testingFrameworkListeners, apiAgentPath);
 
         savePom(fileBackupInfo, pomFile);
