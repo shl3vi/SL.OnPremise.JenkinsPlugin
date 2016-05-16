@@ -40,10 +40,11 @@ public class RestoreBuildFile extends Recorder {
     }
 
     private void RestoreAllFilesInFolder(String rootFolder, Logger logger) throws IOException, InterruptedException {
-        logger.info("searching in folder: " + rootFolder);
+
         VirtualChannel channel = Computer.currentComputer().getChannel();
         FilePath rootFolderPath = new FilePath(channel, rootFolder);
         List<String> filesToRestore = rootFolderPath.act(new SearchFileCallable("**/*.slbak"));
+        logger.info("searching in folder: '" + rootFolder +"', found '" + filesToRestore.size()+"' files.");
         for (String currentName : filesToRestore) {
             restoreSingleFile(currentName, logger);
         }
@@ -51,12 +52,12 @@ public class RestoreBuildFile extends Recorder {
 
     public void restoreSingleFile(String slbackFile, Logger logger) throws IOException, InterruptedException {
         String originalFile = slbackFile.replace(".slbak","");
-        if (!new File(slbackFile).exists())
+        VirtualChannel channel = Computer.currentComputer().getChannel();
+        FilePath backupFile = new FilePath(channel, slbackFile);
+        if (!backupFile.exists())
             //File doesn't exist. Not need to restore.
             return;
 
-        VirtualChannel channel = Computer.currentComputer().getChannel();
-        FilePath backupFile = new FilePath(channel, slbackFile);
         boolean isSuccess = backupFile.act(new RenameFileCallable(originalFile, slbackFile));
         if (isSuccess)
             logger.info("Restored '" + slbackFile + "' to '" + originalFile + "'.");
