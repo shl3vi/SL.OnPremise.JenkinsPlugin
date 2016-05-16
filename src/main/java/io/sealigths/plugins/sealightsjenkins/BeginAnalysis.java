@@ -26,7 +26,9 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -43,7 +45,7 @@ public class BeginAnalysis extends Builder {
     private final boolean enableMultipleBuildFiles;
     private final boolean overrideJars;
     private final boolean multipleBuildFiles;
-    private final String pomPath;
+    private String pomPath;
     private final String environment;
     private final String packagesIncluded;
     private final String packagesExcluded;
@@ -343,6 +345,10 @@ public class BeginAnalysis extends Builder {
 
         printFields(logger);
 
+        String workingDir = ws.getRemote();
+
+        setParentPomPath(logger, workingDir);
+
         if (this.autoRestoreBuildFile) {
             tryAddRestoreBuildFilePublisher(build, logger);
         }
@@ -354,6 +360,15 @@ public class BeginAnalysis extends Builder {
         doMavenIntegration(logger, slInfo);
 
         return true;
+    }
+
+    private void setParentPomPath(Logger logger, String workingDir) {
+        if (relativePathToEffectivePom != null && !"".equals(relativePathToEffectivePom))
+            this.pomPath = this.joinPaths(workingDir, relativePathToEffectivePom);
+        else
+            this.pomPath = this.joinPaths(workingDir, "pom.xml");
+
+        logger.info("Absolute path pom file: " + this.pomPath);
     }
 
     private void doMavenIntegration(Logger logger, SeaLightsPluginInfo slInfo) throws IOException, InterruptedException {
@@ -371,20 +386,20 @@ public class BeginAnalysis extends Builder {
 
     }
 
+    private String joinPaths(String path1, String path2){
+        if (path2.startsWith("/") || path2.startsWith("\\")){
+            //Path2 is rooted, so it's not relative
+            return path2;
+        }
+        return Paths.get(path1, path2).toAbsolutePath().toString();
+    }
+
     private SeaLightsPluginInfo createSeaLightsPluginInfo(AbstractBuild build, FilePath ws, Logger logger) {
 
         SeaLightsPluginInfo slInfo = new SeaLightsPluginInfo();
         setGlobalConfiguration(slInfo);
 
         String workingDir = ws.getRemote();
-        String pomPath;
-        if (relativePathToEffectivePom != null && !"".equals(relativePathToEffectivePom))
-            pomPath = workingDir + "/" + relativePathToEffectivePom;
-        else
-            pomPath = workingDir + "/pom.xml";
-
-        logger.info("Absolute path to effective file: " + pomPath);
-
         slInfo.setEnabled(true);
         slInfo.setBuildName(String.valueOf(build.getNumber()));
 
@@ -455,11 +470,19 @@ public class BeginAnalysis extends Builder {
         List<FileBackupInfo> pomFiles = new ArrayList<>();
         IncludeExcludeFilter filter = new IncludeExcludeFilter(patterns, null);
 
+        boolean isParentPomInList = false;
         for (String folder : folders) {
             List<String> matchingPoms = FileAndFolderUtils.findAllFilesWithFilter(folder, recursiveSearch, filter);
             for (String matchingPom : matchingPoms) {
+                if (matchingPom.equalsIgnoreCase(this.pomPath))
+                    isParentPomInList = true;
                 pomFiles.add(new FileBackupInfo(matchingPom, null));
             }
+        }
+
+        if (!isParentPomInList)
+        {
+            pomFiles.add(new FileBackupInfo(this.pomPath, null));
         }
 
         return pomFiles;
@@ -478,7 +501,7 @@ public class BeginAnalysis extends Builder {
         }
 
         if (!found) {
-            RestoreBuildFile restoreBuildFile = new RestoreBuildFile(true, buildFilesFolders);
+            RestoreBuildFile restoreBuildFile = new RestoreBuildFile(true, buildFilesFolders, this.pomPath);
             publishersList.add(restoreBuildFile);
         }
     }

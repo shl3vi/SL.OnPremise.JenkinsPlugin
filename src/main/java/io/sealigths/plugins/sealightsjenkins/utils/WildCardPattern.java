@@ -2,12 +2,12 @@ package io.sealigths.plugins.sealightsjenkins.utils;
 
 import java.util.regex.Pattern;
 
-public class WildcardPattern {
+public class WildCardPattern {
 
     private String initialExpression;
     private Pattern compiledPattern;
 
-    public WildcardPattern(String initialExpression) {
+    public WildCardPattern(String initialExpression) {
         this.initialExpression = initialExpression;
     }
 
