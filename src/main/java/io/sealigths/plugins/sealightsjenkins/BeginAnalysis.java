@@ -5,6 +5,8 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.*;
+import hudson.remoting.VirtualChannel;
+import hudson.slaves.SlaveComputer;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.DescribableList;
@@ -14,9 +16,9 @@ import io.sealigths.plugins.sealightsjenkins.integration.JarsHelper;
 import io.sealigths.plugins.sealightsjenkins.integration.MavenIntegration;
 import io.sealigths.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
 import io.sealigths.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
-import io.sealigths.plugins.sealightsjenkins.utils.FileAndFolderUtils;
-import io.sealigths.plugins.sealightsjenkins.utils.IncludeExcludeFilter;
+import io.sealigths.plugins.sealightsjenkins.utils.FileUtils;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
+import io.sealigths.plugins.sealightsjenkins.utils.SearchFileCallable;
 import io.sealigths.plugins.sealightsjenkins.utils.StringUtils;
 import jenkins.model.Jenkins;
 import jenkins.model.ProjectNamingStrategy;
@@ -53,9 +55,9 @@ public class BeginAnalysis extends Builder {
     private final String relativePathToEffectivePom;
     private final boolean recursive;
     private final String workspacepath;
-    private final String buildScannerJar;
-    private final String testListenerJar;
-    private final String apiJar;
+    private String buildScannerJar;
+    private String testListenerJar;
+    private String apiJar;
     private final String testListenerConfigFile;
     private boolean autoRestoreBuildFile;
     private final String buildFilesPatterns;
@@ -123,11 +125,6 @@ public class BeginAnalysis extends Builder {
 
         this.buildScannerJar = buildScannerJar;
         this.testListenerJar = testListenerJar;
-
-        if (StringUtils.isNullOrEmpty(apiJar)) {
-            //The user didn't specify a specific version of the test listener. Use an embedded one.
-            apiJar = JarsHelper.loadJarAndSaveAsTempFile("sl-api");
-        }
         this.apiJar = apiJar;
     }
 
@@ -345,6 +342,21 @@ public class BeginAnalysis extends Builder {
             return false;
         }
 
+        if (StringUtils.isNullOrEmpty(apiJar)) {
+            //The user didn't specify a specific version of the test listener. Use an embedded one.
+            apiJar = JarsHelper.loadJarAndSaveAsTempFile("sl-api");
+        } else {
+            logger.info("The user specified a version for the 'apiJar'. Overriding embedded version with:'" + apiJar + "'");
+        }
+
+        if (!StringUtils.isNullOrEmpty(buildScannerJar))
+            FileUtils.tryCopyFileFromLocalToSlave(logger, buildScannerJar);
+        if (!StringUtils.isNullOrEmpty(testListenerJar))
+            FileUtils.tryCopyFileFromLocalToSlave(logger, testListenerJar);
+        if (!StringUtils.isNullOrEmpty(apiJar))
+            FileUtils.tryCopyFileFromLocalToSlave(logger, apiJar);
+
+
         printFields(logger);
         String workingDir = ws.getRemote();
 
@@ -358,9 +370,22 @@ public class BeginAnalysis extends Builder {
 
         configureBuildFilePublisher(build, slInfo.getBuildFilesFolders());
 
-        doMavenIntegration(logger, slInfo);
+        doMavenIntegration(ws, logger, slInfo);
 
         return true;
+    }
+
+
+
+    private List<String> getRemotePoms(Logger logger, FilePath ws) throws IOException, InterruptedException {
+        List<String> results = ws.act(new SearchFileCallable("**/pom.xml"));
+        logger.info("**********************************");
+        logger.info("Results: " + results.size());
+        for (String s : results) {
+            logger.info("-->" + s);
+        }
+        logger.info("**********************************");
+        return results;
     }
 
     private void setParentPomPath(Logger logger, String workingDir) {
@@ -400,10 +425,11 @@ public class BeginAnalysis extends Builder {
         return null;
     }
 
-    private void doMavenIntegration(Logger logger, SeaLightsPluginInfo slInfo) throws IOException, InterruptedException {
+    private void doMavenIntegration(FilePath ws, Logger logger, SeaLightsPluginInfo slInfo) throws IOException, InterruptedException {
+
 
         List<String> folders = Arrays.asList(slInfo.getBuildFilesFolders().split("\\s*,\\s*"));
-        List<FileBackupInfo> pomFiles = getPomFiles(folders, slInfo.getBuildFilesPatterns(), slInfo.isRecursiveOnBuildFilesFolders());
+        List<FileBackupInfo> pomFiles = getPomFiles(ws, folders, slInfo.getBuildFilesPatterns(), slInfo.isRecursiveOnBuildFilesFolders(), logger);
 
         MavenIntegrationInfo info = new MavenIntegrationInfo(
                 pomFiles,
@@ -422,13 +448,14 @@ public class BeginAnalysis extends Builder {
         }
         return Paths.get(path1, path2).toAbsolutePath().toString();
     }
+  
 
     private String getManualBuildName(){
         BuildName.ManualBuildName manual = (BuildName.ManualBuildName) buildName;
         String insertedBuildName = manual.getInsertedBuildName();
         return insertedBuildName;
     }
-
+    
     private String getUpstreamBuildName(AbstractBuild<?, ?> build, Logger logger){
         BuildName.UpstreamBuildName upstream = (BuildName.UpstreamBuildName) buildName;
         String upstreamProjectName = upstream.getUpstreamProjectName();
@@ -531,19 +558,18 @@ public class BeginAnalysis extends Builder {
 
     }
 
-    private List<FileBackupInfo> getPomFiles(List<String> folders, String patterns, boolean recursiveSearch) {
+    private List<FileBackupInfo> getPomFiles(FilePath ws, List<String> folders, String patterns, boolean recursiveSearch, Logger logger) throws IOException, InterruptedException {
         List<FileBackupInfo> pomFiles = new ArrayList<>();
-        IncludeExcludeFilter filter = new IncludeExcludeFilter(patterns, null);
 
+        List<String> remotePoms = getRemotePoms(logger, ws);
         boolean isParentPomInList = false;
-        for (String folder : folders) {
-            List<String> matchingPoms = FileAndFolderUtils.findAllFilesWithFilter(folder, recursiveSearch, filter);
-            for (String matchingPom : matchingPoms) {
-                if (matchingPom.equalsIgnoreCase(this.pomPath))
-                    isParentPomInList = true;
-                pomFiles.add(new FileBackupInfo(matchingPom, null));
-            }
+        for (String matchingPom : remotePoms) {
+            logger.debug("Adding pom:" + matchingPom);
+            if (matchingPom.equalsIgnoreCase(this.pomPath))
+                isParentPomInList = true;
+            pomFiles.add(new FileBackupInfo(matchingPom, null));
         }
+
 
         if (!isParentPomInList) {
             pomFiles.add(new FileBackupInfo(this.pomPath, null));
@@ -634,6 +660,7 @@ public class BeginAnalysis extends Builder {
         public DescriptorImpl() {
             super(BeginAnalysis.class);
             load();
+
         }
 
         @Override

@@ -1,5 +1,8 @@
 package io.sealigths.plugins.sealightsjenkins.integration;
 
+import hudson.FilePath;
+import hudson.model.Computer;
+import hudson.remoting.VirtualChannel;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import io.sealigths.plugins.sealightsjenkins.utils.StringUtils;
 import org.w3c.dom.*;
@@ -7,7 +10,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.*;
@@ -172,7 +174,6 @@ public class PomFile {
 
     public boolean isValidPom() {
 
-        //TODO: Don't delete. Work in progress!!! (Nadav)
         Element documentElement = getDocument().getDocumentElement();
         if (documentElement == null) {
             log.warning("Couldn't read pom file (documentElement is null).");
@@ -324,14 +325,27 @@ public class PomFile {
     }
 
 
-    public void save(String filename) throws TransformerException {
+    public void save(String filename) throws TransformerException, IOException, InterruptedException {
         // write the DOM object to the file
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
         Transformer transformer = transformerFactory.newTransformer();
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
         DOMSource domSource = new DOMSource(getDocument());
-        StreamResult streamResult = new StreamResult(new File(filename));
+
+        VirtualChannel channel = Computer.currentComputer().getChannel();
+        FilePath filePath = new FilePath(channel, filename);
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        StreamResult streamResult = new StreamResult(outputStream);
         transformer.transform(domSource, streamResult);
+
+        String str = new String( outputStream.toByteArray(), "UTF-8");
+
+        String result = filePath.act(new SaveFileCallable(str));
+        if (!StringUtils.isNullOrEmpty(result))
+            log.info("save - Result:" + result);
+        //StreamResult streamResult = new StreamResult(new File(filename));
+        //transformer.transform(domSource, streamResult);
     }
 
     private List<Element> getOrCreateElements(String nameAndXpath, Element parent) throws XPathExpressionException {
@@ -400,13 +414,15 @@ public class PomFile {
         if (document != null)
             return document;
         try {
-            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-            DocumentBuilder db = dbf.newDocumentBuilder();
-            document = db.parse(this.filename);
+
+            VirtualChannel channel = Computer.currentComputer().getChannel();
+            FilePath fp = new FilePath(channel, this.filename);
+            document = fp.act(new GetDocumentFileCallable());
             document.getDocumentElement().normalize();
 
-        } catch (SAXException | ParserConfigurationException | IOException e) {
+        } catch (InterruptedException | IOException e) {
             document = new EmptyDocument();
+            log.error("Failed to get XML document. Error:", e);
         }
         return document;
     }

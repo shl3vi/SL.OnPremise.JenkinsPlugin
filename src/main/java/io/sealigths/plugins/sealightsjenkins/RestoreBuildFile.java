@@ -4,18 +4,19 @@ package io.sealigths.plugins.sealightsjenkins;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Extension;
+import hudson.model.Computer;
+import hudson.remoting.Channel;
+import hudson.remoting.VirtualChannel;
 import hudson.tasks.*;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.AbstractProject;
 import io.sealigths.plugins.sealightsjenkins.entities.FileBackupInfo;
-import io.sealigths.plugins.sealightsjenkins.utils.FileAndFolderUtils;
-import io.sealigths.plugins.sealightsjenkins.utils.FileUtils;
-import io.sealigths.plugins.sealightsjenkins.utils.IncludeExcludeFilter;
-import io.sealigths.plugins.sealightsjenkins.utils.Logger;
+import io.sealigths.plugins.sealightsjenkins.utils.*;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,19 +39,25 @@ public class RestoreBuildFile extends Recorder {
         this.parentPomFile = parentPom;
     }
 
-    private void RestoreAllFilesInFolder(String rootFolder, Logger logger){
+    private void RestoreAllFilesInFolder(String rootFolder, Logger logger) throws IOException, InterruptedException {
         logger.info("searching in folder: " + rootFolder);
-        boolean recursive = true;
-        IncludeExcludeFilter filter = new IncludeExcludeFilter("*.slbak" , null);
-        List<String> filesToRestore = FileAndFolderUtils.findAllFilesWithFilter(rootFolder, recursive, filter);
+        VirtualChannel channel = Computer.currentComputer().getChannel();
+        FilePath rootFolderPath = new FilePath(channel, rootFolder);
+        List<String> filesToRestore = rootFolderPath.act(new SearchFileCallable("**/*.slbak"));
         for (String currentName : filesToRestore) {
             restoreSingleFile(currentName, logger);
         }
     }
 
-    public void restoreSingleFile(String slbackFile, Logger logger) {
+    public void restoreSingleFile(String slbackFile, Logger logger) throws IOException, InterruptedException {
         String originalFile = slbackFile.replace(".slbak","");
-        boolean isSuccess = FileUtils.renameFileOrFolder(slbackFile, originalFile, logger);
+        if (!new File(slbackFile).exists())
+            //File doesn't exist. Not need to restore.
+            return;
+
+        VirtualChannel channel = Computer.currentComputer().getChannel();
+        FilePath backupFile = new FilePath(channel, slbackFile);
+        boolean isSuccess = backupFile.act(new RenameFileCallable(originalFile, slbackFile));
         if (isSuccess)
             logger.info("Restored '" + slbackFile + "' to '" + originalFile + "'.");
         else
@@ -58,7 +65,7 @@ public class RestoreBuildFile extends Recorder {
     }
 
     @Override
-    public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
+    public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 
         Logger logger = new Logger(listener.getLogger());
 
@@ -77,7 +84,6 @@ public class RestoreBuildFile extends Recorder {
                 RestoreAllFilesInFolder(folder, logger);
             }
 
-            logger.info("this.parentPomFile:" + this.parentPomFile);
             if (this.parentPomFile != null)
                 restoreSingleFile(this.parentPomFile + ".slbak", logger);
 
