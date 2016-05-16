@@ -41,6 +41,10 @@ public class RestoreBuildFile extends Recorder {
 
     private void RestoreAllFilesInFolder(String rootFolder, Logger logger) throws IOException, InterruptedException {
 
+        if (StringUtils.isNullOrEmpty(rootFolder)){
+            return;
+        }
+
         VirtualChannel channel = Computer.currentComputer().getChannel();
         FilePath rootFolderPath = new FilePath(channel, rootFolder);
         List<String> filesToRestore = rootFolderPath.act(new SearchFileCallable("**/*.slbak"));
