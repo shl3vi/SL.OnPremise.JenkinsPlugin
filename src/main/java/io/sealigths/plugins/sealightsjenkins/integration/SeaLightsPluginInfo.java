@@ -1,5 +1,6 @@
 package io.sealigths.plugins.sealightsjenkins.integration;
 
+import io.sealigths.plugins.sealightsjenkins.BuildNamingStrategy;
 import io.sealigths.plugins.sealightsjenkins.BuildStrategy;
 import io.sealigths.plugins.sealightsjenkins.LogDestination;
 import io.sealigths.plugins.sealightsjenkins.LogLevel;
@@ -243,8 +244,6 @@ public class SeaLightsPluginInfo {
     public void setBuildStrategy(BuildStrategy buildStrategy) {
         this.buildStrategy = buildStrategy;
     }
-
-    
 
     public String getApiJar() {
         return apiJar;
