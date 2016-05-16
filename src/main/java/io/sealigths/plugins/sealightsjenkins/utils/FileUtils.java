@@ -1,5 +1,11 @@
 package io.sealigths.plugins.sealightsjenkins.utils;
 
+import hudson.FilePath;
+import hudson.model.Computer;
+import hudson.remoting.VirtualChannel;
+import hudson.slaves.SlaveComputer;
+import jenkins.model.Jenkins;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.CopyOption;
@@ -48,17 +54,31 @@ public class FileUtils {
         return returnedFiles;
     }
 
-    public static boolean renameFileOrFolder(String slbackFile, String originalName, Logger logger) {
+    public static void tryCopyFileFromLocalToSlave(Logger logger, String filename) throws IOException, InterruptedException {
+        if (Computer.currentComputer() instanceof SlaveComputer) {
+            VirtualChannel channel = Computer.currentComputer().getChannel();
+            logger.info("Current computer is: " + Computer.currentComputer().getName());
+            logger.info("Jenkins current computer is: " + Jenkins.MasterComputer.currentComputer().getName());
+
+            FilePath fpOnRemote = new FilePath(channel, filename);
+            FilePath fpOnMaster = new FilePath(new File(filename));
+            logger.info("fpOnMaster.getChannel(): " + fpOnMaster.getChannel());
+            logger.info("Filename: " + filename + ", fpOnRemote: " + fpOnRemote.absolutize() + ", fpOnMaster:" + fpOnMaster.absolutize());
+            fpOnMaster.copyTo(fpOnRemote);
+        }
+    }
+
+    public static boolean renameFileOrFolder(String oldName, String newName, Logger logger) {
         // File (or directory) with old name
-        File backupFile = new File(slbackFile);
+        File backupFile = new File(oldName);
 
 
 
         // File (or directory) with new name
        // File newFile = new File(newName);
 
-        Path src = Paths.get(slbackFile);
-        Path target = Paths.get(originalName);
+        Path src = Paths.get(oldName);
+        Path target = Paths.get(newName);
         try {
             Files.move(src, target, REPLACE_EXISTING);
         } catch (IOException e) {

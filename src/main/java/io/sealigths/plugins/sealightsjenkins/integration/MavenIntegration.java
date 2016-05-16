@@ -6,6 +6,7 @@ import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import io.sealigths.plugins.sealightsjenkins.utils.StringUtils;
 
 import javax.xml.transform.TransformerException;
+import java.io.IOException;
 import java.io.PrintStream;
 
 
@@ -75,7 +76,7 @@ public class MavenIntegration {
 
     private void backupPom(String sourceFile, PomFile pom) {
         String backupFile = sourceFile + ".slbak";
-        log.info("MavenIntegration.integrate - created back up file: " + backupFile);
+        log.info("MavenIntegration.integrate - creating a back up file: " + backupFile);
         this.savePom(backupFile, pom);
     }
 
@@ -118,11 +119,6 @@ public class MavenIntegration {
         savePom(fileBackupInfo, pomFile);
     }
 
-
-    private void savePom(String filename) {
-        savePom(filename, new PomFile(filename, this.log));
-    }
-
     private void savePom(FileBackupInfo fileBackupInfo, PomFile pomFile) {
         String targetFile = fileBackupInfo.getTargetFile();
         if (targetFile == null || targetFile.equals("")) {
@@ -134,15 +130,12 @@ public class MavenIntegration {
     private void savePom(String filename, PomFile pomFile) {
         try {
             pomFile.save(filename);
-        } catch (TransformerException e) {
+        } catch (Exception e) {
             log.error("Failed saving POM file. Error:", e);
         }
     }
 
-    private void log(PrintStream logger, String message) {
-        message = "[SeaLights Jenkins Plugin] " + message;
-        logger.println(message);
-    }
+
 
     public String toPluginText(SeaLightsPluginInfo pluginInfo, TestingFramework testingFramework) {
 

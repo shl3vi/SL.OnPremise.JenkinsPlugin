@@ -345,4 +345,9 @@ public class EmptyDocument implements Document {
     public Object getUserData(String key) {
         return null;
     }
+
+    @Override
+    public String toString(){
+        return "<Empty Document>";
+    }
 }

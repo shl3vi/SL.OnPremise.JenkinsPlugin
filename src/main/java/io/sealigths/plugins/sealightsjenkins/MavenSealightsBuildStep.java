@@ -3,19 +3,17 @@ package io.sealigths.plugins.sealightsjenkins;
 import hudson.*;
 import hudson.model.*;
 import hudson.remoting.VirtualChannel;
+import hudson.slaves.NodeProperty;
+import hudson.slaves.NodePropertyDescriptor;
 import hudson.slaves.NodeSpecific;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.tasks._maven.MavenConsoleAnnotator;
-import hudson.tools.DownloadFromUrlInstaller;
-import hudson.tools.ToolInstallation;
-import hudson.tools.ToolProperty;
-import hudson.util.ArgumentListBuilder;
-import hudson.util.NullStream;
-import hudson.util.StreamTaskListener;
-import hudson.util.VariableResolver;
+import hudson.tools.*;
+import hudson.util.*;
 import io.sealigths.plugins.sealightsjenkins.integration.JarsHelper;
 import io.sealigths.plugins.sealightsjenkins.utils.CommandLineHelper;
+import io.sealigths.plugins.sealightsjenkins.utils.FileUtils;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import jenkins.MasterToSlaveFileCallable;
 import jenkins.model.Jenkins;
@@ -32,10 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
-import java.util.StringTokenizer;
+import java.util.*;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
@@ -171,7 +166,6 @@ public class MavenSealightsBuildStep extends Builder {
     }
 
 
-
     public boolean usesPrivateRepository() {
         return usePrivateRepository;
     }
@@ -184,11 +178,13 @@ public class MavenSealightsBuildStep extends Builder {
      */
     public MavenInstallation getMaven() {
         for (MavenInstallation i : getDescriptor().getInstallations()) {
-            if (mavenName != null && mavenName.equals(i.getName()))
-                return i;
+            if (mavenName != null && mavenName.equals(i.getName())) {
+               return i;
+            }
         }
         return null;
     }
+
 
     /**
      * Looks for <tt>pom.xlm</tt> or <tt>project.xml</tt> to determine the maven executable
@@ -231,6 +227,43 @@ public class MavenSealightsBuildStep extends Builder {
         }
     }
 
+
+    private boolean beginAnalysisBuildStep(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Logger logger) throws IOException, InterruptedException {
+        beginAnalysis.perform(build, launcher, listener);
+        if (AUTO_DETECT.equals(beginAnalysis.getTestingFramework())) {
+            if (!runInitializeTestListenerGoal(build, launcher, listener, logger)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private ToolLocationNodeProperty.ToolLocation getMavenNodeToolsForCurrentComputer(Logger logger, String mavenName) {
+        List<Node> nodes = Jenkins.getInstance().getNodes();
+        for (Node node : nodes) {
+            String nodeName = node.getNodeName();
+            String computerName = Computer.currentComputer().getName();
+            logger.info("Current node:" + nodeName + ", Computer name:" + computerName);
+
+            if (!nodeName.equalsIgnoreCase(computerName))
+                continue;
+
+            DescribableList<NodeProperty<?>, NodePropertyDescriptor> nodeProperties = node.getNodeProperties();
+            for (NodeProperty prop : nodeProperties) {
+                if (!(prop instanceof ToolLocationNodeProperty))
+                    continue;
+
+                ToolLocationNodeProperty toolsLocation = (ToolLocationNodeProperty) prop;
+                for (ToolLocationNodeProperty.ToolLocation location : toolsLocation.getLocations()) {
+                    if (location.getName().equalsIgnoreCase(mavenName) && location.getType() instanceof hudson.tasks.Maven.MavenInstallation.DescriptorImpl)
+                        return location;
+                }
+            }
+        }
+        return null;
+    }
+
+
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 
@@ -240,11 +273,11 @@ public class MavenSealightsBuildStep extends Builder {
 
             if (enableSeaLights) {
                 installSealightsMavenPlugin(build, launcher, listener);
-                if (!beginAnalysisBuildStep(build, launcher, listener)) {
+                if (!beginAnalysisBuildStep(build, launcher, listener, logger)) {
                     logger.error("Begin Analysis step returned false. This likely due to an Exit Code > 0 from Maven.");
                     return false;
                 }
-            }else{
+            } else {
                 logger.info("'Enable SeaLights' is set to false. Skipping...");
             }
 
@@ -276,6 +309,7 @@ public class MavenSealightsBuildStep extends Builder {
 
                 } else {
                     mi = mi.forNode(Computer.currentComputer().getNode(), listener);
+                    mi = overrideMavenHomeIfNeed(mi, logger);
                     mi = mi.forEnvironment(env);
                     String exec = mi.getExecutable(launcher);
                     if (exec == null) {
@@ -340,36 +374,38 @@ public class MavenSealightsBuildStep extends Builder {
         return true;
     }
 
-    private void restoreBuildFile(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
+    private MavenInstallation overrideMavenHomeIfNeed(MavenInstallation mavenInstallation, Logger logger) {
+        ToolLocationNodeProperty.ToolLocation nodeTools = getMavenNodeToolsForCurrentComputer(logger, mavenInstallation.getName());
+        if (nodeTools != null) {
+            //If the computer has node tools, update the maven installation to use the 'home' value from the tools.
+            return new MavenInstallation(mavenInstallation.getName(), nodeTools.getHome(), mavenInstallation.getProperties().toList());
+
+        }
+        return mavenInstallation;
+    }
+
+    private void restoreBuildFile(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         RestoreBuildFile restoreBuildFile = new RestoreBuildFile(beginAnalysis.isAutoRestoreBuildFile(), beginAnalysis.getBuildFilesFolders(), beginAnalysis.getPomPath());
         restoreBuildFile.perform(build, launcher, listener);
     }
 
-    private String getSystemPropertiesArgs(String cmdLine){
+    private String getSystemPropertiesArgs(String cmdLine) {
         List<String> argsAsList = CommandLineHelper.toArgsArray(cmdLine);
         StringBuilder sysProps = new StringBuilder();
-        for (String arg: argsAsList){
-            if (arg.startsWith("-D")){
+        for (String arg : argsAsList) {
+            if (arg.startsWith("-D")) {
                 sysProps.append(arg);
                 sysProps.append(" ");
             }
         }
-        return  sysProps.toString();
+        return sysProps.toString();
 
     }
 
-    private boolean beginAnalysisBuildStep(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
-        beginAnalysis.perform(build, launcher, listener);
-        if (AUTO_DETECT.equals(beginAnalysis.getTestingFramework())) {
-            if (!runInitializeTestListenerGoal(build, launcher, listener)) {
-                return false;
-            }
-        }
-        return true;
-    }
+
 
     private boolean invokeMavenCommand(
-            AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String normalizedTarget) throws IOException, InterruptedException {
+            AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String normalizedTarget, Logger logger) throws IOException, InterruptedException {
         VariableResolver<String> vr = build.getBuildVariableResolver();
         EnvVars env = build.getEnvironment(listener);
         String pom = env.expand(this.pom);
@@ -382,6 +418,7 @@ public class MavenSealightsBuildStep extends Builder {
 
         } else {
             mi = mi.forNode(Computer.currentComputer().getNode(), listener);
+            mi = overrideMavenHomeIfNeed(mi,logger);
             mi = mi.forEnvironment(env);
             String exec = mi.getExecutable(launcher);
             if (exec == null) {
@@ -438,24 +475,27 @@ public class MavenSealightsBuildStep extends Builder {
         return true;
     }
 
-    private boolean installSealightsMavenPlugin(
-            AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+    private boolean installSealightsMavenPlugin(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 
-        String normalizedTarget = getSLMavenPluginInstallationCommand();
         Logger logger = new Logger(listener.getLogger());
+
+        String slMavenPluginJar = JarsHelper.loadJarAndSaveAsTempFile(SL_MVN_JAR_NAME);
+        FileUtils.tryCopyFileFromLocalToSlave(logger, slMavenPluginJar);
+
+        String normalizedTarget = getSLMavenPluginInstallationCommand(slMavenPluginJar);
         logger.info("Installing sealights-maven plugin");
         logger.info("Command: " + normalizedTarget);
 
-        return invokeMavenCommand(build, launcher, listener, normalizedTarget);
+        return invokeMavenCommand(build, launcher, listener, normalizedTarget, logger);
     }
 
 
-    public boolean runInitializeTestListenerGoal(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+    public boolean runInitializeTestListenerGoal(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Logger logger) throws IOException, InterruptedException {
 
         String normalizedTarget = targets.replaceAll("[\t\r\n]+", " ");
         normalizedTarget = getSystemPropertiesArgs(normalizedTarget) + " sealights:initialize-test-listener -e";
 
-        return invokeMavenCommand(build, launcher, listener, normalizedTarget);
+        return invokeMavenCommand(build, launcher, listener, normalizedTarget, logger);
     }
 
     private final String SL_MVN_JAR_NAME = "sl-maven-plugin";
@@ -463,13 +503,11 @@ public class MavenSealightsBuildStep extends Builder {
     private final String SL_MVN_ARTIFACT_ID = "sealights-maven-plugin";
     private final String SL_MVN_VERSION = "1.0.0";
 
-    private String getSLMavenPluginInstallationCommand() throws IOException {
-
-        String slMavenPluginJar = JarsHelper.loadJarAndSaveAsTempFile(SL_MVN_JAR_NAME);
+    private String getSLMavenPluginInstallationCommand(String mavenPluginFilePath){
 
         StringBuilder command = new StringBuilder();
         command.append("install:install-file -Dfile=");
-        command.append(slMavenPluginJar);
+        command.append(mavenPluginFilePath);
         command.append(" -DgroupId=");
         command.append(SL_MVN_GROUP_ID);
         command.append(" -DartifactId=");
@@ -544,7 +582,7 @@ public class MavenSealightsBuildStep extends Builder {
         private volatile MavenInstallation[] installations = new MavenInstallation[0];
 
         public DescriptorImpl() {
-            if (this.installations.length == 0){
+            if (this.installations.length == 0) {
                 getOriginalMavenInstallations();
             }
 //            DESCRIPTOR = this;
@@ -577,22 +615,22 @@ public class MavenSealightsBuildStep extends Builder {
             return this.installations;
         }
 
-        private void getOriginalMavenInstallations(){
+        private void getOriginalMavenInstallations() {
             Object mavenDescriptor;
             try {
                 mavenDescriptor = Jenkins.getInstance().getDescriptorByName("hudson.tasks.Maven");
-            }catch (Exception e){
+            } catch (Exception e) {
                 return;
             }
             Method[] methods = mavenDescriptor.getClass().getMethods();
             ToolInstallation[] mavenOriginalDescInstallations;
 
-            for(Method method: methods){
-                if ("getInstallations".equals(method.getName())){
+            for (Method method : methods) {
+                if ("getInstallations".equals(method.getName())) {
                     try {
-                        mavenOriginalDescInstallations = (ToolInstallation[])method.invoke(mavenDescriptor);
+                        mavenOriginalDescInstallations = (ToolInstallation[]) method.invoke(mavenDescriptor);
                         this.installations = new MavenInstallation[mavenOriginalDescInstallations.length];
-                        for (int i=0; i< mavenOriginalDescInstallations.length; i++){
+                        for (int i = 0; i < mavenOriginalDescInstallations.length; i++) {
                             ToolInstallation ti = mavenOriginalDescInstallations[i];
                             this.installations[i] =
                                     new MavenInstallation(
@@ -600,7 +638,7 @@ public class MavenSealightsBuildStep extends Builder {
                                             ti.getHome(),
                                             ti.getProperties());
                         }
-                    } catch (IllegalAccessException |InvocationTargetException  e) {
+                    } catch (IllegalAccessException | InvocationTargetException e) {
                         e.printStackTrace();
                     }
                     break;
@@ -608,20 +646,20 @@ public class MavenSealightsBuildStep extends Builder {
             }
         }
 
-//        public void setInstallations(MavenInstallation... installations) {
-//            List<MavenInstallation> tmpList = new ArrayList<MavenSealightsBuildStep.MavenInstallation>();
-//            // remote empty Maven installation :
-//            if (installations != null) {
-//                Collections.addAll(tmpList, installations);
-//                for (MavenInstallation installation : installations) {
-//                    if (Util.fixEmptyAndTrim(installation.getName()) == null) {
-//                        tmpList.remove(installation);
-//                    }
-//                }
-//            }
-//            this.installations = tmpList.toArray(new MavenInstallation[tmpList.size()]);
-//            save();
-//        }
+        public void setInstallations(MavenInstallation... installations) {
+            List<MavenInstallation> tmpList = new ArrayList<MavenSealightsBuildStep.MavenInstallation>();
+            // remote empty Maven installation :
+            if (installations != null) {
+                Collections.addAll(tmpList, installations);
+                for (MavenInstallation installation : installations) {
+                    if (Util.fixEmptyAndTrim(installation.getName()) == null) {
+                        tmpList.remove(installation);
+                    }
+                }
+            }
+            this.installations = tmpList.toArray(new MavenInstallation[tmpList.size()]);
+            save();
+        }
 
         @Override
         public Builder newInstance(StaplerRequest req, JSONObject formData) throws FormException {
@@ -818,58 +856,58 @@ public class MavenSealightsBuildStep extends Builder {
         }
 
         @Extension
-        public static class DescriptorImpl extends Descriptor/*ToolDescriptor<MavenInstallation>*/ {
+        public static class DescriptorImpl extends ToolDescriptor<MavenInstallation> {
             @Override
             public String getDisplayName() {
                 return "";
             }
-        }
-//
-//            @Override
-//            public List<? extends ToolInstaller> getDefaultInstallers() {
-//                return Collections.singletonList(new MavenInstaller(null));
-//            }
-//
-//            // overriding them for backward compatibility.
-//            // newer code need not do this
-//            @Override
-//            public MavenInstallation[] getInstallations() {
-//                return Jenkins.getInstance().getDescriptorByType(MavenSealightsBuildStep.DescriptorImpl.class).getInstallations();
-//            }
+
+
+            @Override
+            public List<? extends ToolInstaller> getDefaultInstallers() {
+                return Collections.singletonList(new MavenInstaller(null));
+            }
 
         // overriding them for backward compatibility.
         // newer code need not do this
-//            @Override
-//            public void setInstallations(MavenInstallation... installations) {
-//                Jenkins.getInstance().getDescriptorByType(MavenSealightsBuildStep.DescriptorImpl.class).setInstallations(installations);
-//            }
+            @Override
+            public MavenInstallation[] getInstallations() {
+                return Jenkins.getInstance().getDescriptorByType(MavenSealightsBuildStep.DescriptorImpl.class).getInstallations();
+            }
 
-//            /**
-//             * Checks if the MAVEN_HOME is valid.
-//             */
-//            @Override
-//            protected FormValidation checkHomeDirectory(File value) {
-//                File maven1File = new File(value, MAVEN_1_INSTALLATION_COMMON_FILE);
-//                File maven2File = new File(value, MAVEN_2_INSTALLATION_COMMON_FILE);
-//
-//                if (!maven1File.exists() && !maven2File.exists())
-//                    return FormValidation.error(value + " doesn't look like a Maven directory" /*Messages.Maven_NotMavenDirectory(value)*/);
-//
-//                return FormValidation.ok();
-//            }
-//
-//        }
-//
-//        public static class ConverterImpl extends ToolConverter {
-//            public ConverterImpl(XStream2 xstream) {
-//                super(xstream);
-//            }
-//
-//            @Override
-//            protected String oldHomeField(ToolInstallation obj) {
-//                return ((MavenInstallation) obj).mavenHome;
-//            }
-//        }
+            // overriding them for backward compatibility.
+            // newer code need not do this
+            @Override
+            public void setInstallations(MavenInstallation... installations) {
+                Jenkins.getInstance().getDescriptorByType(MavenSealightsBuildStep.DescriptorImpl.class).setInstallations(installations);
+            }
+
+            /**
+             * Checks if the MAVEN_HOME is valid.
+             */
+            @Override
+            protected FormValidation checkHomeDirectory(File value) {
+                File maven1File = new File(value, MAVEN_1_INSTALLATION_COMMON_FILE);
+                File maven2File = new File(value, MAVEN_2_INSTALLATION_COMMON_FILE);
+
+                if (!maven1File.exists() && !maven2File.exists())
+                    return FormValidation.error(value + " doesn't look like a Maven directory" /*Messages.Maven_NotMavenDirectory(value)*/);
+
+                return FormValidation.ok();
+            }
+
+        }
+
+        public static class ConverterImpl extends ToolInstallation.ToolConverter {
+            public ConverterImpl(XStream2 xstream) {
+                super(xstream);
+            }
+
+            @Override
+            protected String oldHomeField(ToolInstallation obj) {
+                return ((MavenInstallation) obj).mavenHome;
+            }
+        }
     }
 
     /**
