@@ -397,11 +397,11 @@ public class BeginAnalysis extends Builder {
         logger.info("Absolute path pom file: " + this.pomPath);
     }
 
-    private String getBuildNumberFromUpstreamBuild(List<Cause> causes, String trigger) {
+    private String getBuildNumberFromUpstreamBuild(List<Cause> causes, String trigger, Logger logger) {
         String buildNum;
         for (Cause c : causes) {
             if (c instanceof Cause.UpstreamCause) {
-                buildNum = checkCauseRecursivelyForBuildNumber((Cause.UpstreamCause) c, trigger);
+                buildNum = checkCauseRecursivelyForBuildNumber((Cause.UpstreamCause) c, trigger, logger);
                 if (StringUtils.isNullOrEmpty(buildNum)){
                     continue;
                 }
@@ -409,19 +409,18 @@ public class BeginAnalysis extends Builder {
             }
         }
         return null;
+
     }
 
-    private String checkCauseRecursivelyForBuildNumber(Cause.UpstreamCause cause, String trigger){
-
+    private String checkCauseRecursivelyForBuildNumber(Cause.UpstreamCause cause, String trigger, Logger logger){
         if (trigger.equals(cause.getUpstreamProject())) {
             return String.valueOf(cause.getUpstreamBuild());
         }
 
-        String recursiveFound = getBuildNumberFromUpstreamBuild(cause.getUpstreamCauses(), trigger);
-        if (StringUtils.isNullOrEmpty(recursiveFound)){
+        String recursiveFound = getBuildNumberFromUpstreamBuild(cause.getUpstreamCauses(), trigger, logger);
+        if (!StringUtils.isNullOrEmpty(recursiveFound)){
             return recursiveFound;
         }
-
         return null;
     }
 
@@ -459,7 +458,7 @@ public class BeginAnalysis extends Builder {
     private String getUpstreamBuildName(AbstractBuild<?, ?> build, Logger logger){
         BuildName.UpstreamBuildName upstream = (BuildName.UpstreamBuildName) buildName;
         String upstreamProjectName = upstream.getUpstreamProjectName();
-        String finalBuildName = getBuildNumberFromUpstreamBuild(build.getCauses(), upstreamProjectName);
+        String finalBuildName = getBuildNumberFromUpstreamBuild(build.getCauses(), upstreamProjectName, logger);
         if (StringUtils.isNullOrEmpty(finalBuildName)) {
             logger.warning("Couldn't find build number for " + upstreamProjectName + ". Using this job's build name.");
             return null;
