@@ -5,8 +5,6 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.*;
-import hudson.remoting.VirtualChannel;
-import hudson.slaves.SlaveComputer;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.DescribableList;
@@ -20,8 +18,6 @@ import io.sealigths.plugins.sealightsjenkins.utils.FileUtils;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import io.sealigths.plugins.sealightsjenkins.utils.SearchFileCallable;
 import io.sealigths.plugins.sealightsjenkins.utils.StringUtils;
-import jenkins.model.Jenkins;
-import jenkins.model.ProjectNamingStrategy;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -29,10 +25,11 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by shahar on 5/9/2016.
@@ -52,7 +49,7 @@ public class BeginAnalysis extends Builder {
     private final String packagesExcluded;
     private final String filesIncluded;
     private final String filesExcluded;
-    private final String relativePathToEffectivePom;
+    private String relativePathToEffectivePom;
     private final boolean recursive;
     private final String workspacepath;
     private String buildScannerJar;
@@ -80,7 +77,7 @@ public class BeginAnalysis extends Builder {
                          String appName, String moduleName, String branch, boolean enableMultipleBuildFiles,
                          boolean overrideJars, boolean multipleBuildFiles, String pomPath, String environment,
                          String packagesIncluded, String packagesExcluded, String filesIncluded,
-                         String filesExcluded, String relativePathToEffectivePom, boolean recursive,
+                         String filesExcluded, boolean recursive,
                          String workspacepath, String buildScannerJar, String testListenerJar, String apiJar,
                          String testListenerConfigFile, boolean autoRestoreBuildFile,
                          String buildFilesPatterns, String buildFilesFolders,
@@ -102,7 +99,6 @@ public class BeginAnalysis extends Builder {
         this.packagesExcluded = packagesExcluded;
         this.filesIncluded = filesIncluded;
         this.filesExcluded = filesExcluded;
-        this.relativePathToEffectivePom = relativePathToEffectivePom;
         this.recursive = recursive;
         this.workspacepath = workspacepath;
         this.testListenerConfigFile = testListenerConfigFile;
@@ -201,6 +197,10 @@ public class BeginAnalysis extends Builder {
     @Exported
     public String getRelativePathToEffectivePom() {
         return relativePathToEffectivePom;
+    }
+
+    public void setRelativePathToEffectivePom(String relativePathToEffectivePom) {
+        this.relativePathToEffectivePom = relativePathToEffectivePom;
     }
 
     @Exported
@@ -569,6 +569,8 @@ public class BeginAnalysis extends Builder {
             if (item.toString().contains("RestoreBuildFile")) {
                 found = true;
                 logger.debug("There was no need to add a new RestoreBuildFile since there is one. Current one:" + item.toString());
+                logger.debug("Updating RestoreBuildFile.parentPomFile");
+                ((RestoreBuildFile)item).setParentPomFile(this.pomPath);
                 //If found, this was added manually. Remove the check box.
                 break;
             }

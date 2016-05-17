@@ -70,15 +70,25 @@ public class RestoreBuildFile extends Recorder {
         String originalFile = slbackFile.replace(".slbak","");
         VirtualChannel channel = Computer.currentComputer().getChannel();
         FilePath backupFile = new FilePath(channel, slbackFile);
-        if (!backupFile.exists())
-            //File doesn't exist. Not need to restore.
+        if (!backupFile.exists()) {
+            logger.warning("File '" + originalFile + "' doesn't exist. Not need to restore.");//File doesn't exist. Not need to restore.
             return;
+        }
 
         boolean isSuccess = backupFile.act(new RenameFileCallable(originalFile, slbackFile));
         if (isSuccess)
             logger.info("Restored '" + slbackFile + "' to '" + originalFile + "'.");
         else
             logger.error("Failed restoring '" + slbackFile + "' to '" + originalFile + "'.");
+    }
+
+
+    public String getParentPomFile() {
+        return parentPomFile;
+    }
+
+    public void setParentPomFile(String parentPomFile) {
+        this.parentPomFile = parentPomFile;
     }
 
     @Override
@@ -101,9 +111,9 @@ public class RestoreBuildFile extends Recorder {
                 RestoreAllFilesInFolder(folder, logger);
             }
 
-            if (this.parentPomFile != null)
+            logger.debug("Restoring parent pom: " + this.parentPomFile);
+            if (!StringUtils.isNullOrEmpty(this.parentPomFile))
                 restoreSingleFile(this.parentPomFile + ".slbak", logger);
-
 
         } else {
             logger.info("No need to restore any files.");
