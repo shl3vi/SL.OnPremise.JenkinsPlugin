@@ -325,12 +325,16 @@ public class MavenSealightsBuildStep extends Builder {
 
                 if (!S_PATTERN.matcher(targets).find()) { // check the given target/goals do not contain settings parameter already
                     String settingsPath = SettingsProvider.getSettingsRemotePath(getSettings(), build, listener);
+                    FileUtils.tryCopyFileFromLocalToSlave(logger, settingsPath);
+
                     if (StringUtils.isNotBlank(settingsPath)) {
                         args.add("-s", settingsPath);
                     }
                 }
                 if (!GS_PATTERN.matcher(targets).find()) {
                     String settingsPath = GlobalSettingsProvider.getSettingsRemotePath(getGlobalSettings(), build, listener);
+                    FileUtils.tryCopyFileFromLocalToSlave(logger, settingsPath);
+                    
                     if (StringUtils.isNotBlank(settingsPath)) {
                         args.add("-gs", settingsPath);
                     }

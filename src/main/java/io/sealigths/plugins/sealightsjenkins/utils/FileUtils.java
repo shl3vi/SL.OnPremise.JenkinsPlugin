@@ -66,6 +66,9 @@ public class FileUtils {
             logger.info("Filename: " + filename + ", fpOnRemote: " + fpOnRemote.absolutize() + ", fpOnMaster:" + fpOnMaster.absolutize());
             fpOnMaster.copyTo(fpOnRemote);
         }
+        else{
+            logger.debug("There is no need to copy '" + filename+ "' since the current machine is a master Jenkins machine.");
+        }
     }
 
     public static boolean renameFileOrFolder(String oldName, String newName, Logger logger) {
