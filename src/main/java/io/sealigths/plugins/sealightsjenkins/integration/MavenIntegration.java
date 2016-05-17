@@ -39,13 +39,25 @@ public class MavenIntegration {
 
         for (FileBackupInfo fileBackupInfo : mavenIntegrationInfo.getPomFiles()) {
             String sourceFilename = fileBackupInfo.getSourceFile();
-            PomFile pomFile = new PomFile(sourceFilename, log);
 
             try {
-                if (pomFile.isPluginExistInEntriePom(SEALIGHTS_GROUP_ID, SEALIGHTS_ARTIFACT_ID)) {
-                    log.info("MavenIntegration.integrate - Skipping the integration since SeaLights plugin is already defined in the the POM file.");
-                    return;
-                }
+                integrateToPomFile(fileBackupInfo, sourceFilename, shouldBackup);
+            } catch (Exception e) {
+                log.error("MavenIntegration.integrate - Unable to parse pom : " + sourceFilename + ". Error:", e);
+            }
+        }
+
+    }
+
+    private void integrateToPomFile(
+            FileBackupInfo fileBackupInfo, String sourceFilename, boolean shouldBackup) {
+
+        PomFile pomFile = new PomFile(sourceFilename, log);
+
+        if (pomFile.isPluginExistInEntriePom(SEALIGHTS_GROUP_ID, SEALIGHTS_ARTIFACT_ID)) {
+            log.info("MavenIntegration.integrate - Skipping the integration since SeaLights plugin is already defined in the the POM file.");
+            return;
+        }
 
 //                TODO: Check the SureFire version on the resolved (effective) *.pom file.
 //            if (!pomFile.isPluginExistInEntriePom(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID))
@@ -63,31 +75,23 @@ public class MavenIntegration {
 //                throw new RuntimeException("Unsupported Maven Surefire plugin. SeaLights requires a version 2.9 or higher.");
 //            }
 
-                if (shouldBackup) {
-                    backupPom(sourceFilename, pomFile);
-                }
-                integrateToPomFile(fileBackupInfo, pomFile);
-            } catch (Exception e) {
-                log.error("MavenIntegration.integrate - Unable to parse pom : " + sourceFilename + ". Error:", e);
-            }
+        if (!pomFile.isValidPom()) {
+            log.info("MavenIntegration.integrateToPomFile - Skipping SeaLights integration due to invalid pom. Pom: " + fileBackupInfo.getSourceFile());
+            return;
         }
 
+        if (shouldBackup) {
+            backupPom(sourceFilename, pomFile);
+        }
+
+        log.info("MavenIntegration.integrateToPomFile - About to modify pom: " + fileBackupInfo.getSourceFile());
+        integrateToAllProfiles(fileBackupInfo, pomFile);
     }
 
     private void backupPom(String sourceFile, PomFile pom) {
         String backupFile = sourceFile + ".slbak";
         log.info("MavenIntegration.integrate - creating a back up file: " + backupFile);
         this.savePom(backupFile, pom);
-    }
-
-    private void integrateToPomFile(FileBackupInfo fileBackupInfo, PomFile pomFile) {
-        if (!pomFile.isValidPom()) {
-            log.info("MavenIntegration.integrateToPomFile - Skipping SeaLights integration due to invalid pom. Pom: " + fileBackupInfo.getSourceFile());
-            return;
-        } else
-            log.info("MavenIntegration.integrateToPomFile - About to modify pom: " + fileBackupInfo.getSourceFile());
-
-        integrateToAllProfiles(fileBackupInfo, pomFile);
     }
 
     private String getEventListenerPackage(TestingFramework testingFramework) {
@@ -134,7 +138,6 @@ public class MavenIntegration {
             log.error("Failed saving POM file. Error:", e);
         }
     }
-
 
 
     public String toPluginText(SeaLightsPluginInfo pluginInfo, TestingFramework testingFramework) {
