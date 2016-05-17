@@ -53,22 +53,39 @@ public class FileUtils {
 
         return returnedFiles;
     }
+    public static void tryCopyFileFromLocalToSlave(Logger logger, String fileOnMaster, String fileOnSlave) throws IOException, InterruptedException {
+        if (StringUtils.isNullOrEmpty(fileOnSlave)) {
+            logger.warning("fileOnSlave is null. Skipping the copy.");
+            return;
+        }
 
-    public static void tryCopyFileFromLocalToSlave(Logger logger, String filename) throws IOException, InterruptedException {
+        if (StringUtils.isNullOrEmpty(fileOnMaster)) {
+            logger.warning("fileOnMaster is null. Skipping the copy.");
+            return;
+        }
+
         if (Computer.currentComputer() instanceof SlaveComputer) {
             VirtualChannel channel = Computer.currentComputer().getChannel();
             logger.info("Current computer is: " + Computer.currentComputer().getName());
             logger.info("Jenkins current computer is: " + Jenkins.MasterComputer.currentComputer().getName());
+            logger.info("fileOnSlave: " + fileOnSlave);
+            logger.info("fileOnMaster: " + fileOnMaster);
+            logger.info("channel: " + channel);
 
-            FilePath fpOnRemote = new FilePath(channel, filename);
-            FilePath fpOnMaster = new FilePath(new File(filename));
+
+            FilePath fpOnRemote = new FilePath(channel, fileOnSlave);
+            FilePath fpOnMaster = new FilePath(new File(fileOnMaster));
             logger.info("fpOnMaster.getChannel(): " + fpOnMaster.getChannel());
-            logger.info("Filename: " + filename + ", fpOnRemote: " + fpOnRemote.absolutize() + ", fpOnMaster:" + fpOnMaster.absolutize());
+            logger.info("fpOnRemote: " + fpOnRemote.absolutize() + ", fpOnMaster:" + fpOnMaster.absolutize());
             fpOnMaster.copyTo(fpOnRemote);
         }
         else{
-            logger.debug("There is no need to copy '" + filename+ "' since the current machine is a master Jenkins machine.");
+            logger.debug("There is no need to copy '" + fileOnSlave+ "' since the current machine is a master Jenkins machine.");
         }
+    }
+
+    public static void tryCopyFileFromLocalToSlave(Logger logger, String filename) throws IOException, InterruptedException {
+        tryCopyFileFromLocalToSlave(logger, filename, filename);
     }
 
     public static boolean renameFileOrFolder(String oldName, String newName, Logger logger) {

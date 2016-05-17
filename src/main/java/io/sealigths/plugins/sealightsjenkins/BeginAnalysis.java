@@ -5,6 +5,7 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.*;
+import hudson.remoting.VirtualChannel;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.DescribableList;
@@ -25,6 +26,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -413,7 +415,7 @@ public class BeginAnalysis extends Builder {
 
 
         List<String> folders = Arrays.asList(slInfo.getBuildFilesFolders().split("\\s*,\\s*"));
-        List<FileBackupInfo> pomFiles = getPomFiles(ws, folders, slInfo.getBuildFilesPatterns(), slInfo.isRecursiveOnBuildFilesFolders(), logger);
+        List<FileBackupInfo> pomFiles = getPomFiles(folders, slInfo.getBuildFilesPatterns(), logger);
 
         MavenIntegrationInfo info = new MavenIntegrationInfo(
                 pomFiles,
@@ -507,10 +509,10 @@ public class BeginAnalysis extends Builder {
         String patternsToSearch;
         if (enableMultipleBuildFiles) {
             foldersToSearch = StringUtils.isNullOrEmpty(buildFilesFolders) ? workingDir : buildFilesFolders;
-            patternsToSearch = StringUtils.isNullOrEmpty(buildFilesPatterns) ? "*pom.xml" : buildFilesPatterns;
+            patternsToSearch = StringUtils.isNullOrEmpty(buildFilesPatterns) ? "**/pom.xml" : buildFilesPatterns;
         } else {
             foldersToSearch = workingDir;
-            patternsToSearch = "*pom.xml";
+            patternsToSearch = "**/pom.xml";
         }
 
         slInfo.setRecursiveOnBuildFilesFolders(enableMultipleBuildFiles);
@@ -542,16 +544,21 @@ public class BeginAnalysis extends Builder {
 
     }
 
-    private List<FileBackupInfo> getPomFiles(FilePath ws, List<String> folders, String patterns, boolean recursiveSearch, Logger logger) throws IOException, InterruptedException {
+    private List<FileBackupInfo> getPomFiles(List<String> folders, String patterns, Logger logger) throws IOException, InterruptedException {
         List<FileBackupInfo> pomFiles = new ArrayList<>();
-
-        List<String> remotePoms = ws.act(new SearchFileCallable("**/pom.xml"));
         boolean isParentPomInList = false;
-        for (String matchingPom : remotePoms) {
-            logger.debug("Adding pom:" + matchingPom);
-            if (matchingPom.equalsIgnoreCase(this.pomPath))
-                isParentPomInList = true;
-            pomFiles.add(new FileBackupInfo(matchingPom, null));
+        VirtualChannel channel = Computer.currentComputer().getChannel();
+        if (!patterns.startsWith("**" + File.separator))
+            patterns = "**" + File.separator + patterns;
+
+        for (String folder: folders) {
+            List<String> remotePoms = new FilePath(channel, folder).act(new SearchFileCallable(patterns));
+            for (String matchingPom : remotePoms) {
+                logger.debug("Adding pom:" + matchingPom);
+                if (matchingPom.equalsIgnoreCase(this.pomPath))
+                    isParentPomInList = true;
+                pomFiles.add(new FileBackupInfo(matchingPom, null));
+            }
         }
 
 

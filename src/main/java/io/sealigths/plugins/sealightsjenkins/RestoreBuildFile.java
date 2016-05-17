@@ -57,15 +57,6 @@ public class RestoreBuildFile extends Recorder {
     }
 
 
-    public String getParentPomFile() {
-        return parentPomFile;
-    }
-
-    public void setParentPomFile(String parentPomFile) {
-        this.parentPomFile = parentPomFile;
-    }
-
-
     public void restoreSingleFile(String slbackFile, Logger logger) throws IOException, InterruptedException {
         String originalFile = slbackFile.replace(".slbak","");
         VirtualChannel channel = Computer.currentComputer().getChannel();

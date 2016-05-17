@@ -6,6 +6,7 @@ import hudson.remoting.VirtualChannel;
 import hudson.slaves.NodeProperty;
 import hudson.slaves.NodePropertyDescriptor;
 import hudson.slaves.NodeSpecific;
+import hudson.slaves.SlaveComputer;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.tasks._maven.MavenConsoleAnnotator;
@@ -30,6 +31,8 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
@@ -326,17 +329,25 @@ public class MavenSealightsBuildStep extends Builder {
 
                 if (!S_PATTERN.matcher(targets).find()) { // check the given target/goals do not contain settings parameter already
                     String settingsPath = SettingsProvider.getSettingsRemotePath(getSettings(), build, listener);
-                    FileUtils.tryCopyFileFromLocalToSlave(logger, settingsPath);
 
                     if (StringUtils.isNotBlank(settingsPath)) {
+                        if (Computer.currentComputer() instanceof SlaveComputer) {
+                            String originalSettings = settingsPath;
+                            settingsPath = toTempSettingsFile(settingsPath);
+                            FileUtils.tryCopyFileFromLocalToSlave(logger, originalSettings, settingsPath);
+                        }
                         args.add("-s", settingsPath);
                     }
                 }
                 if (!GS_PATTERN.matcher(targets).find()) {
                     String settingsPath = GlobalSettingsProvider.getSettingsRemotePath(getGlobalSettings(), build, listener);
-                    FileUtils.tryCopyFileFromLocalToSlave(logger, settingsPath);
-                    
+
                     if (StringUtils.isNotBlank(settingsPath)) {
+                        if (Computer.currentComputer() instanceof SlaveComputer) {
+                            String originalSettings = settingsPath;
+                            settingsPath = toTempSettingsFile(settingsPath);
+                            FileUtils.tryCopyFileFromLocalToSlave(logger, originalSettings, settingsPath);
+                        }
                         args.add("-gs", settingsPath);
                     }
                 }
@@ -377,6 +388,14 @@ public class MavenSealightsBuildStep extends Builder {
                 restoreBuildFile(build, launcher, listener);
         }
         return true;
+    }
+
+    private String toTempSettingsFile(String settingsPath) {
+        settingsPath =  UUID.randomUUID().toString() + "-" +Paths.get(settingsPath).getFileName().toString();
+        String osTempFolder = System.getProperty("java.io.tmpdir");
+        String tempFile = Paths.get(osTempFolder, settingsPath).toAbsolutePath().toString();
+        settingsPath = tempFile;
+        return settingsPath;
     }
 
     private MavenInstallation overrideMavenHomeIfNeed(MavenInstallation mavenInstallation, Logger logger) {
