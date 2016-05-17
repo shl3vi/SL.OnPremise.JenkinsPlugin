@@ -25,8 +25,14 @@ THE SOFTWARE.
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
     <f:advance>
+
         <f:entry field="enableSeaLights" title="Enable SeaLights">
             <f:checkbox checked="${it.enableSeaLights}" />
+        </f:entry>
+
+        <f:entry field="relativePathToEffectivePom" title="Project's build file"
+                 description="Relative path to build file (e.g in maven : 'dir/pom.xml'. default is 'pom.xml')">
+            <f:textbox value="${relativePathToEffectivePom}"/>
         </f:entry>
 
         <f:entry>

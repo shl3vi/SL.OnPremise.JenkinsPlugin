@@ -20,11 +20,15 @@ public class BeginAnalysisBuildStep extends Builder {
 
     public final boolean enableSeaLights;
     public final BeginAnalysis beginAnalysis;
+    public final String relativePathToEffectivePom;
+
 
     @DataBoundConstructor
-    public BeginAnalysisBuildStep(boolean enableSeaLights, BeginAnalysis beginAnalysis) throws IOException {
+    public BeginAnalysisBuildStep(boolean enableSeaLights, BeginAnalysis beginAnalysis, String relativePathToEffectivePom)
+            throws IOException {
 
         this.enableSeaLights = enableSeaLights;
+        this.relativePathToEffectivePom = relativePathToEffectivePom;
         this.beginAnalysis = beginAnalysis;
     }
 
@@ -43,6 +47,7 @@ public class BeginAnalysisBuildStep extends Builder {
         if (!enableSeaLights)
             return true;
 
+        beginAnalysis.setRelativePathToEffectivePom(relativePathToEffectivePom);
         return beginAnalysis.perform(build,launcher,listener);
     }
 

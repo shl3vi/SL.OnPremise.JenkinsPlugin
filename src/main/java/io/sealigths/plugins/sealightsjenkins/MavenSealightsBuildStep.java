@@ -229,6 +229,7 @@ public class MavenSealightsBuildStep extends Builder {
 
 
     private boolean beginAnalysisBuildStep(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Logger logger) throws IOException, InterruptedException {
+        beginAnalysis.setRelativePathToEffectivePom(pom);
         beginAnalysis.perform(build, launcher, listener);
         if (AUTO_DETECT.equals(beginAnalysis.getTestingFramework())) {
             if (!runInitializeTestListenerGoal(build, launcher, listener, logger)) {

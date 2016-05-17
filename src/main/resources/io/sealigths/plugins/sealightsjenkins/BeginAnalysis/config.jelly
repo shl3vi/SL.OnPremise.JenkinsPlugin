@@ -55,11 +55,6 @@
             <f:textbox value="${environment}" default="Unit Tests"/>
         </f:entry>
 
-        <f:entry field="relativePathToEffectivePom" title="Project's build file"
-                 description="Relative path to build file (e.g in maven : 'dir/pom.xml'. default is 'pom.xml')">
-            <f:textbox value="${relativePathToEffectivePom}"/>
-        </f:entry>
-
         <f:entry field="workspacepath" title="Workspace Path"
                  description="Path to a the workspace folder in which the source code exists.">
             <f:textbox value="${workspacepath}" default="$${project.basedir}"/>
