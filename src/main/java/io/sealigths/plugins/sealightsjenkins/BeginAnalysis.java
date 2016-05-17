@@ -398,31 +398,24 @@ public class BeginAnalysis extends Builder {
     }
 
     private String getBuildNumberFromUpstreamBuild(List<Cause> causes, String trigger) {
-        String buildNum;
+        String buildNum = null;
         for (Cause c : causes) {
             if (c instanceof Cause.UpstreamCause) {
                 buildNum = checkCauseRecursivelyForBuildNumber((Cause.UpstreamCause) c, trigger);
-                if (StringUtils.isNullOrEmpty(buildNum)){
-                    continue;
+                if (!StringUtils.isNullOrEmpty(buildNum)){
+                    break;
                 }
-                return buildNum;
             }
         }
-        return null;
+        return buildNum;
     }
 
     private String checkCauseRecursivelyForBuildNumber(Cause.UpstreamCause cause, String trigger){
-
         if (trigger.equals(cause.getUpstreamProject())) {
             return String.valueOf(cause.getUpstreamBuild());
         }
 
-        String recursiveFound = getBuildNumberFromUpstreamBuild(cause.getUpstreamCauses(), trigger);
-        if (StringUtils.isNullOrEmpty(recursiveFound)){
-            return recursiveFound;
-        }
-
-        return null;
+        return getBuildNumberFromUpstreamBuild(cause.getUpstreamCauses(), trigger);
     }
 
     private void doMavenIntegration(FilePath ws, Logger logger, SeaLightsPluginInfo slInfo) throws IOException, InterruptedException {
