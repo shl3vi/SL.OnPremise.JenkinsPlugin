@@ -578,6 +578,8 @@ public class BeginAnalysis extends Builder {
             if (item.toString().contains("RestoreBuildFile")) {
                 found = true;
                 logger.debug("There was no need to add a new RestoreBuildFile since there is one. Current one:" + item.toString());
+                logger.debug("Updating RestoreBuildFile.parentPomFile");
+                ((RestoreBuildFile)item).setParentPomFile(this.pomPath);
                 //If found, this was added manually. Remove the check box.
                 break;
             }
