@@ -179,7 +179,7 @@ public class MavenSealightsBuildStep extends Builder {
     public MavenInstallation getMaven() {
         for (MavenInstallation i : getDescriptor().getInstallations()) {
             if (mavenName != null && mavenName.equals(i.getName())) {
-               return i;
+                return i;
             }
         }
         return null;
@@ -403,7 +403,6 @@ public class MavenSealightsBuildStep extends Builder {
     }
 
 
-
     private boolean invokeMavenCommand(
             AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String normalizedTarget, Logger logger) throws IOException, InterruptedException {
         VariableResolver<String> vr = build.getBuildVariableResolver();
@@ -418,7 +417,7 @@ public class MavenSealightsBuildStep extends Builder {
 
         } else {
             mi = mi.forNode(Computer.currentComputer().getNode(), listener);
-            mi = overrideMavenHomeIfNeed(mi,logger);
+            mi = overrideMavenHomeIfNeed(mi, logger);
             mi = mi.forEnvironment(env);
             String exec = mi.getExecutable(launcher);
             if (exec == null) {
@@ -503,7 +502,7 @@ public class MavenSealightsBuildStep extends Builder {
     private final String SL_MVN_ARTIFACT_ID = "sealights-maven-plugin";
     private final String SL_MVN_VERSION = "1.0.0";
 
-    private String getSLMavenPluginInstallationCommand(String mavenPluginFilePath){
+    private String getSLMavenPluginInstallationCommand(String mavenPluginFilePath) {
 
         StringBuilder command = new StringBuilder();
         command.append("install:install-file -Dfile=");
@@ -861,101 +860,104 @@ public class MavenSealightsBuildStep extends Builder {
             public String getDisplayName() {
                 return "";
             }
-
-
-            @Override
-            public List<? extends ToolInstaller> getDefaultInstallers() {
-                return Collections.singletonList(new MavenInstaller(null));
-            }
-
-        // overriding them for backward compatibility.
-        // newer code need not do this
-            @Override
-            public MavenInstallation[] getInstallations() {
-                return Jenkins.getInstance().getDescriptorByType(MavenSealightsBuildStep.DescriptorImpl.class).getInstallations();
-            }
-
-            // overriding them for backward compatibility.
-            // newer code need not do this
-            @Override
-            public void setInstallations(MavenInstallation... installations) {
-                Jenkins.getInstance().getDescriptorByType(MavenSealightsBuildStep.DescriptorImpl.class).setInstallations(installations);
-            }
-
-            /**
-             * Checks if the MAVEN_HOME is valid.
-             */
-            @Override
-            protected FormValidation checkHomeDirectory(File value) {
-                File maven1File = new File(value, MAVEN_1_INSTALLATION_COMMON_FILE);
-                File maven2File = new File(value, MAVEN_2_INSTALLATION_COMMON_FILE);
-
-                if (!maven1File.exists() && !maven2File.exists())
-                    return FormValidation.error(value + " doesn't look like a Maven directory" /*Messages.Maven_NotMavenDirectory(value)*/);
-
-                return FormValidation.ok();
-            }
-
         }
 
-        public static class ConverterImpl extends ToolInstallation.ToolConverter {
-            public ConverterImpl(XStream2 xstream) {
-                super(xstream);
-            }
+//
+//            @Override
+//            public List<? extends ToolInstaller> getDefaultInstallers() {
+//                return Collections.singletonList(new MavenInstaller(null));
+//            }
+//
+//
+//        // overriding them for backward compatibility.
+//        // newer code need not do this
+//            @Override
+//            public MavenInstallation[] getInstallations() {
+//                return Jenkins.getInstance().getDescriptorByType(MavenSealightsBuildStep.DescriptorImpl.class).getInstallations();
+//            }
+//
+//            // overriding them for backward compatibility.
+//            // newer code need not do this
+//            @Override
+//            public void setInstallations(MavenInstallation... installations) {
+//                Jenkins.getInstance().getDescriptorByType(MavenSealightsBuildStep.DescriptorImpl.class).setInstallations(installations);
+//            }
+//
+//            /**
+//             * Checks if the MAVEN_HOME is valid.
+//             */
+//            @Override
+//            protected FormValidation checkHomeDirectory(File value) {
+//                File maven1File = new File(value, MAVEN_1_INSTALLATION_COMMON_FILE);
+//                File maven2File = new File(value, MAVEN_2_INSTALLATION_COMMON_FILE);
+//
+//                if (!maven1File.exists() && !maven2File.exists())
+//                    return FormValidation.error(value + " doesn't look like a Maven directory" /*Messages.Maven_NotMavenDirectory(value)*/);
+//
+//                return FormValidation.ok();
+//            }
+//
+//        }
+//
+//        public static class ConverterImpl extends ToolInstallation.ToolConverter {
+//            public ConverterImpl(XStream2 xstream) {
+//                super(xstream);
+//            }
+//
+//            @Override
+//            protected String oldHomeField(ToolInstallation obj) {
+//                return ((MavenInstallation) obj).mavenHome;
+//            }
+//        }
+//    }
 
-            @Override
-            protected String oldHomeField(ToolInstallation obj) {
-                return ((MavenInstallation) obj).mavenHome;
-            }
-        }
-    }
-
-    /**
-     * Automatic Maven installer from apache.org.
-     */
-    public static class MavenInstaller extends DownloadFromUrlInstaller {
-        @DataBoundConstructor
-        public MavenInstaller(String id) {
-            super(id);
-        }
-
-        @Extension
-        public static final class DescriptorImpl extends DownloadFromUrlInstaller.DescriptorImpl<MavenInstaller> {
-            public String getDisplayName() {
-                return "Install from Apache" /*Messages.InstallFromApache()*/;
-            }
-
-            @Override
-            public boolean isApplicable(Class<? extends ToolInstallation> toolType) {
-                return toolType == MavenInstallation.class;
-            }
-        }
-    }
-
-    /**
-     * Optional interface that can be implemented by {@link AbstractProject}
-     * that has "contextual" {@link MavenInstallation} associated with it.
-     * <p>
-     * <p>
-     * Code like RedeployPublisher uses this interface in an attempt
-     * to use the consistent Maven installation attached to the project.
-     *
-     * @since 1.235
-     */
-    public interface ProjectWithMaven {
         /**
-         * Gets the {@link MavenInstallation} associated with the project.
-         * Can be null.
-         * <p>
-         * <p>
-         * If the Maven installation can not be uniquely determined,
-         * it's often better to return just one of them, rather than returning
-         * null, since this method is currently ultimately only used to
-         * decide where to parse <tt>conf/settings.xml</tt> from.
-         *
-         * @return MavenInstallation
+         * Automatic Maven installer from apache.org.
          */
-        MavenInstallation inferMavenInstallation();
-    }
+        public static class MavenInstaller extends DownloadFromUrlInstaller {
+            @DataBoundConstructor
+            public MavenInstaller(String id) {
+                super(id);
+            }
 
+            @Extension
+            public static final class DescriptorImpl extends DownloadFromUrlInstaller.DescriptorImpl<MavenInstaller> {
+                public String getDisplayName() {
+                    return "Install from Apache" /*Messages.InstallFromApache()*/;
+                }
+
+                @Override
+                public boolean isApplicable(Class<? extends ToolInstallation> toolType) {
+                    return toolType == MavenInstallation.class;
+                }
+            }
+        }
+
+        /**
+         * Optional interface that can be implemented by {@link AbstractProject}
+         * that has "contextual" {@link MavenInstallation} associated with it.
+         * <p>
+         * <p>
+         * Code like RedeployPublisher uses this interface in an attempt
+         * to use the consistent Maven installation attached to the project.
+         *
+         * @since 1.235
+         */
+        public interface ProjectWithMaven {
+            /**
+             * Gets the {@link MavenInstallation} associated with the project.
+             * Can be null.
+             * <p>
+             * <p>
+             * If the Maven installation can not be uniquely determined,
+             * it's often better to return just one of them, rather than returning
+             * null, since this method is currently ultimately only used to
+             * decide where to parse <tt>conf/settings.xml</tt> from.
+             *
+             * @return MavenInstallation
+             */
+            MavenInstallation inferMavenInstallation();
+        }
+
+    }
 }

@@ -377,16 +377,7 @@ public class BeginAnalysis extends Builder {
 
 
 
-    private List<String> getRemotePoms(Logger logger, FilePath ws) throws IOException, InterruptedException {
-        List<String> results = ws.act(new SearchFileCallable("**/pom.xml"));
-        logger.info("**********************************");
-        logger.info("Results: " + results.size());
-        for (String s : results) {
-            logger.info("-->" + s);
-        }
-        logger.info("**********************************");
-        return results;
-    }
+
 
     private void setParentPomPath(Logger logger, String workingDir) {
         if (relativePathToEffectivePom != null && !"".equals(relativePathToEffectivePom))
@@ -554,7 +545,7 @@ public class BeginAnalysis extends Builder {
     private List<FileBackupInfo> getPomFiles(FilePath ws, List<String> folders, String patterns, boolean recursiveSearch, Logger logger) throws IOException, InterruptedException {
         List<FileBackupInfo> pomFiles = new ArrayList<>();
 
-        List<String> remotePoms = getRemotePoms(logger, ws);
+        List<String> remotePoms = ws.act(new SearchFileCallable("**/pom.xml"));
         boolean isParentPomInList = false;
         for (String matchingPom : remotePoms) {
             logger.debug("Adding pom:" + matchingPom);
