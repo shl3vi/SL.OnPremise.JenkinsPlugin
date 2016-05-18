@@ -47,7 +47,7 @@
 
         <f:entry title="Files Excluded" field="filesExcluded"
                  description="Files to exclude from SeaLights' analysis. Supports wildcards (* = any string, ? = any character).">
-            <f:textbox value="${filesExcluded}" default="*/test-classes/*"/>
+            <f:textbox value="${filesExcluded}" default="*test-classes*"/>
         </f:entry>
 
         <f:entry title="Environment" field="environment"
