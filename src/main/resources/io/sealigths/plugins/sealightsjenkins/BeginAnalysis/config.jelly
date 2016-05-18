@@ -14,7 +14,7 @@
     </f:entry>
 
     <f:entry title="Monitored Application Packages" field="packagesIncluded"
-             description="Java packages that will be analyzed by SeaLights. Supports wildcards (* = any string, ? = any character).">
+             description="Java packages that will be analyzed by SeaLights. Supports wildcards (* = any string, ? = any character). Should start with '*'. For example: '*org.eclipse.*'">
         <f:textbox value="${packagesIncluded}"/>
     </f:entry>
 
