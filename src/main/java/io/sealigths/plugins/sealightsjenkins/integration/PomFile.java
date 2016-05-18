@@ -273,8 +273,10 @@ public class PomFile {
 
             if (!foundApiJar) {
                 //Add one.
-                Element classPathElement = additionalClasspathElementList.get(0);
+                Document doc = this.getDocument();
+                Element classPathElement = doc.createElement("additionalClasspathElement");
                 classPathElement.setTextContent(apiJarPath);
+                additionalClasspathElement.appendChild(classPathElement);
             }
         }
     }
