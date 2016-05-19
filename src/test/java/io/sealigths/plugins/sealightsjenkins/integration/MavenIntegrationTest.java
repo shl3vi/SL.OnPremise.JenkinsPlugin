@@ -231,6 +231,26 @@ public class MavenIntegrationTest {
         assertXMLEquals(expected, actual);
     }
 
+    @Test
+    public void InjectSeaLightsPluginToAPomWithAdditionalClassPathElementInsideSurefire() throws Exception {
+        //Arrange
+        TestingFramework TESTING_FRAMEWORK=TestingFramework.JUNIT;
+        String TEST_CASE = "11_Inject_SeaLights_plugin_to_a_pom_with_additionalClasspathElement_inside_surefire";
+        String testFolder = getTestFolder(TEST_CASE);
+
+        MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
+        mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
+        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo);
+
+        //Act
+        mavenIntegration.integrate(false);
+
+        //Assert
+        String expected = readFile(testFolder + "/expected.xml");
+        String actual = readFile(testFolder + "/actual.xml");
+
+        assertXMLEquals(expected, actual);
+    }
 
     public static void assertXMLEquals(String expectedXML, String actualXML) throws Exception {
         XMLUnit.setIgnoreWhitespace(true);
