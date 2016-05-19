@@ -355,7 +355,7 @@ public class BeginAnalysis extends Builder {
             return false;
         }
 
-        if (StringUtils.isNullOrEmpty(tmpApiJar)) {
+        if (org.apache.commons.lang.StringUtils.isBlank(tmpApiJar) ) {
             //The user didn't specify a specific version of the test listener. Use an embedded one.
             tmpApiJar = JarsHelper.loadJarAndSaveAsTempFile("sl-api");
             this.cleanupManager = getOrCreate(logger);
