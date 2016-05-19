@@ -68,6 +68,26 @@ public class FileUtils {
         }
     }
 
+    public static void tryDeleteFileFromSlave(Logger logger, String filename) throws IOException, InterruptedException {
+        if (Computer.currentComputer() instanceof SlaveComputer) {
+            VirtualChannel channel = Computer.currentComputer().getChannel();
+            logger.info("Current computer is: " + Computer.currentComputer().getName());
+            logger.info("Jenkins current computer is: " + Jenkins.MasterComputer.currentComputer().getName());
+
+            FilePath fpOnRemote = new FilePath(channel, filename);
+            FilePath fpOnMaster = new FilePath(new File(filename));
+
+            logger.info("Try deleting " + filename + " : " + fpOnRemote.absolutize());
+            boolean deleted = fpOnRemote.delete();
+            deleted = deleted && fpOnMaster.delete();
+
+            if (deleted)
+                logger.info("Deleted successfully");
+            else
+                logger.info("Not deleted");
+        }
+    }
+
     public static boolean renameFileOrFolder(String oldName, String newName, Logger logger) {
         // File (or directory) with old name
         File backupFile = new File(oldName);

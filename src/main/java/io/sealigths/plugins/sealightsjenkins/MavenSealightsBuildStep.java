@@ -46,6 +46,7 @@ public class MavenSealightsBuildStep extends Builder {
 
     public final BeginAnalysis beginAnalysis;
     public final boolean enableSeaLights;
+    private CleanupManager cleanupManager;
     /**
      * The targets and other maven options.
      * Can be separated by SP or NL.
@@ -269,9 +270,10 @@ public class MavenSealightsBuildStep extends Builder {
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 
         Logger logger = new Logger(listener.getLogger());
+        cleanupManager = new CleanupManager(logger);
+        beginAnalysis.setCleanupManager(cleanupManager);
 
         try {
-
             if (enableSeaLights) {
                 installSealightsMavenPlugin(build, launcher, listener);
                 if (!beginAnalysisBuildStep(build, launcher, listener, logger)) {
@@ -370,6 +372,7 @@ public class MavenSealightsBuildStep extends Builder {
             } while (startIndex < targets.length());
         } finally {
             if (enableSeaLights && beginAnalysis.isAutoRestoreBuildFile())
+                cleanupManager.clean();
                 restoreBuildFile(build, launcher, listener);
         }
         return true;
@@ -482,6 +485,7 @@ public class MavenSealightsBuildStep extends Builder {
 
         String slMavenPluginJar = JarsHelper.loadJarAndSaveAsTempFile(SL_MVN_JAR_NAME);
         FileUtils.tryCopyFileFromLocalToSlave(logger, slMavenPluginJar);
+        cleanupManager.addFile(slMavenPluginJar);
 
         String normalizedTarget = getSLMavenPluginInstallationCommand(slMavenPluginJar);
         logger.info("Installing sealights-maven plugin");

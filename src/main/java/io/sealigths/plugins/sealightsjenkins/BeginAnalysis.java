@@ -72,6 +72,11 @@ public class BeginAnalysis extends Builder {
     private final String override_url;
     private final String override_proxy;
 
+    private CleanupManager cleanupManager = null;
+    public void setCleanupManager(CleanupManager cleanupManager) {
+        this.cleanupManager = cleanupManager;
+    }
+
     @DataBoundConstructor
     public BeginAnalysis(LogLevel logLevel,
                          String appName, String moduleName, String branch, boolean enableMultipleBuildFiles,
@@ -333,6 +338,13 @@ public class BeginAnalysis extends Builder {
         return override_proxy;
     }
 
+    private CleanupManager getOrCreate(Logger logger){
+        if (cleanupManager == null)
+            return new CleanupManager(logger);
+
+        return this.cleanupManager;
+    }
+
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 
@@ -345,6 +357,9 @@ public class BeginAnalysis extends Builder {
         if (StringUtils.isNullOrEmpty(apiJar)) {
             //The user didn't specify a specific version of the test listener. Use an embedded one.
             apiJar = JarsHelper.loadJarAndSaveAsTempFile("sl-api");
+            this.cleanupManager = getOrCreate(logger);
+            this.cleanupManager.addFile(apiJar);
+
         } else {
             logger.info("The user specified a version for the 'apiJar'. Overriding embedded version with:'" + apiJar + "'");
         }
