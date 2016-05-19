@@ -20,6 +20,10 @@
 
     <f:advanced>
 
+        <f:entry title="Execution Type" field="executionType" >
+            <f:enum>${it.displayName}</f:enum>
+        </f:entry>
+
         <f:dropdownList name="buildName" title="Build Name">
             <j:forEach var="currentDescriptor" items="${descriptor.buildNameDescriptorList}" varStatus="loop">
                 <f:dropdownListBlock title="${currentDescriptor.displayName}" value="${loop.index}" selected="${currentDescriptor == instance.buildName.descriptor}" staplerClass="${currentDescriptor.clazz.name}">

@@ -1,9 +1,6 @@
 package io.sealigths.plugins.sealightsjenkins.integration;
 
-import io.sealigths.plugins.sealightsjenkins.BuildNamingStrategy;
-import io.sealigths.plugins.sealightsjenkins.BuildStrategy;
-import io.sealigths.plugins.sealightsjenkins.LogDestination;
-import io.sealigths.plugins.sealightsjenkins.LogLevel;
+import io.sealigths.plugins.sealightsjenkins.*;
 
 /**
  * Created by Nadav on 4/19/2016.
@@ -27,6 +24,7 @@ public class SeaLightsPluginInfo {
     private String buildFilesFolders;
     private String buildFilesPatterns;
     private boolean recursiveOnBuildFilesFolders;
+    private ExecutionType executionType;
 
     public boolean isRecursiveOnBuildFilesFolders() {
         return recursiveOnBuildFilesFolders;
@@ -166,6 +164,14 @@ public class SeaLightsPluginInfo {
 
     public void setRecursive(boolean recursive) {
         this.recursive = recursive;
+    }
+
+    public ExecutionType getExecutionType() {
+        return executionType;
+    }
+
+    public void setExecutionType(ExecutionType executionType) {
+        this.executionType = executionType;
     }
 
     private String scannerJar;

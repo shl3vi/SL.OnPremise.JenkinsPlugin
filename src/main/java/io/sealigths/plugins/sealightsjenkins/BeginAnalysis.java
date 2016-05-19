@@ -67,6 +67,7 @@ public class BeginAnalysis extends Builder {
     private ProjectType projectType = ProjectType.MAVEN;
     private BuildStrategy buildStrategy = BuildStrategy.ONE_BUILD;
     private BuildName buildName;
+    private ExecutionType executionType = ExecutionType.FULL;
 
     private final String override_customerId;
     private final String override_url;
@@ -83,7 +84,7 @@ public class BeginAnalysis extends Builder {
                          String buildFilesPatterns, String buildFilesFolders,
                          boolean logEnabled, LogDestination logDestination, String logFolder,
                          TestingFramework testingFramework, ProjectType projectType, BuildStrategy buildStrategy,
-                         BuildName buildName,
+                         BuildName buildName, ExecutionType executionType,
                          String override_customerId, String override_url, String override_proxy) throws IOException {
 
 
@@ -108,6 +109,7 @@ public class BeginAnalysis extends Builder {
         this.environment = environment;
         this.testingFramework = testingFramework;
         this.projectType = projectType;
+        this.executionType = executionType;
         this.multipleBuildFiles = multipleBuildFiles;
         this.overrideJars = overrideJars;
         this.buildFilesFolders = buildFilesFolders;
@@ -122,6 +124,14 @@ public class BeginAnalysis extends Builder {
         this.buildScannerJar = buildScannerJar;
         this.testListenerJar = testListenerJar;
         this.apiJar = apiJar;
+    }
+
+    public ExecutionType getExecutionType() {
+        return executionType;
+    }
+
+    public void setExecutionType(ExecutionType executionType) {
+        this.executionType = executionType;
     }
 
     @Exported
@@ -511,6 +521,7 @@ public class BeginAnalysis extends Builder {
         slInfo.setLogLevel(logLevel);
         slInfo.setLogDestination(logDestination);
         slInfo.setLogFolder(logFolder);
+        slInfo.setExecutionType(executionType);
 
         String foldersToSearch;
         String patternsToSearch;
@@ -607,6 +618,7 @@ public class BeginAnalysis extends Builder {
         logger.debug("Override Url: " + override_url);
         logger.debug("Override proxy:" + override_proxy);
         logger.debug("Testing Framework: " + testingFramework);
+        logger.debug("Execution Type: " + executionType.getDisplayName());
         logger.debug("Branch: " + branch);
         logger.debug("App Name:" + appName);
         logger.debug("Module Name:" + moduleName);

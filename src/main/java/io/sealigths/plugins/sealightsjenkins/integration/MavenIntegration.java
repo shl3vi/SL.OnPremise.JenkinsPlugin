@@ -1,5 +1,6 @@
 package io.sealigths.plugins.sealightsjenkins.integration;
 
+import io.sealigths.plugins.sealightsjenkins.ExecutionType;
 import io.sealigths.plugins.sealightsjenkins.TestingFramework;
 import io.sealigths.plugins.sealightsjenkins.entities.FileBackupInfo;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
@@ -201,7 +202,10 @@ public class MavenIntegration {
 
         plugin.append("</configuration>");
         plugin.append("<executions>");
-        appendExecution(plugin, "a1", "build-scanner");
+
+        boolean shouldExecuteScanner = ExecutionType.FULL.equals(pluginInfo.getExecutionType());
+        if (shouldExecuteScanner)
+            appendExecution(plugin, "a1", "build-scanner");
         appendExecution(plugin, "a2", "test-listener");
         appendExecution(plugin, "a3", "initialize-test-listener");
         plugin.append("</executions>");
