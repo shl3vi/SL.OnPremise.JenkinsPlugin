@@ -55,6 +55,7 @@ public class BeginAnalysis extends Builder {
     private String buildScannerJar;
     private String testListenerJar;
     private String apiJar;
+    private String tmpApiJar;
     private final String testListenerConfigFile;
     private boolean autoRestoreBuildFile;
     private final String buildFilesPatterns;
@@ -126,7 +127,7 @@ public class BeginAnalysis extends Builder {
 
         this.buildScannerJar = buildScannerJar;
         this.testListenerJar = testListenerJar;
-        this.apiJar = apiJar;
+        this.apiJar = this.tmpApiJar = apiJar;
     }
 
     @Exported
@@ -354,11 +355,11 @@ public class BeginAnalysis extends Builder {
             return false;
         }
 
-        if (StringUtils.isNullOrEmpty(apiJar)) {
+        if (StringUtils.isNullOrEmpty(tmpApiJar)) {
             //The user didn't specify a specific version of the test listener. Use an embedded one.
-            apiJar = JarsHelper.loadJarAndSaveAsTempFile("sl-api");
+            tmpApiJar = JarsHelper.loadJarAndSaveAsTempFile("sl-api");
             this.cleanupManager = getOrCreate(logger);
-            this.cleanupManager.addFile(apiJar);
+            this.cleanupManager.addFile(tmpApiJar);
 
         } else {
             logger.info("The user specified a version for the 'apiJar'. Overriding embedded version with:'" + apiJar + "'");
@@ -368,8 +369,8 @@ public class BeginAnalysis extends Builder {
             FileUtils.tryCopyFileFromLocalToSlave(logger, buildScannerJar);
         if (!StringUtils.isNullOrEmpty(testListenerJar))
             FileUtils.tryCopyFileFromLocalToSlave(logger, testListenerJar);
-        if (!StringUtils.isNullOrEmpty(apiJar))
-            FileUtils.tryCopyFileFromLocalToSlave(logger, apiJar);
+        if (!StringUtils.isNullOrEmpty(tmpApiJar))
+            FileUtils.tryCopyFileFromLocalToSlave(logger, tmpApiJar);
 
 
         printFields(logger);
@@ -519,7 +520,7 @@ public class BeginAnalysis extends Builder {
         slInfo.setListenerJar(testListenerJar);
         slInfo.setListenerConfigFile(testListenerConfigFile);
         slInfo.setScannerJar(buildScannerJar);
-        slInfo.setApiJar(apiJar);
+        slInfo.setApiJar(tmpApiJar);
         slInfo.setBuildStrategy(buildStrategy);
         slInfo.setEnvironment(environment);
         slInfo.setLogEnabled(!("Off".equalsIgnoreCase(logLevel.getDisplayName())));
@@ -642,7 +643,7 @@ public class BeginAnalysis extends Builder {
         logger.debug("Test-Listener Configuration File :" + testListenerConfigFile);
         logger.debug("Build Strategy: " + buildStrategy);
         logger.debug("Build Naming Strategy (from selection): " + buildName.getBuildNamingStrategy());
-        logger.debug("Api Jar:" + apiJar);
+        logger.debug("Api Jar:" + tmpApiJar);
         logger.debug("Log Enabled:" + logEnabled);
         logger.debug("Log Destination:" + logDestination);
         logger.debug("Log Level:" + logLevel);
