@@ -1,22 +1,25 @@
 package io.sealigths.plugins.sealightsjenkins.integration;
 
-import hudson.FilePath;
-import hudson.model.Computer;
-import hudson.remoting.VirtualChannel;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
-import io.sealigths.plugins.sealightsjenkins.utils.StringUtils;
-import org.w3c.dom.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.*;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.*;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,8 +29,8 @@ import java.util.List;
  */
 public class PomFile {
 
-    private Logger log;
-    private String filename;
+    protected Logger log;
+    protected String filename;
     private Document document;
     private final static String SUREFIRE_GROUP_ID = "org.apache.maven.plugins";
     private final static String SUREFIRE_ARTIFACT_ID = "maven-surefire-plugin";
@@ -38,29 +41,6 @@ public class PomFile {
         this.log = log;
     }
 
-
-    public List<String> getProfileIds() {
-        XPath xPath = XPathFactory.newInstance().newXPath();
-        NodeList nodes = null;
-        try {
-            XPathExpression expression = xPath.compile("//profiles/profile/id");
-            nodes = (NodeList) expression.evaluate(getDocument(), XPathConstants.NODESET);
-        } catch (XPathExpressionException e) {
-            e.printStackTrace();
-        }
-
-
-        List<String> profiles = new ArrayList<>();
-
-        if (nodes != null) {
-            for (int i = 0; i < nodes.getLength(); i++) {
-                Node node = nodes.item(i);
-                profiles.add(node.getTextContent());
-            }
-        }
-
-        return profiles;
-    }
 
     public boolean isPluginExistInEntriePom(String groupId, String artifactId) {
         try {
@@ -334,20 +314,12 @@ public class PomFile {
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
         DOMSource domSource = new DOMSource(getDocument());
 
-        VirtualChannel channel = Computer.currentComputer().getChannel();
-        FilePath filePath = new FilePath(channel, filename);
+        saveInternal(filename, transformer, domSource);
+    }
 
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        StreamResult streamResult = new StreamResult(outputStream);
+    protected void saveInternal(String filename, Transformer transformer, DOMSource domSource) throws TransformerException, IOException, InterruptedException {
+        StreamResult streamResult = new StreamResult(new File(filename));
         transformer.transform(domSource, streamResult);
-
-        String str = new String( outputStream.toByteArray(), "UTF-8");
-
-        String result = filePath.act(new SaveFileCallable(str));
-        if (!StringUtils.isNullOrEmpty(result))
-            log.info("save - Result:" + result);
-        //StreamResult streamResult = new StreamResult(new File(filename));
-        //transformer.transform(domSource, streamResult);
     }
 
     private List<Element> getOrCreateElements(String nameAndXpath, Element parent) throws XPathExpressionException {
@@ -392,44 +364,27 @@ public class PomFile {
         return nodes.getLength() > 0;
     }
 
-    public String getPomAsString() {
-        try {
-            TransformerFactory transfac = TransformerFactory.newInstance();
-            Transformer trans = transfac.newTransformer();
-            trans.setOutputProperty(OutputKeys.METHOD, "xml");
-            trans.setOutputProperty(OutputKeys.INDENT, "yes");
-            trans.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", Integer.toString(2));
-
-            StringWriter sw = new StringWriter();
-            StreamResult result = new StreamResult(sw);
-            DOMSource source = new DOMSource(getDocument().getDocumentElement());
-            trans.transform(source, result);
-            String xmlString = sw.toString();
-            return xmlString;
-        } catch (TransformerException e) {
-            e.printStackTrace();
-        }
-        return "";
-    }
-
     private Document getDocument() {
         if (document != null)
             return document;
         try {
 
-            VirtualChannel channel = Computer.currentComputer().getChannel();
-            FilePath fp = new FilePath(channel, this.filename);
-            document = fp.act(new GetDocumentFileCallable());
+            document = getDocumentInternal();
             document.getDocumentElement().normalize();
 
-        } catch (InterruptedException | IOException e) {
+        } catch (SAXException | ParserConfigurationException | InterruptedException | IOException e) {
             document = new EmptyDocument();
             log.error("Failed to get XML document. Error:", e);
         }
         return document;
     }
 
-    public String getFilename() {
-        return filename;
+
+    protected Document getDocumentInternal() throws IOException, InterruptedException, SAXException, ParserConfigurationException {
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        Document doc = db.parse(this.filename);
+        return doc;
     }
+
 }

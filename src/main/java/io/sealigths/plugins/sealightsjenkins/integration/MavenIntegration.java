@@ -23,10 +23,16 @@ public class MavenIntegration {
 
     private MavenIntegrationInfo mavenIntegrationInfo;
     private Logger log;
+    private boolean isJenkinsEnvironment;
 
     public MavenIntegration(Logger log, MavenIntegrationInfo mavenIntegrationInfo) {
+        this(log, mavenIntegrationInfo, true);
+    }
+
+    public MavenIntegration(Logger log, MavenIntegrationInfo mavenIntegrationInfo, boolean isJenkinsEnvironment) {
         this.log = log;
         this.mavenIntegrationInfo = mavenIntegrationInfo;
+        this.isJenkinsEnvironment = isJenkinsEnvironment;
     }
 
     public void integrate() {
@@ -49,10 +55,9 @@ public class MavenIntegration {
 
     }
 
-    private void integrateToPomFile(
-            FileBackupInfo fileBackupInfo, String sourceFilename, boolean shouldBackup) {
+    private void integrateToPomFile(FileBackupInfo fileBackupInfo, String sourceFilename, boolean shouldBackup) {
 
-        PomFile pomFile = new PomFile(sourceFilename, log);
+        PomFile pomFile = createPomFile(sourceFilename);
 
         if (pomFile.isPluginExistInEntriePom(SEALIGHTS_GROUP_ID, SEALIGHTS_ARTIFACT_ID)) {
             log.info("MavenIntegration.integrate - Skipping the integration since SeaLights plugin is already defined in the the POM file.");
@@ -86,6 +91,12 @@ public class MavenIntegration {
 
         log.info("MavenIntegration.integrateToPomFile - About to modify pom: " + fileBackupInfo.getSourceFile());
         integrateToAllProfiles(fileBackupInfo, pomFile);
+    }
+
+    private PomFile createPomFile(String sourceFilename) {
+        if (isJenkinsEnvironment)
+            return new JenkinsPomFile(sourceFilename, log);
+        return new PomFile(sourceFilename, log);
     }
 
     private void backupPom(String sourceFile, PomFile pom) {
