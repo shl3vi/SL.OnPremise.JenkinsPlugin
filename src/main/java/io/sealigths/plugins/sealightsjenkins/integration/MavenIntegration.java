@@ -174,6 +174,10 @@ public class MavenIntegration {
             plugin.append("<packagesexcluded>*FastClassByGuice*, *ByCGLIB*, *EnhancerByMockitoWithCGLIB*, *EnhancerBySpringCGLIB*, " + pluginInfo.getPackagesExcluded() + "</packagesexcluded>");
         }
 
+        if (!isNullOrEmpty(pluginInfo.getClassLoadersExcluded())) {
+            plugin.append("<classLoadersExcluded>org.powermock.core.classloader.MockClassLoader, " + pluginInfo.getClassLoadersExcluded() + "</classLoadersExcluded>");
+        }
+
         tryAppendValue(plugin, pluginInfo.getFilesIncluded(), "filesincluded");
         tryAppendValue(plugin, pluginInfo.getApiJar(), "apiJar");
         tryAppendValue(plugin, pluginInfo.getScannerJar(), "buildScannerJar");

@@ -17,6 +17,7 @@ public class SeaLightsPluginInfo {
     private String filesExcluded;
     private String packagesIncluded;
     private String packagesExcluded;
+    private String classLoadersExcluded;
     private String workspacepath;
     private String proxy;
     private boolean recursive;
@@ -269,6 +270,14 @@ public class SeaLightsPluginInfo {
 
     public LogDestination getLogDestination() {
         return logDestination;
+    }
+
+    public String getClassLoadersExcluded() {
+        return classLoadersExcluded;
+    }
+
+    public void setClassLoadersExcluded(String classLoadersExcluded) {
+        this.classLoadersExcluded = classLoadersExcluded;
     }
 }
 
