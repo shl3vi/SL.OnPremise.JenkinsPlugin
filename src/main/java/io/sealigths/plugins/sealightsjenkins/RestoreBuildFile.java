@@ -31,6 +31,8 @@ public class RestoreBuildFile extends Recorder {
     private String folders;
     private String parentPomFile;
 
+
+
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
     public RestoreBuildFile(boolean shouldRestore, String folders, String parentPom) {
@@ -53,6 +55,7 @@ public class RestoreBuildFile extends Recorder {
             restoreSingleFile(currentName, logger);
         }
     }
+
 
     public void restoreSingleFile(String slbackFile, Logger logger) throws IOException, InterruptedException {
         String originalFile = slbackFile.replace(".slbak","");

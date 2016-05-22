@@ -18,6 +18,7 @@ import java.util.List;
 public class MavenIntegrationTest {
 
     String PATH = System.getProperty("user.dir") + "/src/test/cases/MavenIntegration/";
+    boolean SAVE_POM_USING_JENKINS_API = false;
 
     @Test
     public void InjectSeaLightsPluginWithTestngListenerToAPomWithoutThePluginButWithSurefire() throws Exception {
@@ -29,7 +30,7 @@ public class MavenIntegrationTest {
 
         MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
         mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo);
+        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
 
         //Act
         mavenIntegration.integrate(false);
@@ -50,7 +51,7 @@ public class MavenIntegrationTest {
 
         MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
         mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo);
+        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
 
         //Act
         mavenIntegration.integrate(false);
@@ -71,7 +72,7 @@ public class MavenIntegrationTest {
 
         MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
         mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo);
+        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
 
         //Act
         mavenIntegration.integrate(false);
@@ -92,7 +93,7 @@ public class MavenIntegrationTest {
 
         MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
         mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo);
+        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
 
         //Act
         mavenIntegration.integrate(false);
@@ -113,7 +114,7 @@ public class MavenIntegrationTest {
 
         MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
         mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo);
+        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
 
         //Act
         mavenIntegration.integrate(false);
@@ -134,7 +135,7 @@ public class MavenIntegrationTest {
 
         MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
         mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo);
+        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
 
         //Act
         mavenIntegration.integrate(false);
@@ -155,7 +156,7 @@ public class MavenIntegrationTest {
 
         MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
         mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo);
+        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
 
         //Act
         mavenIntegration.integrate(false);
@@ -176,7 +177,7 @@ public class MavenIntegrationTest {
 
         MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
         mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo);
+        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
 
         //Act
         mavenIntegration.integrate(false);
@@ -198,7 +199,7 @@ public class MavenIntegrationTest {
 
         MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
         mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo);
+        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
 
         //Act
         mavenIntegration.integrate(false);
@@ -219,7 +220,7 @@ public class MavenIntegrationTest {
 
         MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
         mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo);
+        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
 
         //Act
         mavenIntegration.integrate(false);

@@ -5,6 +5,7 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.*;
+import hudson.remoting.VirtualChannel;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.DescribableList;
@@ -25,6 +26,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -49,6 +51,7 @@ public class BeginAnalysis extends Builder {
     private final String packagesExcluded;
     private final String filesIncluded;
     private final String filesExcluded;
+    private final String classLoadersExcluded;
     private String relativePathToEffectivePom;
     private final boolean recursive;
     private final String workspacepath;
@@ -67,6 +70,7 @@ public class BeginAnalysis extends Builder {
     private ProjectType projectType = ProjectType.MAVEN;
     private BuildStrategy buildStrategy = BuildStrategy.ONE_BUILD;
     private BuildName buildName;
+    private ExecutionType executionType = ExecutionType.FULL;
 
     private final String override_customerId;
     private final String override_url;
@@ -77,13 +81,13 @@ public class BeginAnalysis extends Builder {
                          String appName, String moduleName, String branch, boolean enableMultipleBuildFiles,
                          boolean overrideJars, boolean multipleBuildFiles, String pomPath, String environment,
                          String packagesIncluded, String packagesExcluded, String filesIncluded,
-                         String filesExcluded, boolean recursive,
+                         String filesExcluded, String classLoadersExcluded, boolean recursive,
                          String workspacepath, String buildScannerJar, String testListenerJar, String apiJar,
                          String testListenerConfigFile, boolean autoRestoreBuildFile,
                          String buildFilesPatterns, String buildFilesFolders,
                          boolean logEnabled, LogDestination logDestination, String logFolder,
                          TestingFramework testingFramework, ProjectType projectType, BuildStrategy buildStrategy,
-                         BuildName buildName,
+                         BuildName buildName, ExecutionType executionType,
                          String override_customerId, String override_url, String override_proxy) throws IOException {
 
 
@@ -99,6 +103,7 @@ public class BeginAnalysis extends Builder {
         this.packagesExcluded = packagesExcluded;
         this.filesIncluded = filesIncluded;
         this.filesExcluded = filesExcluded;
+        this.classLoadersExcluded = classLoadersExcluded;
         this.recursive = recursive;
         this.workspacepath = workspacepath;
         this.testListenerConfigFile = testListenerConfigFile;
@@ -108,6 +113,7 @@ public class BeginAnalysis extends Builder {
         this.environment = environment;
         this.testingFramework = testingFramework;
         this.projectType = projectType;
+        this.executionType = executionType;
         this.multipleBuildFiles = multipleBuildFiles;
         this.overrideJars = overrideJars;
         this.buildFilesFolders = buildFilesFolders;
@@ -122,6 +128,14 @@ public class BeginAnalysis extends Builder {
         this.buildScannerJar = buildScannerJar;
         this.testListenerJar = testListenerJar;
         this.apiJar = apiJar;
+    }
+
+    public ExecutionType getExecutionType() {
+        return executionType;
+    }
+
+    public void setExecutionType(ExecutionType executionType) {
+        this.executionType = executionType;
     }
 
     @Exported
@@ -192,6 +206,11 @@ public class BeginAnalysis extends Builder {
     @Exported
     public String getFilesExcluded() {
         return filesExcluded;
+    }
+
+    @Exported
+    public String getClassLoadersExcluded() {
+        return classLoadersExcluded;
     }
 
     @Exported
@@ -356,7 +375,6 @@ public class BeginAnalysis extends Builder {
         if (!StringUtils.isNullOrEmpty(apiJar))
             FileUtils.tryCopyFileFromLocalToSlave(logger, apiJar);
 
-
         printFields(logger);
         String workingDir = ws.getRemote();
 
@@ -377,16 +395,7 @@ public class BeginAnalysis extends Builder {
 
 
 
-    private List<String> getRemotePoms(Logger logger, FilePath ws) throws IOException, InterruptedException {
-        List<String> results = ws.act(new SearchFileCallable("**/pom.xml"));
-        logger.info("**********************************");
-        logger.info("Results: " + results.size());
-        for (String s : results) {
-            logger.info("-->" + s);
-        }
-        logger.info("**********************************");
-        return results;
-    }
+
 
     private void setParentPomPath(Logger logger, String workingDir) {
         if (relativePathToEffectivePom != null && !"".equals(relativePathToEffectivePom))
@@ -422,7 +431,7 @@ public class BeginAnalysis extends Builder {
 
 
         List<String> folders = Arrays.asList(slInfo.getBuildFilesFolders().split("\\s*,\\s*"));
-        List<FileBackupInfo> pomFiles = getPomFiles(ws, folders, slInfo.getBuildFilesPatterns(), slInfo.isRecursiveOnBuildFilesFolders(), logger);
+        List<FileBackupInfo> pomFiles = getPomFiles(folders, slInfo.getBuildFilesPatterns(), logger);
 
         MavenIntegrationInfo info = new MavenIntegrationInfo(
                 pomFiles,
@@ -501,6 +510,7 @@ public class BeginAnalysis extends Builder {
         slInfo.setRecursive(recursive);
         slInfo.setPackagesIncluded(packagesIncluded);
         slInfo.setPackagesExcluded(packagesExcluded);
+        slInfo.setClassLoadersExcluded(classLoadersExcluded);
         slInfo.setListenerJar(testListenerJar);
         slInfo.setListenerConfigFile(testListenerConfigFile);
         slInfo.setScannerJar(buildScannerJar);
@@ -511,15 +521,16 @@ public class BeginAnalysis extends Builder {
         slInfo.setLogLevel(logLevel);
         slInfo.setLogDestination(logDestination);
         slInfo.setLogFolder(logFolder);
+        slInfo.setExecutionType(executionType);
 
         String foldersToSearch;
         String patternsToSearch;
         if (enableMultipleBuildFiles) {
             foldersToSearch = StringUtils.isNullOrEmpty(buildFilesFolders) ? workingDir : buildFilesFolders;
-            patternsToSearch = StringUtils.isNullOrEmpty(buildFilesPatterns) ? "*pom.xml" : buildFilesPatterns;
+            patternsToSearch = StringUtils.isNullOrEmpty(buildFilesPatterns) ? "**/pom.xml" : buildFilesPatterns;
         } else {
             foldersToSearch = workingDir;
-            patternsToSearch = "*pom.xml";
+            patternsToSearch = "**/pom.xml";
         }
 
         slInfo.setRecursiveOnBuildFilesFolders(enableMultipleBuildFiles);
@@ -551,16 +562,21 @@ public class BeginAnalysis extends Builder {
 
     }
 
-    private List<FileBackupInfo> getPomFiles(FilePath ws, List<String> folders, String patterns, boolean recursiveSearch, Logger logger) throws IOException, InterruptedException {
+    private List<FileBackupInfo> getPomFiles(List<String> folders, String patterns, Logger logger) throws IOException, InterruptedException {
         List<FileBackupInfo> pomFiles = new ArrayList<>();
-
-        List<String> remotePoms = getRemotePoms(logger, ws);
         boolean isParentPomInList = false;
-        for (String matchingPom : remotePoms) {
-            logger.debug("Adding pom:" + matchingPom);
-            if (matchingPom.equalsIgnoreCase(this.pomPath))
-                isParentPomInList = true;
-            pomFiles.add(new FileBackupInfo(matchingPom, null));
+        VirtualChannel channel = Computer.currentComputer().getChannel();
+        if (!patterns.startsWith("**" + File.separator))
+            patterns = "**" + File.separator + patterns;
+
+        for (String folder: folders) {
+            List<String> remotePoms = new FilePath(channel, folder).act(new SearchFileCallable(patterns));
+            for (String matchingPom : remotePoms) {
+                logger.debug("Adding pom:" + matchingPom);
+                if (matchingPom.equalsIgnoreCase(this.pomPath))
+                    isParentPomInList = true;
+                pomFiles.add(new FileBackupInfo(matchingPom, null));
+            }
         }
 
 
@@ -607,13 +623,14 @@ public class BeginAnalysis extends Builder {
         logger.debug("Override Url: " + override_url);
         logger.debug("Override proxy:" + override_proxy);
         logger.debug("Testing Framework: " + testingFramework);
+        logger.debug("Execution Type: " + executionType.getDisplayName());
         logger.debug("Branch: " + branch);
         logger.debug("App Name:" + appName);
         logger.debug("Module Name:" + moduleName);
         logger.debug("Recursive: " + recursive);
         logger.debug("Workspace: " + workspacepath);
         logger.debug("Environment: " + environment);
-        logger.debug("enableMultipleBuildFiles: " + enableMultipleBuildFiles);
+        logger.debug("Enable Multiple Build Files: " + enableMultipleBuildFiles);
         logger.debug("Override Jars: " + overrideJars);
         logger.debug("Multiple Build Files: " + multipleBuildFiles);
         logger.debug("Build Files Folders: " + buildFilesFolders + " buildFilesPatterns: " + buildFilesPatterns);
@@ -622,6 +639,7 @@ public class BeginAnalysis extends Builder {
         logger.debug("Packages Excluded:" + packagesExcluded);
         logger.debug("Files Included:" + filesIncluded);
         logger.debug("Files Excluded:" + filesExcluded);
+        logger.debug("ClassLoaders Excluded:" + classLoadersExcluded);
         logger.debug("Build-Scanner Jar:" + buildScannerJar);
         logger.debug("Test-Listener Jar:" + testListenerJar);
         logger.debug("Test-Listener Configuration File :" + testListenerConfigFile);
