@@ -20,6 +20,10 @@
 
     <f:advanced>
 
+        <f:entry title="Execution Type" field="executionType" >
+            <f:enum>${it.displayName}</f:enum>
+        </f:entry>
+
         <f:dropdownList name="buildName" title="Build Name">
             <j:forEach var="currentDescriptor" items="${descriptor.buildNameDescriptorList}" varStatus="loop">
                 <f:dropdownListBlock title="${currentDescriptor.displayName}" value="${loop.index}" selected="${currentDescriptor == instance.buildName.descriptor}" staplerClass="${currentDescriptor.clazz.name}">
@@ -65,8 +69,12 @@
             <f:checkbox default="true"/>
         </f:entry>
 
-        <f:entry field="testListenerConfigFile" title="SeaLights Additional configuration file (for advanced configuration).">
+        <f:entry title="SeaLights Additional configuration file (for advanced configuration)" field="testListenerConfigFile">
             <f:textbox value="${testListenerConfigFile}"/>
+        </f:entry>
+
+        <f:entry title="Excluded class loaders" field="classLoadersExcluded">
+            <f:textbox value="${classLoadersExcluded}"/>
         </f:entry>
 
         <f:entry title="Module Name" field="moduleName">

@@ -1,9 +1,6 @@
 package io.sealigths.plugins.sealightsjenkins.integration;
 
-import io.sealigths.plugins.sealightsjenkins.BuildNamingStrategy;
-import io.sealigths.plugins.sealightsjenkins.BuildStrategy;
-import io.sealigths.plugins.sealightsjenkins.LogDestination;
-import io.sealigths.plugins.sealightsjenkins.LogLevel;
+import io.sealigths.plugins.sealightsjenkins.*;
 
 /**
  * Created by Nadav on 4/19/2016.
@@ -20,6 +17,7 @@ public class SeaLightsPluginInfo {
     private String filesExcluded;
     private String packagesIncluded;
     private String packagesExcluded;
+    private String classLoadersExcluded;
     private String workspacepath;
     private String proxy;
     private boolean recursive;
@@ -27,6 +25,7 @@ public class SeaLightsPluginInfo {
     private String buildFilesFolders;
     private String buildFilesPatterns;
     private boolean recursiveOnBuildFilesFolders;
+    private ExecutionType executionType;
 
     public boolean isRecursiveOnBuildFilesFolders() {
         return recursiveOnBuildFilesFolders;
@@ -168,6 +167,14 @@ public class SeaLightsPluginInfo {
         this.recursive = recursive;
     }
 
+    public ExecutionType getExecutionType() {
+        return executionType;
+    }
+
+    public void setExecutionType(ExecutionType executionType) {
+        this.executionType = executionType;
+    }
+
     private String scannerJar;
     private String listenerJar;
     private String apiJar;
@@ -263,6 +270,14 @@ public class SeaLightsPluginInfo {
 
     public LogDestination getLogDestination() {
         return logDestination;
+    }
+
+    public String getClassLoadersExcluded() {
+        return classLoadersExcluded;
+    }
+
+    public void setClassLoadersExcluded(String classLoadersExcluded) {
+        this.classLoadersExcluded = classLoadersExcluded;
     }
 }
 
