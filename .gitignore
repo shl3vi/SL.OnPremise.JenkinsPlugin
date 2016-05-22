@@ -15,3 +15,4 @@ hs_err_pid*
 target/*
 work/*
 *.orig
+src/test/cases/MavenIntegration/*/actual.xml
