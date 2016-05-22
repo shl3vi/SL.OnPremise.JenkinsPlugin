@@ -248,7 +248,6 @@ public class PomFile {
 
         boolean foundApiJar = false;
         for (Element additionalClasspathElement : additionalClasspathElements) {
-            List<Element> additionalClasspathElementList = getOrCreateElements("additionalClasspathElement", additionalClasspathElement);
             foundApiJar = isFoundAdditonalClasspathElementWithApiJar(apiJarPath, additionalClasspathElements, foundApiJar);
 
             if (!foundApiJar) {

@@ -1,10 +1,12 @@
 package io.sealigths.plugins.sealightsjenkins.integration;
 
 import io.sealigths.plugins.sealightsjenkins.BuildStrategy;
+import io.sealigths.plugins.sealightsjenkins.ExecutionType;
 import io.sealigths.plugins.sealightsjenkins.LogLevel;
 import io.sealigths.plugins.sealightsjenkins.TestingFramework;
 import io.sealigths.plugins.sealightsjenkins.entities.FileBackupInfo;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
+import org.apache.commons.collections.functors.ExceptionClosure;
 import org.apache.commons.io.FileUtils;
 import org.custommonkey.xmlunit.DetailedDiff;
 import org.custommonkey.xmlunit.XMLUnit;
@@ -228,10 +230,30 @@ public class MavenIntegrationTest {
         //Assert
         String expected = readFile(testFolder + "/expected.xml");
         String actual = readFile(testFolder + "/actual.xml");
-        
+
         assertXMLEquals(expected, actual);
     }
 
+    @Test
+    public void InjectSeaLightsPluginToAPomWithAdditionalClassPathElementInsideSurefire() throws Exception {
+        //Arrange
+        TestingFramework TESTING_FRAMEWORK=TestingFramework.JUNIT;
+        String TEST_CASE = "11_Inject_SeaLights_plugin_to_a_pom_with_additionalClasspathElement_inside_surefire";
+        String testFolder = getTestFolder(TEST_CASE);
+
+        MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
+        mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
+        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
+
+        //Act
+        mavenIntegration.integrate(false);
+
+        //Assert
+        String expected = readFile(testFolder + "/expected.xml");
+        String actual = readFile(testFolder + "/actual.xml");
+
+        assertXMLEquals(expected, actual);
+    }
 
     public static void assertXMLEquals(String expectedXML, String actualXML) throws Exception {
         XMLUnit.setIgnoreWhitespace(true);
@@ -262,7 +284,7 @@ public class MavenIntegrationTest {
 
         slInfo.setWorkspacepath("c:\\fake-worakpsacepath");
         slInfo.setBuildFilesFolders(path);
-
+        slInfo.setExecutionType(ExecutionType.FULL);
 
         slInfo.setAppName("fake-app-name");
         slInfo.setModuleName("fake-module-name");
