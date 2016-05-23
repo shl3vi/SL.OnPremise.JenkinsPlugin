@@ -74,7 +74,7 @@
         </f:entry>
 
         <f:entry title="Excluded class loaders" field="classLoadersExcluded"
-                 description="Comma separated list of class loaders to be excluded from the build.">>
+                 description="Comma separated list of class loaders to be excluded from the build.">
             <f:textbox value="${classLoadersExcluded}"/>
         </f:entry>
 
