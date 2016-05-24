@@ -28,6 +28,7 @@ import org.kohsuke.stapler.export.ExportedBean;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Paths;
@@ -41,42 +42,42 @@ import java.util.List;
 @ExportedBean
 public class BeginAnalysis extends Builder {
 
-    private final String appName;
-    private final String moduleName;
-    private final String branch;
-    private final boolean enableMultipleBuildFiles;
-    private final boolean overrideJars;
-    private final boolean multipleBuildFiles;
+    private String appName;
+    private String moduleName;
+    private String branch;
+    private boolean enableMultipleBuildFiles;
+    private boolean overrideJars;
+    private boolean multipleBuildFiles;
     private String pomPath;
-    private final String environment;
-    private final String packagesIncluded;
-    private final String packagesExcluded;
-    private final String filesIncluded;
-    private final String filesExcluded;
-    private final String classLoadersExcluded;
+    private String environment;
+    private String packagesIncluded;
+    private String packagesExcluded;
+    private String filesIncluded;
+    private String filesExcluded;
+    private String classLoadersExcluded;
     private String relativePathToEffectivePom;
-    private final boolean recursive;
-    private final String workspacepath;
+    private boolean recursive;
+    private String workspacepath;
     private String buildScannerJar;
     private String testListenerJar;
     private String apiJar;
     private String tmpApiJar;
-    private final String testListenerConfigFile;
+    private String testListenerConfigFile;
     private boolean autoRestoreBuildFile;
-    private final String buildFilesPatterns;
-    private final String buildFilesFolders;
+    private String buildFilesPatterns;
+    private String buildFilesFolders;
     private boolean logEnabled;
+    private String logFolder;
     private LogDestination logDestination = LogDestination.CONSOLE;
-    private final String logFolder;
     private TestingFramework testingFramework = TestingFramework.AUTO_DETECT;
     private LogLevel logLevel = LogLevel.OFF;
     private BuildStrategy buildStrategy = BuildStrategy.ONE_BUILD;
     private BuildName buildName;
     private ExecutionType executionType = ExecutionType.FULL;
 
-    private final String override_customerId;
-    private final String override_url;
-    private final String override_proxy;
+    private String override_customerId;
+    private String override_url;
+    private String override_proxy;
 
     private CleanupManager cleanupManager = null;
     public void setCleanupManager(CleanupManager cleanupManager) {
@@ -132,6 +133,44 @@ public class BeginAnalysis extends Builder {
         this.buildScannerJar = buildScannerJar;
         this.testListenerJar = testListenerJar;
         this.apiJar = this.tmpApiJar = apiJar;
+    }
+
+    private void escapeNullFromStrings(){
+        Field[] fields = this.getClass().getDeclaredFields();
+        for(Field field : fields){
+            try {
+                if (!String.class.isAssignableFrom(field.getType())) {
+                    continue;
+                }
+                if (field.get(this) == null)
+                    field.set(this, "");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void escapeNullFields(){
+
+        if (this.logDestination == null)
+            this.logDestination = LogDestination.CONSOLE;
+
+        if (this.testingFramework == null)
+            this.testingFramework = TestingFramework.AUTO_DETECT;
+
+        if (this.logLevel == null)
+            this.logLevel = LogLevel.OFF;
+
+        if(this.buildStrategy == null)
+            this.buildStrategy = BuildStrategy.ONE_BUILD;
+
+        if (this.buildName == null)
+            this.buildName = new BuildName.DefaultBuildName();
+
+        if (this.executionType  == null)
+            this.executionType = ExecutionType.FULL;
+
+        escapeNullFromStrings();
     }
 
     public ExecutionType getExecutionType() {
@@ -358,6 +397,7 @@ public class BeginAnalysis extends Builder {
 
         Logger logger = new Logger(listener.getLogger());
         this.cleanupManager = getOrCreateCleanupManager(logger);
+        escapeNullFields();
 
         FilePath ws = build.getWorkspace();
         if (ws == null) {
