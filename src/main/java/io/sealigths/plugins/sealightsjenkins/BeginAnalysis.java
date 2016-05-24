@@ -28,6 +28,8 @@ import org.kohsuke.stapler.export.ExportedBean;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -68,7 +70,6 @@ public class BeginAnalysis extends Builder {
     private final String logFolder;
     private TestingFramework testingFramework = TestingFramework.AUTO_DETECT;
     private LogLevel logLevel = LogLevel.OFF;
-    private ProjectType projectType = ProjectType.MAVEN;
     private BuildStrategy buildStrategy = BuildStrategy.ONE_BUILD;
     private BuildName buildName;
     private ExecutionType executionType = ExecutionType.FULL;
@@ -85,17 +86,16 @@ public class BeginAnalysis extends Builder {
     @DataBoundConstructor
     public BeginAnalysis(LogLevel logLevel,
                          String appName, String moduleName, String branch, boolean enableMultipleBuildFiles,
-                         boolean overrideJars, boolean multipleBuildFiles, String pomPath, String environment,
+                         boolean overrideJars, boolean multipleBuildFiles, String environment,
                          String packagesIncluded, String packagesExcluded, String filesIncluded,
                          String filesExcluded, String classLoadersExcluded, boolean recursive,
                          String workspacepath, String buildScannerJar, String testListenerJar, String apiJar,
                          String testListenerConfigFile, boolean autoRestoreBuildFile,
                          String buildFilesPatterns, String buildFilesFolders,
                          boolean logEnabled, LogDestination logDestination, String logFolder,
-                         TestingFramework testingFramework, ProjectType projectType, BuildStrategy buildStrategy,
+                         TestingFramework testingFramework, BuildStrategy buildStrategy,
                          BuildName buildName, ExecutionType executionType,
                          String override_customerId, String override_url, String override_proxy) throws IOException {
-
 
         this.override_customerId = override_customerId;
         this.override_url = override_url;
@@ -104,7 +104,6 @@ public class BeginAnalysis extends Builder {
         this.appName = appName;
         this.moduleName = moduleName;
         this.branch = branch;
-        this.pomPath = pomPath;
         this.packagesIncluded = packagesIncluded;
         this.packagesExcluded = packagesExcluded;
         this.filesIncluded = filesIncluded;
@@ -118,7 +117,6 @@ public class BeginAnalysis extends Builder {
         this.autoRestoreBuildFile = autoRestoreBuildFile;
         this.environment = environment;
         this.testingFramework = testingFramework;
-        this.projectType = projectType;
         this.executionType = executionType;
         this.multipleBuildFiles = multipleBuildFiles;
         this.overrideJars = overrideJars;
@@ -324,16 +322,6 @@ public class BeginAnalysis extends Builder {
     }
 
     @Exported
-    public ProjectType getProjectType() {
-        return projectType;
-    }
-
-    @Exported
-    public void setProjectType(ProjectType projectType) {
-        this.projectType = projectType;
-    }
-
-    @Exported
     public BuildStrategy getBuildStrategy() {
         return buildStrategy;
     }
@@ -358,17 +346,19 @@ public class BeginAnalysis extends Builder {
         return override_proxy;
     }
 
-    private CleanupManager getOrCreate(Logger logger){
-        if (cleanupManager == null)
-            return new CleanupManager(logger);
+    private CleanupManager getOrCreateCleanupManager(Logger logger){
+        if (this.cleanupManager == null)
+            this.cleanupManager = new CleanupManager(logger);
 
-        return this.cleanupManager;
+        return  this.cleanupManager;
     }
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 
         Logger logger = new Logger(listener.getLogger());
+        this.cleanupManager = getOrCreateCleanupManager(logger);
+
         FilePath ws = build.getWorkspace();
         if (ws == null) {
             return false;
@@ -377,7 +367,6 @@ public class BeginAnalysis extends Builder {
         if (org.apache.commons.lang.StringUtils.isBlank(tmpApiJar) ) {
             //The user didn't specify a specific version of the test listener. Use an embedded one.
             tmpApiJar = JarsHelper.loadJarAndSaveAsTempFile("sl-api");
-            this.cleanupManager = getOrCreate(logger);
             this.cleanupManager.addFile(tmpApiJar);
 
         } else {
@@ -391,7 +380,6 @@ public class BeginAnalysis extends Builder {
         if (!StringUtils.isNullOrEmpty(tmpApiJar))
             FileUtils.tryCopyFileFromLocalToSlave(logger, tmpApiJar);
 
-        printFields(logger);
         String workingDir = ws.getRemote();
 
         setParentPomPath(logger, workingDir);
@@ -401,6 +389,8 @@ public class BeginAnalysis extends Builder {
         }
 
         SeaLightsPluginInfo slInfo = createSeaLightsPluginInfo(build, ws, logger);
+
+        printFields(slInfo, logger);
 
         configureBuildFilePublisher(build, slInfo.getBuildFilesFolders());
 
@@ -533,7 +523,7 @@ public class BeginAnalysis extends Builder {
         slInfo.setApiJar(tmpApiJar);
         slInfo.setBuildStrategy(buildStrategy);
         slInfo.setEnvironment(environment);
-        slInfo.setLogEnabled(!("Off".equalsIgnoreCase(logLevel.getDisplayName())));
+        slInfo.setLogEnabled(!(LogLevel.OFF.equals(logLevel)));
         slInfo.setLogLevel(logLevel);
         slInfo.setLogDestination(logDestination);
         slInfo.setLogFolder(logFolder);
@@ -633,41 +623,33 @@ public class BeginAnalysis extends Builder {
         }
     }
 
-    private void printFields(Logger logger) {
-        logger.debug("-----------Sealights Jenkins Plugin Configuration--------------");
-        logger.debug("Override CustomerId : " + override_customerId);
-        logger.debug("Override Url: " + override_url);
-        logger.debug("Override proxy:" + override_proxy);
-        logger.debug("Testing Framework: " + testingFramework);
-        logger.debug("Execution Type: " + executionType.getDisplayName());
-        logger.debug("Branch: " + branch);
-        logger.debug("App Name:" + appName);
-        logger.debug("Module Name:" + moduleName);
-        logger.debug("Recursive: " + recursive);
-        logger.debug("Workspace: " + workspacepath);
-        logger.debug("Environment: " + environment);
+    private void printFields(SeaLightsPluginInfo slInfo, Logger logger) {
+        Method[] methods = slInfo.getClass().getMethods();
+        logger.debug("--------------Sealights Jenkins Plugin Configuration--------------");
+        for (Method method : methods){
+            String methodName = method.getName();
+            Object value;
+            if (!(methodName.startsWith("get") || methodName.startsWith("is")) || methodName.equals("getClass"))
+                continue;
+            try {
+                value = method.invoke(slInfo);
+                logger.debug(methodName + " : " + value);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                //
+            }
+        }
+
         logger.debug("Enable Multiple Build Files: " + enableMultipleBuildFiles);
-        logger.debug("Override Jars: " + overrideJars);
         logger.debug("Multiple Build Files: " + multipleBuildFiles);
-        logger.debug("Build Files Folders: " + buildFilesFolders + " buildFilesPatterns: " + buildFilesPatterns);
+        logger.debug("Override Jars: " + overrideJars);
         logger.debug("Pom Path:" + pomPath);
-        logger.debug("Packages Included:" + packagesIncluded);
-        logger.debug("Packages Excluded:" + packagesExcluded);
-        logger.debug("Files Included:" + filesIncluded);
-        logger.debug("Files Excluded:" + filesExcluded);
-        logger.debug("ClassLoaders Excluded:" + classLoadersExcluded);
-        logger.debug("Build-Scanner Jar:" + buildScannerJar);
-        logger.debug("Test-Listener Jar:" + testListenerJar);
-        logger.debug("Test-Listener Configuration File :" + testListenerConfigFile);
-        logger.debug("Build Strategy: " + buildStrategy);
+        logger.debug("Testing Framework: " + testingFramework);
         logger.debug("Build Naming Strategy (from selection): " + buildName.getBuildNamingStrategy());
-        logger.debug("Api Jar:" + tmpApiJar);
-        logger.debug("Log Enabled:" + logEnabled);
-        logger.debug("Log Destination:" + logDestination);
-        logger.debug("Log Level:" + logLevel);
-        logger.debug("Log Folder:" + logFolder);
         logger.debug("Auto Restore Build File:" + autoRestoreBuildFile);
-        logger.debug("-----------Sealights Jenkins Plugin Configuration--------------");
+
+        logger.debug("--------------Sealights Jenkins Plugin Configuration--------------");
+
+
     }
 
     @Override
