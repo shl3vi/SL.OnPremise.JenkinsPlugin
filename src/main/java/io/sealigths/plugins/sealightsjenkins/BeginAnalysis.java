@@ -135,7 +135,7 @@ public class BeginAnalysis extends Builder {
         this.apiJar = this.tmpApiJar = apiJar;
     }
 
-    private void escapeNullFromStrings(){
+    private void setDefaultValuesForStrings(Logger logger){
         Field[] fields = this.getClass().getDeclaredFields();
         for(Field field : fields){
             try {
@@ -145,12 +145,13 @@ public class BeginAnalysis extends Builder {
                 if (field.get(this) == null)
                     field.set(this, "");
             } catch (Exception e) {
+                logger.error("Failed to set default value for field " + field.getName() , e);
                 e.printStackTrace();
             }
         }
     }
 
-    private void escapeNullFields(){
+    private void setDefaultValues(Logger logger){
 
         if (this.logDestination == null)
             this.logDestination = LogDestination.CONSOLE;
@@ -170,7 +171,7 @@ public class BeginAnalysis extends Builder {
         if (this.executionType  == null)
             this.executionType = ExecutionType.FULL;
 
-        escapeNullFromStrings();
+        setDefaultValuesForStrings(logger);
     }
 
     public ExecutionType getExecutionType() {
@@ -397,7 +398,7 @@ public class BeginAnalysis extends Builder {
 
         Logger logger = new Logger(listener.getLogger());
         this.cleanupManager = getOrCreateCleanupManager(logger);
-        escapeNullFields();
+        setDefaultValues(logger);
 
         FilePath ws = build.getWorkspace();
         if (ws == null) {
