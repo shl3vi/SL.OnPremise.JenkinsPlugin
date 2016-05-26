@@ -66,17 +66,13 @@ public class FileUtils {
 
         if (Computer.currentComputer() instanceof SlaveComputer) {
             VirtualChannel channel = Computer.currentComputer().getChannel();
-            logger.info("Current computer is: " + Computer.currentComputer().getName());
-            logger.info("Jenkins current computer is: " + Jenkins.MasterComputer.currentComputer().getName());
-            logger.info("fileOnSlave: " + fileOnSlave);
-            logger.info("fileOnMaster: " + fileOnMaster);
-            logger.info("channel: " + channel);
-
+            logger.debug("Current computer is: " + Computer.currentComputer().getName());
+            logger.debug("Jenkins current computer is: " + Jenkins.MasterComputer.currentComputer().getName());
 
             FilePath fpOnRemote = new FilePath(channel, fileOnSlave);
             FilePath fpOnMaster = new FilePath(new File(fileOnMaster));
-            logger.info("fpOnMaster.getChannel(): " + fpOnMaster.getChannel());
-            logger.info("fpOnRemote: " + fpOnRemote.absolutize() + ", fpOnMaster:" + fpOnMaster.absolutize());
+            logger.debug("fpOnMaster.getChannel(): " + fpOnMaster.getChannel());
+            logger.debug("fpOnRemote: " + fpOnRemote.absolutize() + ", fpOnMaster:" + fpOnMaster.absolutize());
             fpOnMaster.copyTo(fpOnRemote);
         }
         else{
@@ -84,28 +80,18 @@ public class FileUtils {
         }
     }
 
-    public static void tryCopyFileFromLocalToSlave(Logger logger, String filename) throws IOException, InterruptedException {
-        tryCopyFileFromLocalToSlave(logger, filename, filename);
-    }
-
-    public static void tryDeleteFileFromSlave(Logger logger, String filename) throws IOException, InterruptedException {
-        boolean deleted;
+    public static void tryDeleteFile(Logger logger, String filename) throws IOException, InterruptedException {
         logger.info("Try deleting temp file: " + filename );
         FilePath fpOnMaster = new FilePath(new File(filename));
-        deleted = fpOnMaster.delete();
+        fpOnMaster.delete();
 
         if (Computer.currentComputer() instanceof SlaveComputer) {
             VirtualChannel channel = Computer.currentComputer().getChannel();
-            logger.info("Current computer is: " + Computer.currentComputer().getName());
-            logger.info("Jenkins current computer is: " + Jenkins.MasterComputer.currentComputer().getName());
+            logger.debug("Current computer is: " + Computer.currentComputer().getName());
+            logger.debug("Jenkins current computer is: " + Jenkins.MasterComputer.currentComputer().getName());
             FilePath fpOnRemote = new FilePath(channel, filename);
-            deleted = deleted && fpOnRemote.delete();
+            fpOnRemote.delete();
         }
-
-        if (deleted)
-            logger.info("Deleted successfully.");
-        else
-            logger.info("Not deleted.");
 
     }
 

@@ -25,7 +25,7 @@ public class CleanupManager {
 
     public void clean() throws IOException, InterruptedException {
         for (String file : files) {
-            FileUtils.tryDeleteFileFromSlave(logger, file);
+            FileUtils.tryDeleteFile(logger, file);
         }
     }
 }

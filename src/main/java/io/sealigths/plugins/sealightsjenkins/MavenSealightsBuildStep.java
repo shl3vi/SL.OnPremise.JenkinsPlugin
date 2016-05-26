@@ -14,7 +14,7 @@ import hudson.tools.*;
 import hudson.util.*;
 import io.sealigths.plugins.sealightsjenkins.integration.JarsHelper;
 import io.sealigths.plugins.sealightsjenkins.utils.CommandLineHelper;
-import io.sealigths.plugins.sealightsjenkins.utils.FileUtils;
+import io.sealigths.plugins.sealightsjenkins.utils.CustomFile;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import jenkins.MasterToSlaveFileCallable;
 import jenkins.model.Jenkins;
@@ -31,7 +31,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.jar.Attributes;
@@ -336,7 +335,8 @@ public class MavenSealightsBuildStep extends Builder {
                         if (Computer.currentComputer() instanceof SlaveComputer) {
                             String originalSettings = settingsPath;
                             settingsPath = toTempSettingsFile(settingsPath);
-                            FileUtils.tryCopyFileFromLocalToSlave(logger, originalSettings, settingsPath);
+                            CustomFile customFile = new CustomFile(logger, cleanupManager ,originalSettings);
+                            customFile.copyToSlave(settingsPath);
                         }
                         args.add("-s", settingsPath);
                     }
@@ -348,7 +348,8 @@ public class MavenSealightsBuildStep extends Builder {
                         if (Computer.currentComputer() instanceof SlaveComputer) {
                             String originalSettings = settingsPath;
                             settingsPath = toTempSettingsFile(settingsPath);
-                            FileUtils.tryCopyFileFromLocalToSlave(logger, originalSettings, settingsPath);
+                            CustomFile customFile = new CustomFile(logger, cleanupManager ,originalSettings);
+                            customFile.copyToSlave(settingsPath);
                         }
                         args.add("-gs", settingsPath);
                     }
@@ -506,8 +507,8 @@ public class MavenSealightsBuildStep extends Builder {
         Logger logger = new Logger(listener.getLogger());
 
         String slMavenPluginJar = JarsHelper.loadJarAndSaveAsTempFile(SL_MVN_JAR_NAME);
-        FileUtils.tryCopyFileFromLocalToSlave(logger, slMavenPluginJar);
-        cleanupManager.addFile(slMavenPluginJar);
+        CustomFile customFile = new CustomFile(logger, cleanupManager, slMavenPluginJar);
+        customFile.copyToSlave();
 
         String normalizedTarget = getSLMavenPluginInstallationCommand(slMavenPluginJar);
         logger.info("Installing sealights-maven plugin");

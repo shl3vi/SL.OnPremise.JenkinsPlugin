@@ -15,7 +15,7 @@ import io.sealigths.plugins.sealightsjenkins.integration.JarsHelper;
 import io.sealigths.plugins.sealightsjenkins.integration.MavenIntegration;
 import io.sealigths.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
 import io.sealigths.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
-import io.sealigths.plugins.sealightsjenkins.utils.FileUtils;
+import io.sealigths.plugins.sealightsjenkins.utils.CustomFile;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import io.sealigths.plugins.sealightsjenkins.utils.SearchFileCallable;
 import io.sealigths.plugins.sealightsjenkins.utils.StringUtils;
@@ -61,7 +61,6 @@ public class BeginAnalysis extends Builder {
     private String buildScannerJar;
     private String testListenerJar;
     private String apiJar;
-    private String tmpApiJar;
     private String testListenerConfigFile;
     private boolean autoRestoreBuildFile;
     private String buildFilesPatterns;
@@ -132,7 +131,7 @@ public class BeginAnalysis extends Builder {
 
         this.buildScannerJar = buildScannerJar;
         this.testListenerJar = testListenerJar;
-        this.apiJar = this.tmpApiJar = apiJar;
+        this.apiJar = apiJar;
     }
 
     private void setDefaultValuesForStrings(Logger logger){
@@ -405,21 +404,29 @@ public class BeginAnalysis extends Builder {
             return false;
         }
 
+        String tmpApiJar = apiJar;
+
         if (org.apache.commons.lang.StringUtils.isBlank(tmpApiJar) ) {
             //The user didn't specify a specific version of the test listener. Use an embedded one.
             tmpApiJar = JarsHelper.loadJarAndSaveAsTempFile("sl-api");
-            this.cleanupManager.addFile(tmpApiJar);
 
         } else {
             logger.info("The user specified a version for the 'apiJar'. Overriding embedded version with:'" + apiJar + "'");
         }
 
-        if (!StringUtils.isNullOrEmpty(buildScannerJar))
-            FileUtils.tryCopyFileFromLocalToSlave(logger, buildScannerJar);
-        if (!StringUtils.isNullOrEmpty(testListenerJar))
-            FileUtils.tryCopyFileFromLocalToSlave(logger, testListenerJar);
-        if (!StringUtils.isNullOrEmpty(tmpApiJar))
-            FileUtils.tryCopyFileFromLocalToSlave(logger, tmpApiJar);
+        if (!StringUtils.isNullOrEmpty(buildScannerJar)){
+            CustomFile customFile = new CustomFile(logger, this.cleanupManager, buildScannerJar);
+            customFile.copyToSlave();
+        }
+
+        if (!StringUtils.isNullOrEmpty(testListenerJar)){
+            CustomFile customFile = new CustomFile(logger, this.cleanupManager, testListenerJar);
+            customFile.copyToSlave();
+        }
+        if (!StringUtils.isNullOrEmpty(tmpApiJar)){
+            CustomFile customFile = new CustomFile(logger, this.cleanupManager, tmpApiJar);
+            customFile.copyToSlave();
+        }
 
         String workingDir = ws.getRemote();
 
@@ -429,7 +436,7 @@ public class BeginAnalysis extends Builder {
             tryAddRestoreBuildFilePublisher(build, logger);
         }
 
-        SeaLightsPluginInfo slInfo = createSeaLightsPluginInfo(build, ws, logger);
+        SeaLightsPluginInfo slInfo = createSeaLightsPluginInfo(build, ws, logger, tmpApiJar);
 
         printFields(slInfo, logger);
 
@@ -534,7 +541,8 @@ public class BeginAnalysis extends Builder {
         return finalBuildName;
     }
 
-    private SeaLightsPluginInfo createSeaLightsPluginInfo(AbstractBuild<?, ?> build, FilePath ws, Logger logger) {
+    private SeaLightsPluginInfo createSeaLightsPluginInfo(
+            AbstractBuild<?, ?> build, FilePath ws, Logger logger, String tmpApiJar) {
 
         SeaLightsPluginInfo slInfo = new SeaLightsPluginInfo();
         setGlobalConfiguration(slInfo);
@@ -676,7 +684,7 @@ public class BeginAnalysis extends Builder {
                 value = method.invoke(slInfo);
                 logger.debug(methodName + " : " + value);
             } catch (IllegalAccessException | InvocationTargetException e) {
-                //
+                logger.error("Error while trying to print method: " + methodName, e);
             }
         }
 
