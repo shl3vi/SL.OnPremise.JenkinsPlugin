@@ -4,11 +4,6 @@ import io.sealigths.plugins.sealightsjenkins.ExecutionType;
 import io.sealigths.plugins.sealightsjenkins.TestingFramework;
 import io.sealigths.plugins.sealightsjenkins.entities.FileBackupInfo;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
-import io.sealigths.plugins.sealightsjenkins.utils.StringUtils;
-
-import javax.xml.transform.TransformerException;
-import java.io.IOException;
-import java.io.PrintStream;
 
 
 /**
@@ -60,13 +55,12 @@ public class MavenIntegration {
 
         PomFile pomFile = createPomFile(sourceFilename);
 
-        if (pomFile.isPluginExistInEntriePom(SEALIGHTS_GROUP_ID, SEALIGHTS_ARTIFACT_ID)) {
+        if (pomFile.isPluginExistInEntirePom(SEALIGHTS_ARTIFACT_ID)) {
             log.info("MavenIntegration.integrate - Skipping the integration since SeaLights plugin is already defined in the the POM file.");
             return;
         }
-
 //                TODO: Check the SureFire version on the resolved (effective) *.pom file.
-//            if (!pomFile.isPluginExistInEntriePom(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID))
+//            if (!pomFile.isPluginExistInEntirePom(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID))
 //            {
 //                //Surefire plugin isn't defined.
 //                throw new RuntimeException("SeaLights plugin requires Maven Surefire Plugin");

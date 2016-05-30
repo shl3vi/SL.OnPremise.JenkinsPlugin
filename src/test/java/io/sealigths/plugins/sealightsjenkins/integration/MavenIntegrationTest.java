@@ -23,222 +23,100 @@ public class MavenIntegrationTest {
     boolean SAVE_POM_USING_JENKINS_API = false;
 
     @Test
-    public void InjectSeaLightsPluginWithTestngListenerToAPomWithoutThePluginButWithSurefire() throws Exception {
-
-        //Arrange
-        TestingFramework TESTING_FRAMEWORK=TestingFramework.TESTNG;
-        String TEST_CASE = "1_Inject_SeaLights_plugin_with_testng_listener_to_a_pom_without_the_plugin_but_with_surefire";
-        String testFolder = getTestFolder(TEST_CASE);
-
-        MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
-        mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
-
-        //Act
-        mavenIntegration.integrate(false);
-
-        //Assert
-        String expected = readFile(testFolder + "/expected.xml");
-        String actual = readFile(testFolder + "/actual.xml");
-        assertXMLEquals(expected, actual);
+    public void injectSeaLightsPluginWithTestngListenerToAPomWithoutThePluginButWithSurefire() throws Exception {
+        performTest(
+                "1_Inject_SeaLights_plugin_with_testng_listener_to_a_pom_without_the_plugin_but_with_surefire", TestingFramework.TESTNG);
     }
 
     @Test
-    public void InjectSeaLightsPluginWithJunitListenerToAPomWithoutThePluginButWithSurefire() throws Exception {
-
-        //Arrange
-        TestingFramework TESTING_FRAMEWORK=TestingFramework.JUNIT;
-        String TEST_CASE = "2_Inject_SeaLights_plugin_with_junit_listener_to_a_pom_without_the_plugin_but_with_surefire";
-        String testFolder = getTestFolder(TEST_CASE);
-
-        MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
-        mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
-
-        //Act
-        mavenIntegration.integrate(false);
-
-        //Assert
-        String expected = readFile(testFolder + "/expected.xml");
-        String actual = readFile(testFolder + "/actual.xml");
-        assertXMLEquals(expected, actual);
+    public void injectSeaLightsPluginWithJunitListenerToAPomWithoutThePluginButWithSurefire() throws Exception {
+        performTest("2_Inject_SeaLights_plugin_with_junit_listener_to_a_pom_without_the_plugin_but_with_surefire");
     }
 
     @Test
-    public void InjectSeaLightsPluginToAPomWithSingleProfileWithSurefire() throws Exception {
-
-        //Arrange
-        TestingFramework TESTING_FRAMEWORK=TestingFramework.JUNIT;
-        String TEST_CASE = "3_Inject_SeaLights_plugin_to_a_pom_with_a_single_profile_with_surefire";
-        String testFolder = getTestFolder(TEST_CASE);
-
-        MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
-        mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
-
-        //Act
-        mavenIntegration.integrate(false);
-
-        //Assert
-        String expected = readFile(testFolder + "/expected.xml");
-        String actual = readFile(testFolder + "/actual.xml");
-        assertXMLEquals(expected, actual);
+    public void injectSeaLightsPluginToAPomWithSingleProfileWithSurefire() throws Exception {
+        performTest("3_Inject_SeaLights_plugin_to_a_pom_with_a_single_profile_with_surefire");
     }
 
     @Test
-    public void InjectSeaLightsPluginToAPomWithTwoProfilesWithSurefire() throws Exception {
-
-        //Arrange
-        TestingFramework TESTING_FRAMEWORK=TestingFramework.JUNIT;
-        String TEST_CASE = "4_Inject_SeaLights_plugin_to_a_pom_with_a_two_profiles_with_surefire";
-        String testFolder = getTestFolder(TEST_CASE);
-
-        MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
-        mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
-
-        //Act
-        mavenIntegration.integrate(false);
-
-        //Assert
-        String expected = readFile(testFolder + "/expected.xml");
-        String actual = readFile(testFolder + "/actual.xml");
-        assertXMLEquals(expected, actual);
+    public void injectSeaLightsPluginToAPomWithTwoProfilesWithSurefire() throws Exception {
+        performTest("4_Inject_SeaLights_plugin_to_a_pom_with_a_two_profiles_with_surefire");
     }
 
     @Test
-    public void InjectSeaLightsPluginToAPomWithTwoProfilesWithSurefireAndAnotherSurefireNotInProfile() throws Exception {
-
-        //Arrange
-        TestingFramework TESTING_FRAMEWORK=TestingFramework.JUNIT;
-        String TEST_CASE = "5_Inject_SeaLights_plugin_to_a_pom_with_a_two_profiles_with_surefire_and_another_surefire_not_in_profile";
-        String testFolder = getTestFolder(TEST_CASE);
-
-        MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
-        mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
-
-        //Act
-        mavenIntegration.integrate(false);
-
-        //Assert
-        String expected = readFile(testFolder + "/expected.xml");
-        String actual = readFile(testFolder + "/actual.xml");
-        assertXMLEquals(expected, actual);
+    public void injectSeaLightsPluginToAPomWithTwoProfilesWithSurefireAndAnotherSurefireNotInProfile() throws Exception {
+        performTest("5_Inject_SeaLights_plugin_to_a_pom_with_a_two_profiles_with_surefire_and_another_surefire_not_in_profile");
     }
 
     @Test
-    public void InjectSeaLightsPluginToAPomWithProfileWhichHasSurefireAndAnotherDoesnt() throws Exception {
-
-        //Arrange
-        TestingFramework TESTING_FRAMEWORK=TestingFramework.JUNIT;
-        String TEST_CASE = "6_Inject_SeaLights_plugin_to_a_pom_with_a_profile_which_has_surefire_and_another_doesnt";
-        String testFolder = getTestFolder(TEST_CASE);
-
-        MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
-        mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
-
-        //Act
-        mavenIntegration.integrate(false);
-
-        //Assert
-        String expected = readFile(testFolder + "/expected.xml");
-        String actual = readFile(testFolder + "/actual.xml");
-        assertXMLEquals(expected, actual);
+    public void injectSeaLightsPluginToAPomWithProfileWhichHasSurefireAndAnotherDoesnt() throws Exception {
+        performTest("6_Inject_SeaLights_plugin_to_a_pom_with_a_profile_which_has_surefire_and_another_doesnt");
     }
 
     @Test
-    public void InjectSeaLightsPluginToAPomWithSurefireThatHasExistingConfigurationElement() throws Exception {
-
-        //Arrange
-        TestingFramework TESTING_FRAMEWORK=TestingFramework.JUNIT;
-        String TEST_CASE = "7_Inject_SeaLights_plugin_to_a_pom_with_surefire_that_has_existing_configuration_element";
-        String testFolder = getTestFolder(TEST_CASE);
-
-        MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
-        mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
-
-        //Act
-        mavenIntegration.integrate(false);
-
-        //Assert
-        String expected = readFile(testFolder + "/expected.xml");
-        String actual = readFile(testFolder + "/actual.xml");
-        assertXMLEquals(expected, actual);
+    public void injectSeaLightsPluginToAPomWithSurefireThatHasExistingConfigurationElement() throws Exception {
+        performTest("7_Inject_SeaLights_plugin_to_a_pom_with_surefire_that_has_existing_configuration_element");
     }
 
     @Test
-    public void InjectSeaLightsPluginToAPomWithSurefireThatHasExistingConfigurationElementWithArgLineElementThatDoesntChainOldValues() throws Exception {
-
-        //Arrange
-        TestingFramework TESTING_FRAMEWORK=TestingFramework.JUNIT;
-        String TEST_CASE = "8_Inject_SeaLights_plugin_to_a_pom_with_surefire_that_has_existing_configuration_element_with_argLine_element_that_doesnt_chain_old_values";
-        String testFolder = getTestFolder(TEST_CASE);
-
-        MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
-        mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
-
-        //Act
-        mavenIntegration.integrate(false);
-
-        //Assert
-        String expected = readFile(testFolder + "/expected.xml");
-        String actual = readFile(testFolder + "/actual.xml");
-        assertXMLEquals(expected, actual);
+    public void injectSeaLightsPluginToAPomWithSurefireThatHasExistingConfigurationElementWithArgLineElementThatDoesntChainOldValues() throws Exception {
+        performTest("8_Inject_SeaLights_plugin_to_a_pom_with_surefire_that_has_existing_configuration_element_with_argLine_element_that_doesnt_chain_old_values");
     }
 
 
     @Test
-    public void InjectSeaLightsPluginToAPomWithSurefireThatHasExistingConfigurationElementWithArgLineElementThatDoesChainOldValues() throws Exception {
-
-        //Arrange
-        TestingFramework TESTING_FRAMEWORK=TestingFramework.JUNIT;
-        String TEST_CASE = "9_Inject_SeaLights_plugin_to_a_pom_with_surefire_that_has_existing_configuration_element_with_argLine_element_that_does_chain_old_values";
-        String testFolder = getTestFolder(TEST_CASE);
-
-        MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
-        mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
-
-        //Act
-        mavenIntegration.integrate(false);
-
-        //Assert
-        String expected = readFile(testFolder + "/expected.xml");
-        String actual = readFile(testFolder + "/actual.xml");
-        assertXMLEquals(expected, actual);
+    public void injectSeaLightsPluginToAPomWithSurefireThatHasExistingConfigurationElementWithArgLineElementThatDoesChainOldValues() throws Exception {
+        performTest("9_Inject_SeaLights_plugin_to_a_pom_with_surefire_that_has_existing_configuration_element_with_argLine_element_that_does_chain_old_values");
     }
 
     @Test
-    public void InjectSeaLightsPluginToAPomWithSurefireInsidePluginManagementElement() throws Exception {
-
-        //Arrange
-        TestingFramework TESTING_FRAMEWORK=TestingFramework.JUNIT;
-        String TEST_CASE = "10_Inject_SeaLights_plugin_to_a_pom_with_surefire_inside_pluginManagement_element";
-        String testFolder = getTestFolder(TEST_CASE);
-
-        MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
-        mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
-        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
-
-        //Act
-        mavenIntegration.integrate(false);
-
-        //Assert
-        String expected = readFile(testFolder + "/expected.xml");
-        String actual = readFile(testFolder + "/actual.xml");
-
-        assertXMLEquals(expected, actual);
+    public void injectSeaLightsPluginToAPomWithSurefireInsidePluginManagementElement() throws Exception {
+        performTest("10_Inject_SeaLights_plugin_to_a_pom_with_surefire_inside_pluginManagement_element");
     }
 
     @Test
-    public void InjectSeaLightsPluginToAPomWithAdditionalClassPathElementInsideSurefire() throws Exception {
+    public void injectSeaLightsPluginToAPomWithAdditionalClassPathElementInsideSurefire() throws Exception {
+        performTest("11_Inject_SeaLights_plugin_to_a_pom_with_additionalClasspathElement_inside_surefire");
+    }
+
+    @Test(expected = FileNotFoundException.class)
+    public void dontInjectSeaLightsPluginIfAlreadyInjected() throws Exception {
+        performTest("12_Dont_Inject_Sealights_plugin_if_already_injected");
+    }
+
+    @Test
+    public void insertSeaLightsListenerWhenWithNameWithoutValue() throws Exception {
+        performTest("13_Insert_Sealights_listener_when_with_name_without_value");
+    }
+
+    @Test
+    public void insertSeaLightsListenerWhenWithoutNameWithoutValue() throws Exception {
+        performTest("14_Insert_Sealights_listener_when_without_name_without_value");
+    }
+
+    @Test
+    public void insertSeaLightsListenerWhenWithNameWithDifferentValue() throws Exception {
+        performTest("15_Insert_Sealights_listener_when_with_name_with_value_different_from_ours");
+    }
+
+    @Test
+    public void dontInjectSeaLightsAdditionalClassPathElementWhenAlreadyExist() throws Exception {
+        performTest("16_dont_Insert_Sealights_additionalClassPathElement__when_already_exist");
+    }
+
+    @Test
+    public void injectSeaLightsWhenBuildElementNotExist() throws Exception {
+        performTest("17_Inject_SeaLights_when_build_element_not_exist");
+    }
+
+    private void performTest(String testCase) throws Exception {
+        performTest(testCase, TestingFramework.JUNIT);
+    }
+
+    private void performTest(String testCase, TestingFramework testingFramework) throws Exception {
         //Arrange
-        TestingFramework TESTING_FRAMEWORK=TestingFramework.JUNIT;
-        String TEST_CASE = "11_Inject_SeaLights_plugin_to_a_pom_with_additionalClasspathElement_inside_surefire";
+        TestingFramework TESTING_FRAMEWORK= testingFramework;
+        String TEST_CASE = testCase;
         String testFolder = getTestFolder(TEST_CASE);
 
         MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
@@ -297,7 +175,7 @@ public class MavenIntegrationTest {
 
         slInfo.setListenerJar("c:\\fake-test-listener.jar");
         slInfo.setScannerJar("c:\\fake-build-scanner.jar");
-        slInfo.setApiJar("c:\\fake-api.jar");
+        slInfo.setApiJar("c:\\sl-api.jar");
         slInfo.setBuildStrategy(BuildStrategy.ONE_BUILD);
 
         slInfo.setLogEnabled(false);
