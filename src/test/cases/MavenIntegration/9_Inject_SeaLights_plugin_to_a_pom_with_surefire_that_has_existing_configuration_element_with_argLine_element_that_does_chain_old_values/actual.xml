@@ -32,7 +32,7 @@
 </property>
 </properties>
 <additionalClasspathElements>
-<additionalClasspathElement>c:\fake-api.jar</additionalClasspathElement>
+<additionalClasspathElement>c:\sl-api.jar</additionalClasspathElement>
 </additionalClasspathElements>
 </configuration>
 			</plugin>
@@ -51,7 +51,7 @@
 <packagesincluded>com.fake.*</packagesincluded>
 <packagesexcluded>*FastClassByGuice*, *ByCGLIB*, *EnhancerByMockitoWithCGLIB*, *EnhancerBySpringCGLIB*, com.fake.excluded.*</packagesexcluded>
 <filesincluded>*.class</filesincluded>
-<apiJar>c:\fake-api.jar</apiJar>
+<apiJar>c:\sl-api.jar</apiJar>
 <buildScannerJar>c:\fake-build-scanner.jar</buildScannerJar>
 <testListenerJar>c:\fake-test-listener.jar</testListenerJar>
 <logLevel>INFO</logLevel>

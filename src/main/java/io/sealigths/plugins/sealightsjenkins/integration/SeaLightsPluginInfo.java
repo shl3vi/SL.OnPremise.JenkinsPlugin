@@ -218,10 +218,6 @@ public class SeaLightsPluginInfo {
         this.logEnabled = logEnabled;
     }
 
-    public LogDestination isLogDestination() {
-        return logDestination;
-    }
-
     public void setLogDestination(LogDestination logDestination) {
         this.logDestination = logDestination;
     }
@@ -243,10 +239,6 @@ public class SeaLightsPluginInfo {
     }
 
     private BuildStrategy buildStrategy;
-
-    public BuildStrategy isBuildStrategy() {
-        return buildStrategy;
-    }
 
     public void setBuildStrategy(BuildStrategy buildStrategy) {
         this.buildStrategy = buildStrategy;

@@ -66,17 +66,13 @@ public class FileUtils {
 
         if (Computer.currentComputer() instanceof SlaveComputer) {
             VirtualChannel channel = Computer.currentComputer().getChannel();
-            logger.info("Current computer is: " + Computer.currentComputer().getName());
-            logger.info("Jenkins current computer is: " + Jenkins.MasterComputer.currentComputer().getName());
-            logger.info("fileOnSlave: " + fileOnSlave);
-            logger.info("fileOnMaster: " + fileOnMaster);
-            logger.info("channel: " + channel);
-
+            logger.debug("Current computer is: " + Computer.currentComputer().getName());
+            logger.debug("Jenkins current computer is: " + Jenkins.MasterComputer.currentComputer().getName());
 
             FilePath fpOnRemote = new FilePath(channel, fileOnSlave);
             FilePath fpOnMaster = new FilePath(new File(fileOnMaster));
-            logger.info("fpOnMaster.getChannel(): " + fpOnMaster.getChannel());
-            logger.info("fpOnRemote: " + fpOnRemote.absolutize() + ", fpOnMaster:" + fpOnMaster.absolutize());
+            logger.debug("fpOnMaster.getChannel(): " + fpOnMaster.getChannel());
+            logger.debug("fpOnRemote: " + fpOnRemote.absolutize() + ", fpOnMaster:" + fpOnMaster.absolutize());
             fpOnMaster.copyTo(fpOnRemote);
         }
         else{
@@ -84,8 +80,19 @@ public class FileUtils {
         }
     }
 
-    public static void tryCopyFileFromLocalToSlave(Logger logger, String filename) throws IOException, InterruptedException {
-        tryCopyFileFromLocalToSlave(logger, filename, filename);
+    public static void tryDeleteFile(Logger logger, String filename) throws IOException, InterruptedException {
+        logger.info("Try deleting temp file: " + filename );
+        FilePath fpOnMaster = new FilePath(new File(filename));
+        fpOnMaster.delete();
+
+        if (Computer.currentComputer() instanceof SlaveComputer) {
+            VirtualChannel channel = Computer.currentComputer().getChannel();
+            logger.debug("Current computer is: " + Computer.currentComputer().getName());
+            logger.debug("Jenkins current computer is: " + Jenkins.MasterComputer.currentComputer().getName());
+            FilePath fpOnRemote = new FilePath(channel, filename);
+            fpOnRemote.delete();
+        }
+
     }
 
     public static boolean renameFileOrFolder(String oldName, String newName, Logger logger) {
