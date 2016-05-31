@@ -99,6 +99,51 @@
 
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>io.sealights.on-premise.agents.plugin</groupId>
+                <artifactId>sealights-maven-plugin</artifactId>
+                <version>1.0.0</version>
+                <configuration>
+                    <customerid>${SEALIGHTS_CUSTOMER_ID}</customerid>
+                    <server>${SEALIGHTS_SERVER}</server>
+                    <appName>${SEALIGHTS_APPNAME}</appName>
+                    <moduleName>${project.name}</moduleName>
+                    <workspacepath>${project.basedir}</workspacepath>
+                    <build>${BUILD_NUMBER}</build>
+                    <branch>${GIT_BRANCH}</branch>
+                    <packagesincluded>*io.sealights.agents.plugins.*</packagesincluded>
+                    <filesincluded>*.class</filesincluded>
+                    <apiJar>/tmp/sl-api7356619536606515642.jar</apiJar>
+                    <environment>Unit Tests</environment>
+                    <filesexcluded>*/test-classes/*</filesexcluded>
+                    <logLevel>OFF</logLevel>
+                    <enableTestListenerInitialization>true</enableTestListenerInitialization>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>a1</id>
+                        <goals>
+                            <goal>build-scanner</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>a2</id>
+                        <goals>
+                            <goal>test-listener</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>a3</id>
+                        <goals>
+                            <goal>initialize-test-listener</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
     <profiles>
         <profile>
