@@ -392,6 +392,38 @@ public class BeginAnalysis extends Builder {
         return  this.cleanupManager;
     }
 
+    private String handleApiJar(Logger logger, String tmpApiJar) throws IOException, InterruptedException {
+
+        boolean deleteApiJarOnExit = false;
+        if (org.apache.commons.lang.StringUtils.isBlank(tmpApiJar) ) {
+            //The user didn't specify a specific version of the test listener. Use an embedded one.
+            tmpApiJar = JarsHelper.loadJarAndSaveAsTempFile("sl-api");
+            deleteApiJarOnExit = true;
+        } else {
+            logger.info("The user specified a version for the 'apiJar'. Overriding embedded version with:'" + apiJar + "'");
+        }
+
+        if (!StringUtils.isNullOrEmpty(tmpApiJar)){
+            CustomFile customFile = new CustomFile(logger, this.cleanupManager, tmpApiJar);
+            customFile.copyToSlave(deleteApiJarOnExit);
+        }
+
+        return tmpApiJar;
+
+    }
+
+    private void handleAgents(Logger logger) throws IOException, InterruptedException {
+        if (!StringUtils.isNullOrEmpty(buildScannerJar)){
+            CustomFile customFile = new CustomFile(logger, this.cleanupManager, buildScannerJar);
+            customFile.copyToSlave(false);
+        }
+
+        if (!StringUtils.isNullOrEmpty(testListenerJar)){
+            CustomFile customFile = new CustomFile(logger, this.cleanupManager, testListenerJar);
+            customFile.copyToSlave(false);
+        }
+    }
+
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 
@@ -404,29 +436,9 @@ public class BeginAnalysis extends Builder {
             return false;
         }
 
+        handleAgents(logger);
         String tmpApiJar = apiJar;
-
-        if (org.apache.commons.lang.StringUtils.isBlank(tmpApiJar) ) {
-            //The user didn't specify a specific version of the test listener. Use an embedded one.
-            tmpApiJar = JarsHelper.loadJarAndSaveAsTempFile("sl-api");
-
-        } else {
-            logger.info("The user specified a version for the 'apiJar'. Overriding embedded version with:'" + apiJar + "'");
-        }
-
-        if (!StringUtils.isNullOrEmpty(buildScannerJar)){
-            CustomFile customFile = new CustomFile(logger, this.cleanupManager, buildScannerJar);
-            customFile.copyToSlave();
-        }
-
-        if (!StringUtils.isNullOrEmpty(testListenerJar)){
-            CustomFile customFile = new CustomFile(logger, this.cleanupManager, testListenerJar);
-            customFile.copyToSlave();
-        }
-        if (!StringUtils.isNullOrEmpty(tmpApiJar)){
-            CustomFile customFile = new CustomFile(logger, this.cleanupManager, tmpApiJar);
-            customFile.copyToSlave();
-        }
+        tmpApiJar = handleApiJar(logger, tmpApiJar);
 
         String workingDir = ws.getRemote();
 

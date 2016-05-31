@@ -23,6 +23,10 @@ public class CustomFile {
         copyToSlave(name, true);
     }
 
+    public void copyToSlave(boolean deleteOnExit) throws IOException, InterruptedException {
+        copyToSlave(name, deleteOnExit);
+    }
+
     public void copyToSlave(String targetFile) throws IOException, InterruptedException {
         copyToSlave(targetFile, true);
     }

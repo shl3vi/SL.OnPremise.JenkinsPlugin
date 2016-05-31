@@ -79,34 +79,49 @@ public class MavenIntegrationTest {
         performTest("11_Inject_SeaLights_plugin_to_a_pom_with_additionalClasspathElement_inside_surefire");
     }
 
-    @Test(expected = FileNotFoundException.class)
-    public void dontInjectSeaLightsPluginIfAlreadyInjected() throws Exception {
-        performTest("12_Dont_Inject_Sealights_plugin_if_already_injected");
-    }
-
     @Test
     public void insertSeaLightsListenerWhenWithNameWithoutValue() throws Exception {
-        performTest("13_Insert_Sealights_listener_when_with_name_without_value");
+        performTest("12_Insert_Sealights_listener_when_with_name_without_value");
     }
 
     @Test
     public void insertSeaLightsListenerWhenWithoutNameWithoutValue() throws Exception {
-        performTest("14_Insert_Sealights_listener_when_without_name_without_value");
+        performTest("13_Insert_Sealights_listener_when_without_name_without_value");
     }
 
     @Test
     public void insertSeaLightsListenerWhenWithNameWithDifferentValue() throws Exception {
-        performTest("15_Insert_Sealights_listener_when_with_name_with_value_different_from_ours");
+        performTest("14_Insert_Sealights_listener_when_with_name_with_value_different_from_ours");
     }
 
     @Test
     public void dontInjectSeaLightsAdditionalClassPathElementWhenAlreadyExist() throws Exception {
-        performTest("16_dont_Insert_Sealights_additionalClassPathElement__when_already_exist");
+        performTest("15_dont_Insert_Sealights_additionalClassPathElement_when_already_exist");
     }
 
     @Test
     public void injectSeaLightsWhenBuildElementNotExist() throws Exception {
-        performTest("17_Inject_SeaLights_when_build_element_not_exist");
+        performTest("16_Inject_SeaLights_when_build_element_not_exist");
+    }
+
+    @Test(expected = FileNotFoundException.class)
+    public void dontInjectSeaLightsPluginIfAlreadyInjected() throws Exception {
+        performTest("17_Dont_inject_Sealights_plugin_if_already_injected");
+    }
+
+    @Test(expected = FileNotFoundException.class)
+    public void dontInjectSeaLightsPluginIfAlreadyInjectedInPluginManagement() throws Exception {
+        performTest("18_Dont_inject_Sealights_plugin_if_already_injected_in_pluginManagement");
+    }
+
+    @Test(expected = FileNotFoundException.class)
+    public void dontInjectSeaLightsPluginIfAlreadyInjectedInPlugins() throws Exception {
+        performTest("19_Dont_inject_Sealights_plugin_if_already_injected_in_plugins");
+    }
+
+    @Test(expected = FileNotFoundException.class)
+    public void dontInjectSeaLightsPluginIfAlreadyInjectedInProfile() throws Exception {
+        performTest("20_Dont_inject_Sealights_plugin_if_already_injected_in_profile");
     }
 
     private void performTest(String testCase) throws Exception {

@@ -4,6 +4,7 @@ import io.sealigths.plugins.sealightsjenkins.utils.FileUtils;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 
 import java.io.IOException;
+import java.nio.file.FileSystemException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +26,12 @@ public class CleanupManager {
 
     public void clean() throws IOException, InterruptedException {
         for (String file : files) {
-            FileUtils.tryDeleteFile(logger, file);
+            try {
+                FileUtils.tryDeleteFile(logger, file);
+            } catch (FileSystemException e) {
+                logger.warning("Failed to delete file: " + file);
+                logger.warning(e.getMessage());
+            }
         }
     }
 }
