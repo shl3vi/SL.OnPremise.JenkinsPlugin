@@ -1,0 +1,16 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+
+    <f:entry field="insertedAppName" title="${%App Name}">
+        <f:textbox default="$${JOB_NAME}"/>
+    </f:entry>
+
+    <f:entry field="insertedBranchName" title="${%Branch Name}">
+        <f:textbox default="$${GIT_BRANCH}"/>
+    </f:entry>
+
+    <f:entry field="insertedBuildName" title="${%Build Name}">
+        <f:textbox default="$${BUILD_NUMBER}"/>
+    </f:entry>
+
+</j:jelly>

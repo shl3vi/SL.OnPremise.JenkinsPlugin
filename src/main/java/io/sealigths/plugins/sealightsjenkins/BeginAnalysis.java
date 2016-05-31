@@ -71,14 +71,23 @@ public class BeginAnalysis extends Builder {
     private TestingFramework testingFramework = TestingFramework.AUTO_DETECT;
     private LogLevel logLevel = LogLevel.OFF;
     private BuildStrategy buildStrategy = BuildStrategy.ONE_BUILD;
-    private BuildName buildName;
-    private ExecutionType executionType = ExecutionType.FULL;
 
+    /*
+    * This field is for backward compatibility.
+    * Should use the buildInformation field.
+    * */
+    @Deprecated
+    private BuildName buildName;
+
+    private BuildInformation buildInformation;
+
+    private ExecutionType executionType = ExecutionType.FULL;
     private String override_customerId;
     private String override_url;
     private String override_proxy;
 
     private CleanupManager cleanupManager = null;
+
     public void setCleanupManager(CleanupManager cleanupManager) {
         this.cleanupManager = cleanupManager;
     }
@@ -94,7 +103,7 @@ public class BeginAnalysis extends Builder {
                          String buildFilesPatterns, String buildFilesFolders,
                          boolean logEnabled, LogDestination logDestination, String logFolder,
                          TestingFramework testingFramework, BuildStrategy buildStrategy,
-                         BuildName buildName, ExecutionType executionType,
+                         BuildInformation buildInformation, ExecutionType executionType,
                          String override_customerId, String override_url, String override_proxy) throws IOException {
 
         this.override_customerId = override_customerId;
@@ -113,7 +122,7 @@ public class BeginAnalysis extends Builder {
         this.workspacepath = workspacepath;
         this.testListenerConfigFile = testListenerConfigFile;
         this.buildStrategy = buildStrategy;
-        this.buildName = buildName;
+        this.buildInformation = buildInformation;
         this.autoRestoreBuildFile = autoRestoreBuildFile;
         this.environment = environment;
         this.testingFramework = testingFramework;
@@ -134,9 +143,9 @@ public class BeginAnalysis extends Builder {
         this.apiJar = apiJar;
     }
 
-    private void setDefaultValuesForStrings(Logger logger){
+    private void setDefaultValuesForStrings(Logger logger) {
         Field[] fields = this.getClass().getDeclaredFields();
-        for(Field field : fields){
+        for (Field field : fields) {
             try {
                 if (!String.class.isAssignableFrom(field.getType())) {
                     continue;
@@ -144,13 +153,13 @@ public class BeginAnalysis extends Builder {
                 if (field.get(this) == null)
                     field.set(this, "");
             } catch (Exception e) {
-                logger.error("Failed to set default value for field " + field.getName() , e);
+                logger.error("Failed to set default value for field " + field.getName(), e);
                 e.printStackTrace();
             }
         }
     }
 
-    private void setDefaultValues(Logger logger){
+    private void setDefaultValues(Logger logger) {
 
         if (this.logDestination == null)
             this.logDestination = LogDestination.CONSOLE;
@@ -161,22 +170,24 @@ public class BeginAnalysis extends Builder {
         if (this.logLevel == null)
             this.logLevel = LogLevel.OFF;
 
-        if(this.buildStrategy == null)
+        if (this.buildStrategy == null)
             this.buildStrategy = BuildStrategy.ONE_BUILD;
 
-        if (this.buildName == null)
-            this.buildName = new BuildName.DefaultBuildName();
+        if (this.buildInformation == null)
+            this.buildInformation = new BuildInformation.ManualBuildInformation("", "", "");
 
-        if (this.executionType  == null)
+        if (this.executionType == null)
             this.executionType = ExecutionType.FULL;
 
         setDefaultValuesForStrings(logger);
     }
 
+    @Exported
     public ExecutionType getExecutionType() {
         return executionType;
     }
 
+    @Exported
     public void setExecutionType(ExecutionType executionType) {
         this.executionType = executionType;
     }
@@ -189,6 +200,16 @@ public class BeginAnalysis extends Builder {
     @Exported
     public void setBuildName(BuildName buildName) {
         this.buildName = buildName;
+    }
+
+    @Exported
+    public BuildInformation getBuildInformation() {
+        return buildInformation;
+    }
+
+    @Exported
+    public void setBuildInformation(BuildInformation buildInformation) {
+        this.buildInformation = buildInformation;
     }
 
     @Exported
@@ -261,6 +282,7 @@ public class BeginAnalysis extends Builder {
         return relativePathToEffectivePom;
     }
 
+    @Exported
     public void setRelativePathToEffectivePom(String relativePathToEffectivePom) {
         this.relativePathToEffectivePom = relativePathToEffectivePom;
     }
@@ -385,11 +407,11 @@ public class BeginAnalysis extends Builder {
         return override_proxy;
     }
 
-    private CleanupManager getOrCreateCleanupManager(Logger logger){
+    private CleanupManager getOrCreateCleanupManager(Logger logger) {
         if (this.cleanupManager == null)
             this.cleanupManager = new CleanupManager(logger);
 
-        return  this.cleanupManager;
+        return this.cleanupManager;
     }
 
     @Override
@@ -406,7 +428,7 @@ public class BeginAnalysis extends Builder {
 
         String tmpApiJar = apiJar;
 
-        if (org.apache.commons.lang.StringUtils.isBlank(tmpApiJar) ) {
+        if (org.apache.commons.lang.StringUtils.isBlank(tmpApiJar)) {
             //The user didn't specify a specific version of the test listener. Use an embedded one.
             tmpApiJar = JarsHelper.loadJarAndSaveAsTempFile("sl-api");
 
@@ -414,16 +436,16 @@ public class BeginAnalysis extends Builder {
             logger.info("The user specified a version for the 'apiJar'. Overriding embedded version with:'" + apiJar + "'");
         }
 
-        if (!StringUtils.isNullOrEmpty(buildScannerJar)){
+        if (!StringUtils.isNullOrEmpty(buildScannerJar)) {
             CustomFile customFile = new CustomFile(logger, this.cleanupManager, buildScannerJar);
             customFile.copyToSlave();
         }
 
-        if (!StringUtils.isNullOrEmpty(testListenerJar)){
+        if (!StringUtils.isNullOrEmpty(testListenerJar)) {
             CustomFile customFile = new CustomFile(logger, this.cleanupManager, testListenerJar);
             customFile.copyToSlave();
         }
-        if (!StringUtils.isNullOrEmpty(tmpApiJar)){
+        if (!StringUtils.isNullOrEmpty(tmpApiJar)) {
             CustomFile customFile = new CustomFile(logger, this.cleanupManager, tmpApiJar);
             customFile.copyToSlave();
         }
@@ -442,14 +464,10 @@ public class BeginAnalysis extends Builder {
 
         configureBuildFilePublisher(build, slInfo.getBuildFilesFolders());
 
-        doMavenIntegration(ws, logger, slInfo);
+        doMavenIntegration(logger, slInfo);
 
         return true;
     }
-
-
-
-
 
     private void setParentPomPath(Logger logger, String workingDir) {
         if (relativePathToEffectivePom != null && !"".equals(relativePathToEffectivePom))
@@ -460,12 +478,13 @@ public class BeginAnalysis extends Builder {
         logger.info("Absolute path pom file: " + this.pomPath);
     }
 
+    @Deprecated
     private String getBuildNumberFromUpstreamBuild(List<Cause> causes, String trigger) {
         String buildNum = null;
         for (Cause c : causes) {
             if (c instanceof Cause.UpstreamCause) {
                 buildNum = checkCauseRecursivelyForBuildNumber((Cause.UpstreamCause) c, trigger);
-                if (!StringUtils.isNullOrEmpty(buildNum)){
+                if (!StringUtils.isNullOrEmpty(buildNum)) {
                     break;
                 }
             }
@@ -473,7 +492,8 @@ public class BeginAnalysis extends Builder {
         return buildNum;
     }
 
-    private String checkCauseRecursivelyForBuildNumber(Cause.UpstreamCause cause, String trigger){
+    @Deprecated
+    private String checkCauseRecursivelyForBuildNumber(Cause.UpstreamCause cause, String trigger) {
         if (trigger.equals(cause.getUpstreamProject())) {
             return String.valueOf(cause.getUpstreamBuild());
         }
@@ -481,7 +501,26 @@ public class BeginAnalysis extends Builder {
         return getBuildNumberFromUpstreamBuild(cause.getUpstreamCauses(), trigger);
     }
 
-    private void doMavenIntegration(FilePath ws, Logger logger, SeaLightsPluginInfo slInfo) throws IOException, InterruptedException {
+    private Cause.UpstreamCause getUpstreamCause(List<Cause> causes, String upstreamProjectName) {
+        Cause.UpstreamCause cause = null;
+        for (Cause c : causes) {
+            if (!(c instanceof Cause.UpstreamCause))
+                continue;
+
+            Cause.UpstreamCause currentCause = (Cause.UpstreamCause) c;
+
+            if (upstreamProjectName.equals(currentCause.getUpstreamProject()))
+                return currentCause;
+
+            cause = getUpstreamCause(currentCause.getUpstreamCauses(), upstreamProjectName);
+            if (cause != null) {
+                break;
+            }
+        }
+        return cause;
+    }
+
+    private void doMavenIntegration(Logger logger, SeaLightsPluginInfo slInfo) throws IOException, InterruptedException {
 
 
         List<String> folders = Arrays.asList(slInfo.getBuildFilesFolders().split("\\s*,\\s*"));
@@ -504,15 +543,15 @@ public class BeginAnalysis extends Builder {
         }
         return Paths.get(path1, path2).toAbsolutePath().toString();
     }
-  
 
-    private String getManualBuildName(){
+
+    private String getManualBuildName() {
         BuildName.ManualBuildName manual = (BuildName.ManualBuildName) buildName;
         String insertedBuildName = manual.getInsertedBuildName();
         return insertedBuildName;
     }
-    
-    private String getUpstreamBuildName(AbstractBuild<?, ?> build, Logger logger){
+
+    private String getUpstreamBuildName(AbstractBuild<?, ?> build, Logger logger) {
         BuildName.UpstreamBuildName upstream = (BuildName.UpstreamBuildName) buildName;
         String upstreamProjectName = upstream.getUpstreamProjectName();
         String finalBuildName = getBuildNumberFromUpstreamBuild(build.getCauses(), upstreamProjectName);
@@ -525,20 +564,75 @@ public class BeginAnalysis extends Builder {
         return finalBuildName;
     }
 
+    @Deprecated
     private String getFinalBuildName(AbstractBuild<?, ?> build, Logger logger) {
         String finalBuildName = null;
         if (BuildNamingStrategy.MANUAL.equals(buildName.getBuildNamingStrategy())) {
             finalBuildName = getManualBuildName();
-        }
-        else if (BuildNamingStrategy.JENKINS_UPSTREAM.equals(buildName.getBuildNamingStrategy())) {
+        } else if (BuildNamingStrategy.JENKINS_UPSTREAM.equals(buildName.getBuildNamingStrategy())) {
             finalBuildName = getUpstreamBuildName(build, logger);
         }
 
-        if (StringUtils.isNullOrEmpty(finalBuildName)){
+        if (StringUtils.isNullOrEmpty(finalBuildName)) {
             return String.valueOf(build.getNumber());
         }
 
         return finalBuildName;
+    }
+
+    private void setBuildInformation(AbstractBuild<?, ?> build, Logger logger, SeaLightsPluginInfo slInfo) {
+
+        if (buildName != null) {
+            slInfo.setAppName(appName);
+            slInfo.setBranchName(branch);
+            slInfo.setBuildName(getFinalBuildName(build, logger));
+            return;
+        }
+
+        if (BuildInformationStrategy.MANUAL.equals(buildInformation.getBuildInformationStrategy())) {
+            setBuildInformationFromUpstreamJob(build, logger, slInfo);
+        }
+
+        setBuildInformationManualy(slInfo);
+    }
+
+    private void setBuildInformationManualy(SeaLightsPluginInfo slInfo) {
+        BuildInformation.ManualBuildInformation manualBuildInformation =
+                (BuildInformation.ManualBuildInformation) buildInformation;
+
+        slInfo.setAppName(manualBuildInformation.getInsertedAppName());
+        slInfo.setBranchName(manualBuildInformation.getInsertedBranchName());
+        slInfo.setBuildName(manualBuildInformation.getInsertedBuildName());
+    }
+
+    private void setBuildInformationFromUpstreamJob(AbstractBuild<?, ?> build, Logger logger, SeaLightsPluginInfo slInfo) {
+        BuildInformation.UpstreamBuildInformation upstreamBuildInformation =
+                (BuildInformation.UpstreamBuildInformation) buildInformation;
+
+        String upstreamProjectName = upstreamBuildInformation.getUpstreamProjectName();
+        Cause.UpstreamCause upstreamCause = getUpstreamCause(build.getCauses(), upstreamProjectName);
+
+        /*************************************/
+        String finalBuildName = String.valueOf(upstreamCause.getUpstreamBuild());
+        if (StringUtils.isNullOrEmpty(finalBuildName)) {
+            logger.warning("Couldn't find build number for " + upstreamProjectName + ". Using this job's build name.");
+            finalBuildName = String.valueOf(build.getNumber());
+        }
+        slInfo.setBuildName(finalBuildName);
+        /*************************************/
+
+        /*************************************/
+        String finalBuildName = String.valueOf(upstreamCause.);
+        if (StringUtils.isNullOrEmpty(finalBuildName)) {
+            logger.warning("Couldn't find build number for " + upstreamProjectName + ". Using this job's build name.");
+            finalBuildName = String.valueOf(build.getNumber());
+        }
+        slInfo.setBuildName(finalBuildName);
+        /*************************************/
+
+
+
+        logger.info("Upstream project: " + upstreamProjectName + " # " + finalBuildName);
     }
 
     private SeaLightsPluginInfo createSeaLightsPluginInfo(
@@ -546,20 +640,17 @@ public class BeginAnalysis extends Builder {
 
         SeaLightsPluginInfo slInfo = new SeaLightsPluginInfo();
         setGlobalConfiguration(slInfo);
+        setBuildInformation(build, logger, slInfo);
 
         String workingDir = ws.getRemote();
         slInfo.setEnabled(true);
-
-        slInfo.setBuildName(getFinalBuildName(build, logger));
 
         if (workspacepath != null && !"".equals(workspacepath))
             slInfo.setWorkspacepath(workspacepath);
         else
             slInfo.setWorkspacepath(workingDir);
 
-        slInfo.setAppName(appName);
         slInfo.setModuleName(moduleName);
-        slInfo.setBranchName(branch);
         slInfo.setFilesIncluded(filesIncluded);
         slInfo.setFilesExcluded(filesExcluded);
         slInfo.setRecursive(recursive);
@@ -624,7 +715,7 @@ public class BeginAnalysis extends Builder {
         if (!patterns.startsWith("**" + File.separator))
             patterns = "**" + File.separator + patterns;
 
-        for (String folder: folders) {
+        for (String folder : folders) {
             List<String> remotePoms = new FilePath(channel, folder).act(new SearchFileCallable(patterns));
             for (String matchingPom : remotePoms) {
                 logger.debug("Adding pom:" + matchingPom);
@@ -650,7 +741,7 @@ public class BeginAnalysis extends Builder {
                 found = true;
                 logger.debug("There was no need to add a new RestoreBuildFile since there is one. Current one:" + item.toString());
                 logger.debug("Updating RestoreBuildFile.parentPomFile");
-                ((RestoreBuildFile)item).setParentPomFile(this.pomPath);
+                ((RestoreBuildFile) item).setParentPomFile(this.pomPath);
                 //If found, this was added manually. Remove the check box.
                 break;
             }
@@ -675,7 +766,7 @@ public class BeginAnalysis extends Builder {
     private void printFields(SeaLightsPluginInfo slInfo, Logger logger) {
         Method[] methods = slInfo.getClass().getMethods();
         logger.debug("--------------Sealights Jenkins Plugin Configuration--------------");
-        for (Method method : methods){
+        for (Method method : methods) {
             String methodName = method.getName();
             Object value;
             if (!(methodName.startsWith("get") || methodName.startsWith("is")) || methodName.equals("getClass"))
