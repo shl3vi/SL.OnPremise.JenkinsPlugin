@@ -28,6 +28,7 @@
                         </additionalClasspathElements>
                         <properties>
                             <property>
+                                <name>not-listener</name>
                             </property>
                             <property>
                                 <name>listener</name>

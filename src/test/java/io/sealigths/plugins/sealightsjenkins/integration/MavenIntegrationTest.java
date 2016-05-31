@@ -124,6 +124,11 @@ public class MavenIntegrationTest {
         performTest("20_Dont_inject_Sealights_plugin_if_already_injected_in_profile");
     }
 
+    @Test()
+    public void ifNameTagIsNotListenerAddNameTagWithOurListener() throws Exception {
+        performTest("21_If_name_tag_is_not_listener_add_name_tag_with_our_listener");
+    }
+
     private void performTest(String testCase) throws Exception {
         performTest(testCase, TestingFramework.JUNIT);
     }

@@ -235,21 +235,22 @@ public class PomFile {
     private void verifyPropertiesElement(String listenerValue, Element configurationElement) throws XPathExpressionException {
         List<Element> propertiesElements = getOrCreateElements("properties", configurationElement);
         for (Element propertiesElement : propertiesElements) {
-            List<Element> propertyElements = getOrCreateElements("property", propertiesElement);
+            List<Element> propertyElements = getElements("property", propertiesElement);
             boolean foundListenerProperty = isFoundListenerProperty(listenerValue, propertyElements);
 
             if (!foundListenerProperty) {
                 //Add one.
+                Element propertyElement = getDocument().createElement("property");
                 Element name = getDocument().createElement("name");
                 name.setTextContent("listener");
 
                 Element value = getDocument().createElement("value");
                 value.setTextContent(listenerValue);
 
-                Element property = propertyElements.get(0);
-                property.appendChild(name);
-                property.appendChild(value);
+                propertyElement.appendChild(name);
+                propertyElement.appendChild(value);
 
+                propertiesElement.appendChild(propertyElement);
             }
         }
     }
@@ -284,6 +285,11 @@ public class PomFile {
                 if (!isNodeExist(propertyElement, "name"))
                     continue;
 
+                List<Element> nameElements = getElements("name", propertyElement);
+                Element name = nameElements.get(0);
+                if (!"listener".equalsIgnoreCase(name.getTextContent()))
+                    continue;
+
                 if (isNodeExist(propertyElement, "value")) {
                     //Update the current value
                     List<Element> valueElements = getOrCreateElements("value", propertyElement);
@@ -310,8 +316,9 @@ public class PomFile {
 
     private boolean isAdditonalClasspathElementWithApiJar(List<Element> additionalClasspathElementList) throws XPathExpressionException {
         for (Element additionalClasspathElement : additionalClasspathElementList) {
-            if (additionalClasspathElement.getTextContent().endsWith("sl-api.jar")) {
-                log.debug("'additionalClasspathElement' node with path to 'sl-api.jar' already exist. No need to add it.");
+            String elementTextContent = additionalClasspathElement.getTextContent();
+            if (elementTextContent.contains("sl-api") && elementTextContent.endsWith(".jar")) {
+                log.debug("'additionalClasspathElement' node with path to '*sl-api*.jar' already exist. No need to add it.");
                 return true;
             }
         }
