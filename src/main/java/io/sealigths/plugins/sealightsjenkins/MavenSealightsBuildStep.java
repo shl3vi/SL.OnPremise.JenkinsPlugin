@@ -15,6 +15,7 @@ import hudson.util.*;
 import io.sealigths.plugins.sealightsjenkins.integration.JarsHelper;
 import io.sealigths.plugins.sealightsjenkins.utils.CommandLineHelper;
 import io.sealigths.plugins.sealightsjenkins.utils.CustomFile;
+import io.sealigths.plugins.sealightsjenkins.utils.FileAndFolderUtils;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import jenkins.MasterToSlaveFileCallable;
 import jenkins.model.Jenkins;
@@ -28,6 +29,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -531,7 +533,7 @@ public class MavenSealightsBuildStep extends Builder {
     private final String SL_MVN_ARTIFACT_ID = "sealights-maven-plugin";
     private final String SL_MVN_VERSION = "1.0.0";
 
-    private String getSLMavenPluginInstallationCommand(String mavenPluginFilePath) {
+    private String getSLMavenPluginInstallationCommand(String mavenPluginFilePath) throws FileNotFoundException {
 
         StringBuilder command = new StringBuilder();
         command.append("install:install-file -Dfile=");
@@ -541,7 +543,13 @@ public class MavenSealightsBuildStep extends Builder {
         command.append(" -DartifactId=");
         command.append(SL_MVN_ARTIFACT_ID);
         command.append(" -Dversion=");
-        command.append(SL_MVN_VERSION);
+
+        String version = FileAndFolderUtils.readFileFromResources("sl-maven-plugin-version");
+        if (StringUtils.isNotBlank(version))
+            command.append(version);
+        else
+            command.append(SL_MVN_VERSION);
+
         command.append(" -Dpackaging=jar");
 
         return command.toString();

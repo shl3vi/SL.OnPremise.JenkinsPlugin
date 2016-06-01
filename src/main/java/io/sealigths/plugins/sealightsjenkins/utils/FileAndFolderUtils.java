@@ -1,75 +1,41 @@
 package io.sealigths.plugins.sealightsjenkins.utils;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 public class FileAndFolderUtils {
 
-//    public static boolean isFolderExists(String folder){
-//        File f = new File(folder);
-//        if (!f.exists()) {
-//            return false;
-//        }
-//
-//        if (!f.isDirectory()){
-//            throw new RuntimeException("'" + folder + "' is not a folder.");
-//        }
-//
-//        return true;
-//    }
+    public static String readFileFromResources(String fileName) throws FileNotFoundException {
 
-//    public static boolean createFolder(String folder)
-//    {
-//        if (isFolderExists(folder))
-//            return false;
-//
-//        File f = new File(folder);
-//        return f.mkdir();
-//    }
-//
-//    public static void verifyFolderExists(String folder)
-//    {
-//        if (!isFolderExists(folder)){
-//            createFolder(folder);
-//        }
-//    }
-//
-//    public static File getOrCreateFile(String filePath) throws IOException{
-//        File file = new File(filePath);
-//        if(!file.exists()) {
-//            file.createNewFile();
-//        }
-//
-//        return file;
-//    }
+        StringBuilder result = new StringBuilder("");
 
-//    public static void writeAllTextToFile(String text, String fileName)
-//    {
-//        PrintWriter file = null;
-//        try {
-//            File fileObj = new File(fileName);
-//            if (fileObj.exists())
-//            {
-//                fileObj.delete();
-//            }
-//            fileObj.createNewFile();
-//
-//            file = new PrintWriter(fileObj);
-//            file.println(text);
-//        } catch (Exception e) {
-//            throw new RuntimeException(e);
-//        }
-//        finally {
-//            if (file != null)
-//                file.close();
-//        }
-//
-//    }
+        //Get file from resources folder
+        ClassLoader classLoader = FileAndFolderUtils.class.getClassLoader();
+        File file = new File(classLoader.getResource(fileName).getFile());
 
-    public static List<String> findAllFilesWithFilter(String rootpath, Boolean recursive, IncludeExcludeFilter filter){
+        if (!file.exists())
+            return null;
+
+        Scanner scanner = new Scanner(file)
+
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine();
+            result.append(line).append("\n");
+        }
+
+        scanner.close();
+
+
+        return result.toString();
+
+    }
+
+    public static List<String> findAllFilesWithFilter(String rootpath, Boolean recursive, IncludeExcludeFilter filter) {
 
         List<String> result = new ArrayList<>();
         File rootDir = new File(rootpath);
@@ -85,14 +51,14 @@ public class FileAndFolderUtils {
         return result;
     }
 
-    private static List<String> search(File directory, Boolean recursive, IncludeExcludeFilter filter){
+    private static List<String> search(File directory, Boolean recursive, IncludeExcludeFilter filter) {
 
         List<String> returnedFiles = new ArrayList<String>();
 
-        if (!directory.isDirectory()){
+        if (!directory.isDirectory()) {
             throw new RuntimeException("The specified directory is not a valid directory: " + directory);
         }
-        if (!directory.canRead()){
+        if (!directory.canRead()) {
             throw new RuntimeException("There is no permission to read from the specified directory: " + directory);
         }
 
