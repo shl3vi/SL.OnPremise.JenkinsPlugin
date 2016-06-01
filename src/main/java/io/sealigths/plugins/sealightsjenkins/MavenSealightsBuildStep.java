@@ -512,7 +512,7 @@ public class MavenSealightsBuildStep extends Builder {
         CustomFile customFile = new CustomFile(logger, cleanupManager, slMavenPluginJar);
         customFile.copyToSlave();
 
-        String normalizedTarget = getSLMavenPluginInstallationCommand(slMavenPluginJar);
+        String normalizedTarget = getSLMavenPluginInstallationCommand(slMavenPluginJar, logger);
         logger.info("Installing sealights-maven plugin");
         logger.info("Command: " + normalizedTarget);
 
@@ -533,7 +533,7 @@ public class MavenSealightsBuildStep extends Builder {
     private final String SL_MVN_ARTIFACT_ID = "sealights-maven-plugin";
     private final String SL_MVN_VERSION = "1.0.0";
 
-    private String getSLMavenPluginInstallationCommand(String mavenPluginFilePath) throws FileNotFoundException {
+    private String getSLMavenPluginInstallationCommand(String mavenPluginFilePath, Logger logger) throws FileNotFoundException {
 
         StringBuilder command = new StringBuilder();
         command.append("install:install-file -Dfile=");
@@ -545,6 +545,7 @@ public class MavenSealightsBuildStep extends Builder {
         command.append(" -Dversion=");
 
         String version = FileAndFolderUtils.readFileFromResources("sl-maven-plugin-version");
+        logger.info("Got version from file: '" + version + "'.");
         if (StringUtils.isNotBlank(version))
             command.append(version);
         else
