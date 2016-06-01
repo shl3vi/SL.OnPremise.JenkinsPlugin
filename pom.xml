@@ -79,6 +79,44 @@
     </pluginRepository>
   </pluginRepositories>
 
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.19</version>
+        <executions>
+          <execution>
+            <id>default-test</id>
+            <phase>test</phase>
+            <goals>
+              <goal>test</goal>
+            </goals>
+            <configuration>
+              <systemProperties>
+                <property>
+                  <name>hudson.udp</name>
+                  <value>33849</value>
+                </property>
+              </systemProperties>
+              <!--<reuseForks>true</reuseForks>-->
+              <!--<forkCount>1C</forkCount>-->
+            </configuration>
+          </execution>
+        </executions>
+        <configuration>
+          <systemProperties>
+            <property>
+              <name>hudson.udp</name>
+              <value>33849</value>
+            </property>
+          </systemProperties>
+          <!--<reuseForks>true</reuseForks>-->
+          <!--<forkCount>1C</forkCount>-->
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
 
 
   <dependencies>
