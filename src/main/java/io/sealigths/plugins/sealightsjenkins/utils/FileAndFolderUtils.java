@@ -1,35 +1,17 @@
 package io.sealigths.plugins.sealightsjenkins.utils;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 public class FileAndFolderUtils {
 
-    public static String readFileFromResources(String fileName) throws FileNotFoundException {
-        StringBuilder result = new StringBuilder("");
-
+    public static String readFileFromResources(String fileName, Logger logger) throws FileNotFoundException {
         //Get file from resources folder
-        ClassLoader classLoader = FileAndFolderUtils.class.getClassLoader();
-        File file = new File(classLoader.getResource(fileName).getFile());
-
-        if (!file.exists())
-            return null;
-
-        Scanner scanner = new Scanner(file);
-
-        while (scanner.hasNextLine()) {
-            String line = scanner.nextLine();
-            result.append(line).append("\n");
-        }
-
-        scanner.close();
-        return result.toString();
-
+        InputStream inputStream = FileAndFolderUtils.class.getClassLoader().getResourceAsStream(fileName);
+        String content = StreamUtils.toString(inputStream);
+        return content;
     }
 
     public static List<String> findAllFilesWithFilter(String rootpath, Boolean recursive, IncludeExcludeFilter filter) {

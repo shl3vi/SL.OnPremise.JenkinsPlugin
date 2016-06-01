@@ -544,12 +544,14 @@ public class MavenSealightsBuildStep extends Builder {
         command.append(SL_MVN_ARTIFACT_ID);
         command.append(" -Dversion=");
 
-        String version = FileAndFolderUtils.readFileFromResources("sl-maven-plugin-version");
-        logger.info("Got version from file: '" + version + "'.");
-        if (StringUtils.isNotBlank(version))
+        String version = FileAndFolderUtils.readFileFromResources("sl-maven-plugin-version.txt", logger);
+        if (StringUtils.isNotBlank(version)) {
             command.append(version);
-        else
+        }
+        else {
+            logger.warning("Couldn't load the version number of the maven plugin from the resources. Using default version.");
             command.append(SL_MVN_VERSION);
+        }
 
         command.append(" -Dpackaging=jar");
 
