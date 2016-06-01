@@ -59,9 +59,9 @@
             <f:textbox value="${environment}" default="Unit Tests"/>
         </f:entry>
 
-        <f:entry field="workspacepath" title="Workspace Path"
-                 description="Path to a the workspace folder in which the source code exists.">
-            <f:textbox value="${workspacepath}" default="$${project.basedir}"/>
+        <f:entry field="workspacepath" title="Project's Output Folder"
+                 description="Path to a project output folder ('target/classes').">
+            <f:textbox value="${workspacepath}" default="$${project.build.outputDirectory}"/>
         </f:entry>
 
         <f:entry title="Recursive search on folders tree" field="recursive"
