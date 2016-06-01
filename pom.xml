@@ -99,7 +99,7 @@
                 </property>
               </systemProperties>
               <!--<reuseForks>true</reuseForks>-->
-              <!--<forkCount>1C</forkCount>-->
+              <forkCount>1</forkCount>
             </configuration>
           </execution>
         </executions>
@@ -111,7 +111,7 @@
             </property>
           </systemProperties>
           <!--<reuseForks>true</reuseForks>-->
-          <!--<forkCount>1C</forkCount>-->
+          <forkCount>1</forkCount>
         </configuration>
       </plugin>
     </plugins>
