@@ -11,7 +11,6 @@ import java.util.Scanner;
 public class FileAndFolderUtils {
 
     public static String readFileFromResources(String fileName) throws FileNotFoundException {
-
         StringBuilder result = new StringBuilder("");
 
         //Get file from resources folder
@@ -21,7 +20,7 @@ public class FileAndFolderUtils {
         if (!file.exists())
             return null;
 
-        Scanner scanner = new Scanner(file)
+        Scanner scanner = new Scanner(file);
 
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
@@ -29,8 +28,6 @@ public class FileAndFolderUtils {
         }
 
         scanner.close();
-
-
         return result.toString();
 
     }
