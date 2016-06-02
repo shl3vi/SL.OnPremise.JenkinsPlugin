@@ -13,6 +13,7 @@ import hudson.tasks._maven.MavenConsoleAnnotator;
 import hudson.tools.*;
 import hudson.util.*;
 import io.sealigths.plugins.sealightsjenkins.integration.JarsHelper;
+import io.sealigths.plugins.sealightsjenkins.integration.SealightsMavenPluginHelper;
 import io.sealigths.plugins.sealightsjenkins.utils.CommandLineHelper;
 import io.sealigths.plugins.sealightsjenkins.utils.CustomFile;
 import io.sealigths.plugins.sealightsjenkins.utils.FileAndFolderUtils;
@@ -535,6 +536,8 @@ public class MavenSealightsBuildStep extends Builder {
 
     private String getSLMavenPluginInstallationCommand(String mavenPluginFilePath, Logger logger) throws FileNotFoundException {
 
+        SealightsMavenPluginHelper slPluginHelper = new SealightsMavenPluginHelper(logger);
+
         StringBuilder command = new StringBuilder();
         command.append("install:install-file -Dfile=");
         command.append(mavenPluginFilePath);
@@ -543,16 +546,7 @@ public class MavenSealightsBuildStep extends Builder {
         command.append(" -DartifactId=");
         command.append(SL_MVN_ARTIFACT_ID);
         command.append(" -Dversion=");
-
-        String version = FileAndFolderUtils.readFileFromResources("sl-maven-plugin-version.txt", logger);
-        if (StringUtils.isNotBlank(version)) {
-            command.append(version);
-        }
-        else {
-            logger.warning("Couldn't load the version number of the maven plugin from the resources. Using default version.");
-            command.append(SL_MVN_VERSION);
-        }
-
+        command.append(slPluginHelper.getPluginVersion());
         command.append(" -Dpackaging=jar");
 
         return command.toString();
