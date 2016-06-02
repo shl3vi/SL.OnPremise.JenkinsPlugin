@@ -1,1 +1,1 @@
-cls && mvn clean install -Dfindbugs.skip 
+cls && mvn clean install -Dfindbugs.skip  -e
