@@ -78,11 +78,6 @@ public class BeginAnalysis extends Builder {
     private String override_url;
     private String override_proxy;
 
-    private CleanupManager cleanupManager = null;
-    public void setCleanupManager(CleanupManager cleanupManager) {
-        this.cleanupManager = cleanupManager;
-    }
-
     @DataBoundConstructor
     public BeginAnalysis(LogLevel logLevel,
                          String appName, String moduleName, String branch, boolean enableMultipleBuildFiles,
@@ -385,14 +380,7 @@ public class BeginAnalysis extends Builder {
         return override_proxy;
     }
 
-    private CleanupManager getOrCreateCleanupManager(Logger logger){
-        if (this.cleanupManager == null)
-            this.cleanupManager = new CleanupManager(logger);
-
-        return  this.cleanupManager;
-    }
-
-    private String handleApiJar(Logger logger, String tmpApiJar) throws IOException, InterruptedException {
+    private String handleApiJar(Logger logger, String tmpApiJar, CleanupManager cleanupManager) throws IOException, InterruptedException {
 
         boolean deleteApiJarOnExit = false;
         if (org.apache.commons.lang.StringUtils.isBlank(tmpApiJar) ) {
@@ -404,7 +392,7 @@ public class BeginAnalysis extends Builder {
         }
 
         if (!StringUtils.isNullOrEmpty(tmpApiJar)){
-            CustomFile customFile = new CustomFile(logger, this.cleanupManager, tmpApiJar);
+            CustomFile customFile = new CustomFile(logger, cleanupManager, tmpApiJar);
             customFile.copyToSlave(deleteApiJarOnExit);
         }
 
@@ -412,23 +400,23 @@ public class BeginAnalysis extends Builder {
 
     }
 
-    private void handleAgents(Logger logger) throws IOException, InterruptedException {
+    private void handleAgents(Logger logger, CleanupManager cleanupManager) throws IOException, InterruptedException {
         if (!StringUtils.isNullOrEmpty(buildScannerJar)){
-            CustomFile customFile = new CustomFile(logger, this.cleanupManager, buildScannerJar);
+            CustomFile customFile = new CustomFile(logger, cleanupManager, buildScannerJar);
             customFile.copyToSlave(false);
         }
 
         if (!StringUtils.isNullOrEmpty(testListenerJar)){
-            CustomFile customFile = new CustomFile(logger, this.cleanupManager, testListenerJar);
+            CustomFile customFile = new CustomFile(logger, cleanupManager, testListenerJar);
             customFile.copyToSlave(false);
         }
     }
 
-    @Override
-    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+    public boolean perform(
+            AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener,
+            CleanupManager cleanupManager, Logger logger)
+            throws IOException, InterruptedException {
 
-        Logger logger = new Logger(listener.getLogger());
-        this.cleanupManager = getOrCreateCleanupManager(logger);
         setDefaultValues(logger);
 
         FilePath ws = build.getWorkspace();
@@ -436,9 +424,9 @@ public class BeginAnalysis extends Builder {
             return false;
         }
 
-        handleAgents(logger);
+        handleAgents(logger, cleanupManager);
         String tmpApiJar = apiJar;
-        tmpApiJar = handleApiJar(logger, tmpApiJar);
+        tmpApiJar = handleApiJar(logger, tmpApiJar, cleanupManager);
 
         String workingDir = ws.getRemote();
 
@@ -459,9 +447,13 @@ public class BeginAnalysis extends Builder {
         return true;
     }
 
-
-
-
+    @Override
+    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener
+    ) throws IOException, InterruptedException {
+        Logger logger = new Logger(listener.getLogger());
+        CleanupManager cleanupManager = new CleanupManager(logger);
+        return perform(build, launcher, listener, cleanupManager, logger);
+    }
 
     private void setParentPomPath(Logger logger, String workingDir) {
         if (relativePathToEffectivePom != null && !"".equals(relativePathToEffectivePom))

@@ -51,7 +51,6 @@ public class MavenSealightsBuildStep extends Builder {
 
     public final BeginAnalysis beginAnalysis;
     public final boolean enableSeaLights;
-    private CleanupManager cleanupManager;
     /**
      * The targets and other maven options.
      * Can be separated by SP or NL.
@@ -234,9 +233,12 @@ public class MavenSealightsBuildStep extends Builder {
     }
 
 
-    private boolean beginAnalysisBuildStep(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Logger logger) throws IOException, InterruptedException {
+    private boolean beginAnalysisBuildStep(
+            AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener,
+            Logger logger, CleanupManager cleanupManager) throws IOException, InterruptedException {
         beginAnalysis.setRelativePathToEffectivePom(pom);
-        beginAnalysis.perform(build, launcher, listener);
+        beginAnalysis.perform(build, launcher, listener, cleanupManager, logger);
+
         if (AUTO_DETECT.equals(beginAnalysis.getTestingFramework())) {
             if (!runInitializeTestListenerGoal(build, launcher, listener, logger)) {
                 return false;
@@ -275,13 +277,12 @@ public class MavenSealightsBuildStep extends Builder {
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 
         Logger logger = new Logger(listener.getLogger());
-        cleanupManager = new CleanupManager(logger);
-        beginAnalysis.setCleanupManager(cleanupManager);
+        CleanupManager cleanupManager = new CleanupManager(logger);
 
         try {
             if (enableSeaLights) {
-                installSealightsMavenPlugin(build, launcher, listener);
-                if (!beginAnalysisBuildStep(build, launcher, listener, logger)) {
+                installSealightsMavenPlugin(build, launcher, listener, cleanupManager);
+                if (!beginAnalysisBuildStep(build, launcher, listener, logger, cleanupManager)) {
                     logger.error("Begin Analysis step returned false. This likely due to an Exit Code > 0 from Maven.");
                     return false;
                 }
@@ -505,7 +506,9 @@ public class MavenSealightsBuildStep extends Builder {
         return true;
     }
 
-    private boolean installSealightsMavenPlugin(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+    private boolean installSealightsMavenPlugin(
+            AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, CleanupManager cleanupManager)
+            throws IOException, InterruptedException {
 
         Logger logger = new Logger(listener.getLogger());
 
