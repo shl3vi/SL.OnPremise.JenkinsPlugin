@@ -1,19 +1,22 @@
 package io.sealigths.plugins.sealightsjenkins.integration;
 
-import io.sealigths.plugins.sealightsjenkins.ExecutionType;
+import hudson.FilePath;
+import hudson.model.Computer;
+import hudson.remoting.VirtualChannel;
 import io.sealigths.plugins.sealightsjenkins.TestingFramework;
 import io.sealigths.plugins.sealightsjenkins.entities.FileBackupInfo;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
+import io.sealigths.plugins.sealightsjenkins.utils.StringUtils;
+
+import javax.xml.transform.stream.StreamResult;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 
 /**
  * Created by Nadav on 4/19/2016.
  */
 public class MavenIntegration {
-    //TODO: Check the SureFire version on the resolved (effective) *.pom file.
-    //private final static String SUREFIRE_GROUP_ID = "org.apache.maven.plugins";
-    //private final static String SUREFIRE_ARTIFACT_ID = "maven-surefire-plugin";
-    private final static String SEALIGHTS_GROUP_ID = "io.sealights.on-premise.agents.plugin";
     private final static String SEALIGHTS_ARTIFACT_ID = "sealights-maven-plugin";
 
 
@@ -41,39 +44,22 @@ public class MavenIntegration {
 
         for (FileBackupInfo fileBackupInfo : mavenIntegrationInfo.getPomFiles()) {
             String sourceFilename = fileBackupInfo.getSourceFile();
-
             try {
                 integrateToPomFile(fileBackupInfo, sourceFilename, shouldBackup);
             } catch (Exception e) {
-                log.error("MavenIntegration.integrate - Unable to parse pom : " + sourceFilename + ". Error:", e);
+                log.error("MavenIntegration.integrate - Unable to integrate sealights to pom : " + sourceFilename + ". Error:", e);
             }
         }
 
     }
 
-    private void integrateToPomFile(FileBackupInfo fileBackupInfo, String sourceFilename, boolean shouldBackup) {
-
+    private void integrateToPomFile(FileBackupInfo fileBackupInfo, String sourceFilename, boolean shouldBackup) throws IOException, InterruptedException {
         PomFile pomFile = createPomFile(sourceFilename);
 
         if (pomFile.isPluginExistInEntirePom(SEALIGHTS_ARTIFACT_ID)) {
             log.info("MavenIntegration.integrate - Skipping the integration since SeaLights plugin is already defined in the the POM file.");
             return;
         }
-//                TODO: Check the SureFire version on the resolved (effective) *.pom file.
-//            if (!pomFile.isPluginExistInEntirePom(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID))
-//            {
-//                //Surefire plugin isn't defined.
-//                throw new RuntimeException("SeaLights plugin requires Maven Surefire Plugin");
-//            }
-//
-//            String version = pomFile.getPluginVersion(SUREFIRE_GROUP_ID, SUREFIRE_ARTIFACT_ID);
-//            String[] tokens = version.split("\\.");
-//            int majorVersion = Integer.parseInt(tokens[0]);
-//            int minorVersion = Integer.parseInt(tokens[1]);
-//            if ((majorVersion < 2) || (majorVersion == 2 && minorVersion < 9))
-//            {
-//                throw new RuntimeException("Unsupported Maven Surefire plugin. SeaLights requires a version 2.9 or higher.");
-//            }
 
         if (!pomFile.isValidPom()) {
             log.info("MavenIntegration.integrateToPomFile - Skipping SeaLights integration due to invalid pom. Pom: " + fileBackupInfo.getSourceFile());
@@ -81,7 +67,7 @@ public class MavenIntegration {
         }
 
         if (shouldBackup) {
-            backupPom(sourceFilename, pomFile);
+            backupPom(sourceFilename);
         }
 
         log.info("MavenIntegration.integrateToPomFile - About to modify pom: " + fileBackupInfo.getSourceFile());
@@ -94,10 +80,15 @@ public class MavenIntegration {
         return new PomFile(sourceFilename, log);
     }
 
-    private void backupPom(String sourceFile, PomFile pom) {
-        String backupFile = sourceFile + ".slbak";
+    protected void backupPom(String sourceFileName) throws IOException, InterruptedException {
+        String backupFile = sourceFileName + ".slbak";
         log.info("MavenIntegration.integrate - creating a back up file: " + backupFile);
-        this.savePom(backupFile, pom);
+
+        VirtualChannel channel = Computer.currentComputer().getChannel();
+        FilePath sourceFile = new FilePath(channel, sourceFileName);
+        FilePath targeFile = new FilePath(channel, backupFile);
+
+        sourceFile.copyTo(targeFile);
     }
 
     private String getEventListenerPackage(TestingFramework testingFramework) {
