@@ -687,6 +687,8 @@ public class BeginAnalysis extends Builder {
     private void printFields(SeaLightsPluginInfo slInfo, Logger logger) {
         Method[] methods = slInfo.getClass().getMethods();
         logger.debug("--------------Sealights Jenkins Plugin Configuration--------------");
+        logger.debug("Plugin Version:" + getPluginVersion());
+
         for (Method method : methods){
             String methodName = method.getName();
             Object value;
@@ -711,6 +713,10 @@ public class BeginAnalysis extends Builder {
         logger.debug("--------------Sealights Jenkins Plugin Configuration--------------");
 
 
+    }
+
+    private String getPluginVersion() {
+        return BeginAnalysis.class.getPackage().getImplementationVersion();
     }
 
     @Override
