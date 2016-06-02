@@ -54,7 +54,6 @@ public class MavenIntegration {
     }
 
     private void integrateToPomFile(FileBackupInfo fileBackupInfo, String sourceFilename, boolean shouldBackup) throws IOException, InterruptedException {
-
         PomFile pomFile = createPomFile(sourceFilename);
 
         if (pomFile.isPluginExistInEntirePom(SEALIGHTS_ARTIFACT_ID)) {
