@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -129,9 +130,9 @@ public class BeginAnalysis extends Builder {
         this.apiJar = apiJar;
     }
 
-    private void setDefaultValuesForStrings(Logger logger){
+    private void setDefaultValuesForStrings(Logger logger) {
         Field[] fields = this.getClass().getDeclaredFields();
-        for(Field field : fields){
+        for (Field field : fields) {
             try {
                 if (!String.class.isAssignableFrom(field.getType())) {
                     continue;
@@ -139,13 +140,13 @@ public class BeginAnalysis extends Builder {
                 if (field.get(this) == null)
                     field.set(this, "");
             } catch (Exception e) {
-                logger.error("Failed to set default value for field " + field.getName() , e);
+                logger.error("Failed to set default value for field " + field.getName(), e);
                 e.printStackTrace();
             }
         }
     }
 
-    private void setDefaultValues(Logger logger){
+    private void setDefaultValues(Logger logger) {
 
         if (this.logDestination == null)
             this.logDestination = LogDestination.CONSOLE;
@@ -156,13 +157,13 @@ public class BeginAnalysis extends Builder {
         if (this.logLevel == null)
             this.logLevel = LogLevel.OFF;
 
-        if(this.buildStrategy == null)
+        if (this.buildStrategy == null)
             this.buildStrategy = BuildStrategy.ONE_BUILD;
 
         if (this.buildName == null)
             this.buildName = new BuildName.DefaultBuildName();
 
-        if (this.executionType  == null)
+        if (this.executionType == null)
             this.executionType = ExecutionType.FULL;
 
         setDefaultValuesForStrings(logger);
@@ -383,7 +384,7 @@ public class BeginAnalysis extends Builder {
     private String handleApiJar(Logger logger, String tmpApiJar, CleanupManager cleanupManager) throws IOException, InterruptedException {
 
         boolean deleteApiJarOnExit = false;
-        if (org.apache.commons.lang.StringUtils.isBlank(tmpApiJar) ) {
+        if (org.apache.commons.lang.StringUtils.isBlank(tmpApiJar)) {
             //The user didn't specify a specific version of the test listener. Use an embedded one.
             tmpApiJar = JarsHelper.loadJarAndSaveAsTempFile("sl-api");
             deleteApiJarOnExit = true;
@@ -391,7 +392,7 @@ public class BeginAnalysis extends Builder {
             logger.info("The user specified a version for the 'apiJar'. Overriding embedded version with:'" + apiJar + "'");
         }
 
-        if (!StringUtils.isNullOrEmpty(tmpApiJar)){
+        if (!StringUtils.isNullOrEmpty(tmpApiJar)) {
             CustomFile customFile = new CustomFile(logger, cleanupManager, tmpApiJar);
             customFile.copyToSlave(deleteApiJarOnExit);
         }
@@ -400,13 +401,13 @@ public class BeginAnalysis extends Builder {
 
     }
 
-    private void handleAgents(Logger logger, CleanupManager cleanupManager) throws IOException, InterruptedException {
-        if (!StringUtils.isNullOrEmpty(buildScannerJar)){
+    private void copyAgentsToSlaveIfNeeded(Logger logger, CleanupManager cleanupManager) throws IOException, InterruptedException {
+        if (!StringUtils.isNullOrEmpty(buildScannerJar)) {
             CustomFile customFile = new CustomFile(logger, cleanupManager, buildScannerJar);
             customFile.copyToSlave(false);
         }
 
-        if (!StringUtils.isNullOrEmpty(testListenerJar)){
+        if (!StringUtils.isNullOrEmpty(testListenerJar)) {
             CustomFile customFile = new CustomFile(logger, cleanupManager, testListenerJar);
             customFile.copyToSlave(false);
         }
@@ -424,7 +425,7 @@ public class BeginAnalysis extends Builder {
             return false;
         }
 
-        handleAgents(logger, cleanupManager);
+        copyAgentsToSlaveIfNeeded(logger, cleanupManager);
         String tmpApiJar = apiJar;
         tmpApiJar = handleApiJar(logger, tmpApiJar, cleanupManager);
 
@@ -456,9 +457,14 @@ public class BeginAnalysis extends Builder {
     }
 
     private void setParentPomPath(Logger logger, String workingDir) {
-        if (relativePathToEffectivePom != null && !"".equals(relativePathToEffectivePom))
-            this.pomPath = this.joinPaths(workingDir, relativePathToEffectivePom);
-        else
+        if (relativePathToEffectivePom != null && !"".equals(relativePathToEffectivePom)) {
+            Path pathToPom = Paths.get(relativePathToEffectivePom);
+            if (pathToPom.isAbsolute()) {
+                this.pomPath = relativePathToEffectivePom;
+            } else {
+                this.pomPath = this.joinPaths(workingDir, relativePathToEffectivePom);
+            }
+        } else
             this.pomPath = this.joinPaths(workingDir, "pom.xml");
 
         logger.info("Absolute path pom file: " + this.pomPath);
@@ -469,7 +475,7 @@ public class BeginAnalysis extends Builder {
         for (Cause c : causes) {
             if (c instanceof Cause.UpstreamCause) {
                 buildNum = checkCauseRecursivelyForBuildNumber((Cause.UpstreamCause) c, trigger);
-                if (!StringUtils.isNullOrEmpty(buildNum)){
+                if (!StringUtils.isNullOrEmpty(buildNum)) {
                     break;
                 }
             }
@@ -477,7 +483,7 @@ public class BeginAnalysis extends Builder {
         return buildNum;
     }
 
-    private String checkCauseRecursivelyForBuildNumber(Cause.UpstreamCause cause, String trigger){
+    private String checkCauseRecursivelyForBuildNumber(Cause.UpstreamCause cause, String trigger) {
         if (trigger.equals(cause.getUpstreamProject())) {
             return String.valueOf(cause.getUpstreamBuild());
         }
@@ -508,15 +514,15 @@ public class BeginAnalysis extends Builder {
         }
         return Paths.get(path1, path2).toAbsolutePath().toString();
     }
-  
 
-    private String getManualBuildName(){
+
+    private String getManualBuildName() {
         BuildName.ManualBuildName manual = (BuildName.ManualBuildName) buildName;
         String insertedBuildName = manual.getInsertedBuildName();
         return insertedBuildName;
     }
-    
-    private String getUpstreamBuildName(AbstractBuild<?, ?> build, Logger logger){
+
+    private String getUpstreamBuildName(AbstractBuild<?, ?> build, Logger logger) {
         BuildName.UpstreamBuildName upstream = (BuildName.UpstreamBuildName) buildName;
         String upstreamProjectName = upstream.getUpstreamProjectName();
         String finalBuildName = getBuildNumberFromUpstreamBuild(build.getCauses(), upstreamProjectName);
@@ -533,12 +539,11 @@ public class BeginAnalysis extends Builder {
         String finalBuildName = null;
         if (BuildNamingStrategy.MANUAL.equals(buildName.getBuildNamingStrategy())) {
             finalBuildName = getManualBuildName();
-        }
-        else if (BuildNamingStrategy.JENKINS_UPSTREAM.equals(buildName.getBuildNamingStrategy())) {
+        } else if (BuildNamingStrategy.JENKINS_UPSTREAM.equals(buildName.getBuildNamingStrategy())) {
             finalBuildName = getUpstreamBuildName(build, logger);
         }
 
-        if (StringUtils.isNullOrEmpty(finalBuildName)){
+        if (StringUtils.isNullOrEmpty(finalBuildName)) {
             return String.valueOf(build.getNumber());
         }
 
@@ -628,7 +633,7 @@ public class BeginAnalysis extends Builder {
         if (!patterns.startsWith("**" + File.separator))
             patterns = "**" + File.separator + patterns;
 
-        for (String folder: folders) {
+        for (String folder : folders) {
             List<String> remotePoms = new FilePath(channel, folder).act(new SearchFileCallable(patterns));
             for (String matchingPom : remotePoms) {
                 logger.debug("Adding pom:" + matchingPom);
@@ -654,7 +659,7 @@ public class BeginAnalysis extends Builder {
                 found = true;
                 logger.debug("There was no need to add a new RestoreBuildFile since there is one. Current one:" + item.toString());
                 logger.debug("Updating RestoreBuildFile.parentPomFile");
-                ((RestoreBuildFile)item).setParentPomFile(this.pomPath);
+                ((RestoreBuildFile) item).setParentPomFile(this.pomPath);
                 //If found, this was added manually. Remove the check box.
                 break;
             }
@@ -677,11 +682,25 @@ public class BeginAnalysis extends Builder {
     }
 
     private void printFields(SeaLightsPluginInfo slInfo, Logger logger) {
-        Method[] methods = slInfo.getClass().getMethods();
         logger.debug("--------------Sealights Jenkins Plugin Configuration--------------");
         logger.debug("Plugin Version:" + getPluginVersion());
 
-        for (Method method : methods){
+        printSLInfo(slInfo, logger);
+
+        logger.debug("Enable Multiple Build Files: " + enableMultipleBuildFiles);
+        logger.debug("Multiple Build Files: " + multipleBuildFiles);
+        logger.debug("Override Jars: " + overrideJars);
+        logger.debug("Pom Path:" + pomPath);
+        logger.debug("Testing Framework: " + testingFramework);
+        logger.debug("Build Naming Strategy (from selection): " + buildName.getBuildNamingStrategy());
+        logger.debug("Auto Restore Build File:" + autoRestoreBuildFile);
+
+        logger.debug("--------------Sealights Jenkins Plugin Configuration--------------");
+    }
+
+    private void printSLInfo(SeaLightsPluginInfo slInfo, Logger logger) {
+        Method[] methods = slInfo.getClass().getMethods();
+        for (Method method : methods) {
             String methodName = method.getName();
             Object value;
             if (!(methodName.startsWith("get") || methodName.startsWith("is")) || methodName.equals("getClass"))
@@ -693,18 +712,6 @@ public class BeginAnalysis extends Builder {
                 logger.error("Error while trying to print method: " + methodName, e);
             }
         }
-
-        logger.debug("Enable Multiple Build Files: " + enableMultipleBuildFiles);
-        logger.debug("Multiple Build Files: " + multipleBuildFiles);
-        logger.debug("Override Jars: " + overrideJars);
-        logger.debug("Pom Path:" + pomPath);
-        logger.debug("Testing Framework: " + testingFramework);
-        logger.debug("Build Naming Strategy (from selection): " + buildName.getBuildNamingStrategy());
-        logger.debug("Auto Restore Build File:" + autoRestoreBuildFile);
-
-        logger.debug("--------------Sealights Jenkins Plugin Configuration--------------");
-
-
     }
 
     private String getPluginVersion() {

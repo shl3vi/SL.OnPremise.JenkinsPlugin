@@ -7,6 +7,8 @@ import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
+import io.sealigths.plugins.sealightsjenkins.utils.CustomFile;
+import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
@@ -47,8 +49,13 @@ public class BeginAnalysisBuildStep extends Builder {
         if (!enableSeaLights)
             return true;
 
+        Logger logger = new Logger(listener.getLogger());
+        CleanupManager cleanupManager = new CleanupManager(logger);
+        CustomFile customFile = new CustomFile(logger, cleanupManager, relativePathToEffectivePom);
+        customFile.copyToSlave();
         beginAnalysis.setRelativePathToEffectivePom(relativePathToEffectivePom);
-        return beginAnalysis.perform(build,launcher,listener);
+
+        return beginAnalysis.perform(build,launcher,listener, cleanupManager, logger);
     }
 
     @Override
