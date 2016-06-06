@@ -16,7 +16,6 @@ import io.sealigths.plugins.sealightsjenkins.integration.JarsHelper;
 import io.sealigths.plugins.sealightsjenkins.integration.SealightsMavenPluginHelper;
 import io.sealigths.plugins.sealightsjenkins.utils.CommandLineHelper;
 import io.sealigths.plugins.sealightsjenkins.utils.CustomFile;
-import io.sealigths.plugins.sealightsjenkins.utils.FileAndFolderUtils;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import jenkins.MasterToSlaveFileCallable;
 import jenkins.model.Jenkins;
@@ -236,8 +235,7 @@ public class MavenSealightsBuildStep extends Builder {
     private boolean beginAnalysisBuildStep(
             AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener,
             Logger logger, CleanupManager cleanupManager) throws IOException, InterruptedException {
-        beginAnalysis.setRelativePathToEffectivePom(pom);
-        beginAnalysis.perform(build, launcher, listener, cleanupManager, logger);
+        beginAnalysis.perform(build, cleanupManager, logger, pom);
 
         if (AUTO_DETECT.equals(beginAnalysis.getTestingFramework())) {
             if (!runInitializeTestListenerGoal(build, launcher, listener, logger)) {
