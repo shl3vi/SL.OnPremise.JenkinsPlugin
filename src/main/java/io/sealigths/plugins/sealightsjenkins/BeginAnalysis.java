@@ -1,9 +1,6 @@
 package io.sealigths.plugins.sealightsjenkins;
 
-import hudson.DescriptorExtensionList;
-import hudson.Extension;
-import hudson.FilePath;
-import hudson.Launcher;
+import hudson.*;
 import hudson.model.*;
 import hudson.remoting.VirtualChannel;
 import hudson.tasks.BuildStepDescriptor;
@@ -35,6 +32,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Created by shahar on 5/9/2016.
@@ -412,6 +411,25 @@ public class BeginAnalysis extends Builder {
 
     }
 
+//    /**
+//     * Same as {@link #getBranch()} but with <em>default</em> values of parameters expanded.
+//     */
+//    private EnvVars expandAllParameters(AbstractProject<?,?> project) {
+//        EnvVars env = new EnvVars();
+//        ParametersDefinitionProperty params = project.getProperty(ParametersDefinitionProperty.class);
+//        if (params != null) {
+//            for (ParameterDefinition param : params.getParameterDefinitions()) {
+//                if (param instanceof StringParameterDefinition) {
+//                    String dflt = ((StringParameterDefinition) param).getDefaultValue();
+//                    if (dflt != null) {
+//                        env.put(param.getName(), dflt);
+//                    }
+//                }
+//            }
+//        }
+//        return  env;
+//    }
+
     private void handleAgents(Logger logger) throws IOException, InterruptedException {
         if (!StringUtils.isNullOrEmpty(buildScannerJar)){
             CustomFile customFile = new CustomFile(logger, this.cleanupManager, buildScannerJar);
@@ -426,6 +444,21 @@ public class BeginAnalysis extends Builder {
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+
+//        AbstractProject<?, ?> project = build.getProject();
+//        EnvVars envVars = expandAllParameters(project);
+//        Logger logger = new Logger(listener.getLogger());
+//        for(Map.Entry<String, String> prop : envVars.entrySet()){
+//            logger.warning("------> '" + prop.getKey() + "' : '" + prop.getValue() + "'.");
+//            logger.warning("       '" + prop.getKey() + "' : '" + Util.replaceMacro(relativePathToEffectivePom, build.getBuildVariables()));
+//        }
+//
+//        if (envVars.containsKey(relativePathToEffectivePom)){
+//            logger.info("envVars.containsKey(relativePathToEffectivePom) is true. Value: " + envVars.get(relativePathToEffectivePom));
+//        }
+//        else{
+//            logger.info("envVars DOESNT containsKey(relativePathToEffectivePom");
+//        }
 
         Logger logger = new Logger(listener.getLogger());
         this.cleanupManager = getOrCreateCleanupManager(logger);
@@ -442,7 +475,7 @@ public class BeginAnalysis extends Builder {
 
         String workingDir = ws.getRemote();
 
-        setParentPomPath(logger, workingDir);
+        setParentPomPath(build, logger, workingDir);
 
         if (this.autoRestoreBuildFile) {
             tryAddRestoreBuildFilePublisher(build, logger);
@@ -459,11 +492,29 @@ public class BeginAnalysis extends Builder {
         return true;
     }
 
+    private String splitAndExpand(AbstractBuild<?, ?> build, String string)
+    {
+        String[] tokens = string.split(Pattern.quote(File.separator.toString()));
+        for(int i=0; i< tokens.length; i++){
+            tokens[i] = Util.replaceMacro(tokens[i], build.getBuildVariables());
+        }
+        string = StringUtils.join(tokens, File.separatorChar);
+
+        return string;
+    }
 
 
-
-
-    private void setParentPomPath(Logger logger, String workingDir) {
+    private void setParentPomPath(AbstractBuild<?, ?> build, Logger logger, String workingDir) {
+//        logger.info("Got relativePathToEffectivePom:" + relativePathToEffectivePom + ", workingDir: " + workingDir);
+//        String[] tokens = relativePathToEffectivePom.split(Pattern.quote(File.separator.toString()));
+//        for(int i=0; i< tokens.length; i++){
+//            logger.info("Token before:" + tokens[i]);
+//            tokens[i] = Util.replaceMacro(tokens[i], build.getBuildVariables());
+//            logger.info("Token After:" + tokens[i]);
+//        }
+//        logger.info("Just for fun!!! :" + Util.replaceMacro("Kuku", build.getBuildVariables()));
+//        relativePathToEffectivePom = StringUtils.join(tokens, File.separatorChar);
+//        logger.info("relativePathToEffectivePom after change :" + relativePathToEffectivePom);
         if (relativePathToEffectivePom != null && !"".equals(relativePathToEffectivePom))
             this.pomPath = this.joinPaths(workingDir, relativePathToEffectivePom);
         else
