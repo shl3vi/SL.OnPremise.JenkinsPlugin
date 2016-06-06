@@ -1,9 +1,20 @@
 package io.sealigths.plugins.sealightsjenkins.utils;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class StringUtils {
 
+    public static String join(String[] strings, char delimiter){
+
+        if (strings == null){
+            return null;
+        }
+
+        List<String> stringsAsList = Arrays.asList(strings);
+        return join(stringsAsList,delimiter);
+    }
     public static String join(List<String> strings, char delimiter){
 
         if (strings == null){
