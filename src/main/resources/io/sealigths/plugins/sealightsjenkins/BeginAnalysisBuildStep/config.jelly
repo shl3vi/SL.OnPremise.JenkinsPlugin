@@ -31,7 +31,7 @@ THE SOFTWARE.
         </f:entry>
 
         <f:entry field="relativePathToEffectivePom" title="Project's build file"
-                 description="Relative path to build file (e.g in maven : 'dir/pom.xml'. default is 'pom.xml')">
+                 description="path to build file (e.g in maven : (relative)'dir/pom.xml', (absolute)'/var/lib/path/to/pom.xml'. default is 'pom.xml')">
             <f:textbox value="${relativePathToEffectivePom}"/>
         </f:entry>
 

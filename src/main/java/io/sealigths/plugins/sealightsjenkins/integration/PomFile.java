@@ -99,11 +99,7 @@ public class PomFile {
                 addPluginToPluginsElement(pluginBodyAsXml, pluginsElement);
             }
 
-        } catch (SAXException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ParserConfigurationException e) {
+        } catch (SAXException | IOException | ParserConfigurationException e) {
             e.printStackTrace();
         }
     }
@@ -380,9 +376,9 @@ public class PomFile {
         return isPluginExistInElement(artifactId, parent, false);
     }
 
-    private boolean isPluginExistInElement(String artifactId, Element parent, boolean allChildren) throws XPathExpressionException {
+    private boolean isPluginExistInElement(String artifactId, Element parent, boolean includeAllDescendants) throws XPathExpressionException {
         String xpath = PLUGIN_TEMPLATE;
-        if (allChildren)
+        if (includeAllDescendants)
             xpath = "//" + xpath;
 
         xpath = xpath.replace("#ARTIFACT_ID#", artifactId);
