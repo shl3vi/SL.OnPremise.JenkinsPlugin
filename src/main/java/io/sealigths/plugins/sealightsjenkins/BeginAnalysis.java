@@ -15,10 +15,7 @@ import io.sealigths.plugins.sealightsjenkins.integration.JarsHelper;
 import io.sealigths.plugins.sealightsjenkins.integration.MavenIntegration;
 import io.sealigths.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
 import io.sealigths.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
-import io.sealigths.plugins.sealightsjenkins.utils.CustomFile;
-import io.sealigths.plugins.sealightsjenkins.utils.Logger;
-import io.sealigths.plugins.sealightsjenkins.utils.SearchFileCallable;
-import io.sealigths.plugins.sealightsjenkins.utils.StringUtils;
+import io.sealigths.plugins.sealightsjenkins.utils.*;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -675,7 +672,7 @@ public class BeginAnalysis extends Builder {
         logger.debug("--------------Sealights Jenkins Plugin Configuration--------------");
         logger.debug("Plugin Version:" + getPluginVersion());
 
-        printSLInfo(slInfo, logger);
+        ReflectionUtils.printGetters(slInfo, logger);
 
         logger.debug("Enable Multiple Build Files: " + enableMultipleBuildFiles);
         logger.debug("Multiple Build Files: " + multipleBuildFiles);
@@ -686,22 +683,6 @@ public class BeginAnalysis extends Builder {
         logger.debug("Auto Restore Build File:" + autoRestoreBuildFile);
 
         logger.debug("--------------Sealights Jenkins Plugin Configuration--------------");
-    }
-
-    private void printSLInfo(SeaLightsPluginInfo slInfo, Logger logger) {
-        Method[] methods = slInfo.getClass().getMethods();
-        for (Method method : methods) {
-            String methodName = method.getName();
-            Object value;
-            if (!(methodName.startsWith("get") || methodName.startsWith("is")) || methodName.equals("getClass"))
-                continue;
-            try {
-                value = method.invoke(slInfo);
-                logger.debug(methodName + " : " + value);
-            } catch (IllegalAccessException | InvocationTargetException e) {
-                logger.error("Error while trying to print method: " + methodName, e);
-            }
-        }
     }
 
     private String getPluginVersion() {
