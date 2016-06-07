@@ -398,7 +398,6 @@ public class BeginAnalysis extends Builder {
     }
 
     private void copyAgentsToSlaveIfNeeded(Logger logger, CleanupManager cleanupManager) throws IOException, InterruptedException {
-
         if (!StringUtils.isNullOrEmpty(buildScannerJar)) {
             CustomFile customFile = new CustomFile(logger, cleanupManager, buildScannerJar);
             customFile.copyToSlave(false);
@@ -409,6 +408,7 @@ public class BeginAnalysis extends Builder {
             customFile.copyToSlave(false);
         }
     }
+
 
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, CleanupManager cleanupManager, Logger logger) throws IOException, InterruptedException {
         setDefaultValues(logger);

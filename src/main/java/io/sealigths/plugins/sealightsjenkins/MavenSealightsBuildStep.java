@@ -189,9 +189,6 @@ public class MavenSealightsBuildStep extends Builder {
         CleanupManager cleanupManager = new CleanupManager(logger);
 
         MavenBuildStepHelper mavenBuildStepHelper = new MavenBuildStepHelper(enableSeaLights, cleanupManager, this.beginAnalysis);
-
-        MavenBuildStepHelper mavenBuildStepHelper = new MavenBuildStepHelper(enableSeaLights, this.cleanupManager, this.beginAnalysis);
-
         try {
             if (enableSeaLights) {
                 mavenBuildStepHelper.installSealightsMavenPlugin(build, launcher, listener, this.pom, this.properties, this);
@@ -294,12 +291,12 @@ public class MavenSealightsBuildStep extends Builder {
                 startIndex = endIndex + 1;
             } while (startIndex < targets.length());
         } finally {
-            mavenBuildStepHelper.tryRestore(build,launcher,listener);
+            mavenBuildStepHelper.tryRestore(build, launcher, listener);
         }
         return true;
     }
-
-        /**
+    
+    /**
      * Allows the derived type to make additional modifications to the arguments list.
      *
      * @param args             a
