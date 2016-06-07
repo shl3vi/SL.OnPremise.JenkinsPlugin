@@ -30,6 +30,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -397,6 +398,7 @@ public class BeginAnalysis extends Builder {
     }
 
     private void copyAgentsToSlaveIfNeeded(Logger logger, CleanupManager cleanupManager) throws IOException, InterruptedException {
+
         if (!StringUtils.isNullOrEmpty(buildScannerJar)) {
             CustomFile customFile = new CustomFile(logger, cleanupManager, buildScannerJar);
             customFile.copyToSlave(false);
@@ -409,7 +411,6 @@ public class BeginAnalysis extends Builder {
     }
 
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, CleanupManager cleanupManager, Logger logger) throws IOException, InterruptedException {
-
         setDefaultValues(logger);
 
         FilePath ws = build.getWorkspace();
@@ -451,8 +452,9 @@ public class BeginAnalysis extends Builder {
             } else {
                 this.pomPath = this.joinPaths(workingDir, relativePathToEffectivePom);
             }
-        } else
+        } else {
             this.pomPath = this.joinPaths(workingDir, "pom.xml");
+        }
 
         logger.info("Absolute path pom file: " + this.pomPath);
     }
