@@ -406,32 +406,37 @@ public class BeginAnalysis extends Builder {
             AbstractBuild<?, ?> build, CleanupManager cleanupManager, Logger logger, String pomPath)
             throws IOException, InterruptedException {
 
-        setDefaultValues(logger);
+        try {
+            setDefaultValues(logger);
 
-        FilePath ws = build.getWorkspace();
-        if (ws == null) {
-            return false;
+            FilePath ws = build.getWorkspace();
+            if (ws == null) {
+                return true;
+            }
+
+            copyAgentsToSlaveIfNeeded(logger, cleanupManager);
+            String tmpApiJar = apiJar;
+            tmpApiJar = handleApiJar(logger, tmpApiJar, cleanupManager);
+
+            String workingDir = ws.getRemote();
+
+            this.pomPath = getParentPomPath(logger, workingDir, pomPath);
+
+            if (this.autoRestoreBuildFile) {
+                tryAddRestoreBuildFilePublisher(build, logger);
+            }
+
+            SeaLightsPluginInfo slInfo = createSeaLightsPluginInfo(build, ws, logger, tmpApiJar);
+
+            printFields(slInfo, logger);
+
+            configureBuildFilePublisher(build, slInfo.getBuildFilesFolders());
+
+            doMavenIntegration(logger, slInfo);
+
+        }catch(Exception e){
+            logger.error("Error occurred while performing Sealights Analysis build step.", e);
         }
-
-        copyAgentsToSlaveIfNeeded(logger, cleanupManager);
-        String tmpApiJar = apiJar;
-        tmpApiJar = handleApiJar(logger, tmpApiJar, cleanupManager);
-
-        String workingDir = ws.getRemote();
-
-        this.pomPath = getParentPomPath(logger, workingDir, pomPath);
-
-        if (this.autoRestoreBuildFile) {
-            tryAddRestoreBuildFilePublisher(build, logger);
-        }
-
-        SeaLightsPluginInfo slInfo = createSeaLightsPluginInfo(build, ws, logger, tmpApiJar);
-
-        printFields(slInfo, logger);
-
-        configureBuildFilePublisher(build, slInfo.getBuildFilesFolders());
-
-        doMavenIntegration(logger, slInfo);
 
         return true;
     }
@@ -445,7 +450,7 @@ public class BeginAnalysis extends Builder {
     }
 
     private String getParentPomPath(Logger logger, String workingDir, String pomPath) {
-        if (!StringUtils.isNullOrEmpty(pomPath )) {
+        if (!StringUtils.isNullOrEmpty(pomPath)) {
             Path pathToPom = Paths.get(pomPath);
             if (!pathToPom.isAbsolute()) {
                 pomPath = this.joinPaths(workingDir, pomPath);

@@ -87,29 +87,32 @@ public class RestoreBuildFile extends Recorder {
 
         Logger logger = new Logger(listener.getLogger());
 
-        if (this.shouldRestore) {
-            logger.info("Searching for files to restore...");
-            FilePath ws = build.getWorkspace();
-            if (ws == null) {
-                logger.error("Failed to retrieve workspace path.");
-                return false;
+        try {
+            if (this.shouldRestore) {
+                logger.info("Searching for files to restore...");
+                FilePath ws = build.getWorkspace();
+                if (ws == null) {
+                    logger.error("Failed to retrieve workspace path.");
+                    return true;
+                }
+
+                List<String> folders = new ArrayList<>(Arrays.asList(this.folders.split("\\s*,\\s*")));
+                folders.add(ws.getRemote());
+
+                for (String folder : folders) {
+                    RestoreAllFilesInFolder(folder, logger);
+                }
+
+                logger.debug("Restoring parent pom: " + this.parentPomFile);
+                if (!StringUtils.isNullOrEmpty(this.parentPomFile))
+                    restoreSingleFile(this.parentPomFile + ".slbak", logger);
+
+            } else {
+                logger.info("No need to restore any files.");
             }
-
-            List<String> folders = new ArrayList<>(Arrays.asList(this.folders.split("\\s*,\\s*")));
-            folders.add(ws.getRemote());
-
-            for (String folder : folders){
-                RestoreAllFilesInFolder(folder, logger);
-            }
-
-            logger.debug("Restoring parent pom: " + this.parentPomFile);
-            if (!StringUtils.isNullOrEmpty(this.parentPomFile))
-                restoreSingleFile(this.parentPomFile + ".slbak", logger);
-
-        } else {
-            logger.info("No need to restore any files.");
+        }catch(Exception e){
+            logger.error("Error occurred while performing Sealights Restore build step.", e);
         }
-
         return true;
     }
 
