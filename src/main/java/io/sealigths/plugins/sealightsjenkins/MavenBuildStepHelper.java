@@ -67,8 +67,7 @@ public class MavenBuildStepHelper {
         if (!isSealightsEnabled)
             return true;
 
-        beginAnalysis.setRelativePathToEffectivePom(pom);
-        beginAnalysis.perform(build, launcher, listener);
+        beginAnalysis.perform(build, cleanupManager, logger, pom);
         if (AUTO_DETECT.equals(beginAnalysis.getTestingFramework())) {
             if (!runInitializeTestListenerGoal(build, launcher, listener, logger, pom, targets, properties, mavenBuildStep)) {
                 return false;
