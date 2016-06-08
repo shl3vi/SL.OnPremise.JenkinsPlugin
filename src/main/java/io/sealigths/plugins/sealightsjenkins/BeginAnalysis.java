@@ -1,9 +1,6 @@
 package io.sealigths.plugins.sealightsjenkins;
 
-import hudson.DescriptorExtensionList;
-import hudson.Extension;
-import hudson.FilePath;
-import hudson.Launcher;
+import hudson.*;
 import hudson.model.*;
 import hudson.remoting.VirtualChannel;
 import hudson.tasks.BuildStepDescriptor;
@@ -15,10 +12,7 @@ import io.sealigths.plugins.sealightsjenkins.integration.JarsHelper;
 import io.sealigths.plugins.sealightsjenkins.integration.MavenIntegration;
 import io.sealigths.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
 import io.sealigths.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
-import io.sealigths.plugins.sealightsjenkins.utils.CustomFile;
-import io.sealigths.plugins.sealightsjenkins.utils.Logger;
-import io.sealigths.plugins.sealightsjenkins.utils.SearchFileCallable;
-import io.sealigths.plugins.sealightsjenkins.utils.StringUtils;
+import io.sealigths.plugins.sealightsjenkins.utils.*;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -36,6 +30,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Created by shahar on 5/9/2016.
@@ -413,11 +409,8 @@ public class BeginAnalysis extends Builder {
         }
     }
 
-    public boolean perform(
-            AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener,
-            CleanupManager cleanupManager, Logger logger)
-            throws IOException, InterruptedException {
 
+    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, CleanupManager cleanupManager, Logger logger) throws IOException, InterruptedException {
         setDefaultValues(logger);
 
         FilePath ws = build.getWorkspace();
@@ -431,7 +424,7 @@ public class BeginAnalysis extends Builder {
 
         String workingDir = ws.getRemote();
 
-        setParentPomPath(logger, workingDir);
+        setParentPomPath(build, logger, workingDir);
 
         if (this.autoRestoreBuildFile) {
             tryAddRestoreBuildFilePublisher(build, logger);
@@ -448,15 +441,10 @@ public class BeginAnalysis extends Builder {
         return true;
     }
 
-    @Override
-    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener
-    ) throws IOException, InterruptedException {
-        Logger logger = new Logger(listener.getLogger());
-        CleanupManager cleanupManager = new CleanupManager(logger);
-        return perform(build, launcher, listener, cleanupManager, logger);
-    }
 
-    private void setParentPomPath(Logger logger, String workingDir) {
+    private void setParentPomPath(AbstractBuild<?, ?> build, Logger logger, String workingDir){
+        JenkinsUtils jenkinsUtils = new JenkinsUtils();
+        relativePathToEffectivePom = jenkinsUtils.expandPathVariable(build, relativePathToEffectivePom);
         if (relativePathToEffectivePom != null && !"".equals(relativePathToEffectivePom)) {
             Path pathToPom = Paths.get(relativePathToEffectivePom);
             if (pathToPom.isAbsolute()) {
@@ -464,8 +452,9 @@ public class BeginAnalysis extends Builder {
             } else {
                 this.pomPath = this.joinPaths(workingDir, relativePathToEffectivePom);
             }
-        } else
+        } else {
             this.pomPath = this.joinPaths(workingDir, "pom.xml");
+        }
 
         logger.info("Absolute path pom file: " + this.pomPath);
     }
