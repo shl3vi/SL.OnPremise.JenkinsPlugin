@@ -181,7 +181,6 @@ public class MavenSealightsBuildStep extends Builder {
         return null;
     }
 
-
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 

@@ -45,15 +45,14 @@ public class BeginAnalysis extends Builder {
     private boolean enableMultipleBuildFiles;
     private boolean overrideJars;
     private boolean multipleBuildFiles;
-    private String pomPath;
     private String environment;
     private String packagesIncluded;
     private String packagesExcluded;
     private String filesIncluded;
     private String filesExcluded;
     private String classLoadersExcluded;
-    private String relativePathToEffectivePom;
     private boolean recursive;
+    private String pomPath;
     private String workspacepath;
     private String buildScannerJar;
     private String testListenerJar;
@@ -165,10 +164,17 @@ public class BeginAnalysis extends Builder {
         setDefaultValuesForStrings(logger);
     }
 
+    @Exported
+    public String getPomPath() {
+        return pomPath;
+    }
+
+    @Exported
     public ExecutionType getExecutionType() {
         return executionType;
     }
 
+    @Exported
     public void setExecutionType(ExecutionType executionType) {
         this.executionType = executionType;
     }
@@ -214,11 +220,6 @@ public class BeginAnalysis extends Builder {
     }
 
     @Exported
-    public String getPomPath() {
-        return pomPath;
-    }
-
-    @Exported
     public String getEnvironment() {
         return environment;
     }
@@ -246,15 +247,6 @@ public class BeginAnalysis extends Builder {
     @Exported
     public String getClassLoadersExcluded() {
         return classLoadersExcluded;
-    }
-
-    @Exported
-    public String getRelativePathToEffectivePom() {
-        return relativePathToEffectivePom;
-    }
-
-    public void setRelativePathToEffectivePom(String relativePathToEffectivePom) {
-        this.relativePathToEffectivePom = relativePathToEffectivePom;
     }
 
     @Exported
@@ -409,54 +401,71 @@ public class BeginAnalysis extends Builder {
         }
     }
 
+    public boolean perform(
+            AbstractBuild<?, ?> build, CleanupManager cleanupManager, Logger logger, String pomPath)
+            throws IOException, InterruptedException {
 
-    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, CleanupManager cleanupManager, Logger logger) throws IOException, InterruptedException {
-        setDefaultValues(logger);
+        try {
+            setDefaultValues(logger);
 
-        FilePath ws = build.getWorkspace();
-        if (ws == null) {
-            return false;
+            FilePath ws = build.getWorkspace();
+            if (ws == null) {
+                return true;
+            }
+
+            copyAgentsToSlaveIfNeeded(logger, cleanupManager);
+            String tmpApiJar = apiJar;
+            tmpApiJar = handleApiJar(logger, tmpApiJar, cleanupManager);
+
+            String workingDir = ws.getRemote();
+
+            this.pomPath = getParentPomPath(build, logger, workingDir, pomPath);
+
+            if (this.autoRestoreBuildFile) {
+                tryAddRestoreBuildFilePublisher(build, logger);
+            }
+
+            SeaLightsPluginInfo slInfo = createSeaLightsPluginInfo(build, ws, logger, tmpApiJar);
+
+            printFields(slInfo, logger);
+
+            configureBuildFilePublisher(build, slInfo.getBuildFilesFolders());
+
+            doMavenIntegration(logger, slInfo);
+
+        } catch (Exception e) {
+            logger.error("Error occurred while performing Sealights Analysis build step.", e);
         }
-
-        copyAgentsToSlaveIfNeeded(logger, cleanupManager);
-        String tmpApiJar = apiJar;
-        tmpApiJar = handleApiJar(logger, tmpApiJar, cleanupManager);
-
-        String workingDir = ws.getRemote();
-
-        setParentPomPath(build, logger, workingDir);
-
-        if (this.autoRestoreBuildFile) {
-            tryAddRestoreBuildFilePublisher(build, logger);
-        }
-
-        SeaLightsPluginInfo slInfo = createSeaLightsPluginInfo(build, ws, logger, tmpApiJar);
-
-        printFields(slInfo, logger);
-
-        configureBuildFilePublisher(build, slInfo.getBuildFilesFolders());
-
-        doMavenIntegration(ws, logger, slInfo);
 
         return true;
     }
 
+    @Override
+    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener
+    ) throws IOException, InterruptedException {
+        String DEFAULT_POM_PATH = "";
+        Logger logger = new Logger(listener.getLogger());
+        CleanupManager cleanupManager = new CleanupManager(logger);
+        return perform(build, cleanupManager, logger, DEFAULT_POM_PATH);
+    }
 
-    private void setParentPomPath(AbstractBuild<?, ?> build, Logger logger, String workingDir){
-        JenkinsUtils jenkinsUtils = new JenkinsUtils();
-        relativePathToEffectivePom = jenkinsUtils.expandPathVariable(build, relativePathToEffectivePom);
-        if (relativePathToEffectivePom != null && !"".equals(relativePathToEffectivePom)) {
-            Path pathToPom = Paths.get(relativePathToEffectivePom);
-            if (pathToPom.isAbsolute()) {
-                this.pomPath = relativePathToEffectivePom;
-            } else {
-                this.pomPath = this.joinPaths(workingDir, relativePathToEffectivePom);
+    //TODO: add unit-tests for this method
+    private String getParentPomPath(AbstractBuild<?, ?> build, Logger logger, String workingDir, String pomPath) {
+
+        if (!StringUtils.isNullOrEmpty(pomPath)) {
+            JenkinsUtils jenkinsUtils = new JenkinsUtils();
+            pomPath = jenkinsUtils.expandPathVariable(build, pomPath);
+            Path pathToPom = Paths.get(pomPath);
+            if (!pathToPom.isAbsolute()) {
+                pomPath = this.joinPaths(workingDir, pomPath);
             }
         } else {
-            this.pomPath = this.joinPaths(workingDir, "pom.xml");
+            pomPath = this.joinPaths(workingDir, "pom.xml");
+
         }
 
-        logger.info("Absolute path pom file: " + this.pomPath);
+        logger.info("Absolute path to pom file: " + pomPath);
+        return pomPath;
     }
 
     private String getBuildNumberFromUpstreamBuild(List<Cause> causes, String trigger) {
@@ -480,11 +489,10 @@ public class BeginAnalysis extends Builder {
         return getBuildNumberFromUpstreamBuild(cause.getUpstreamCauses(), trigger);
     }
 
-    private void doMavenIntegration(FilePath ws, Logger logger, SeaLightsPluginInfo slInfo) throws IOException, InterruptedException {
-
+    private void doMavenIntegration(Logger logger, SeaLightsPluginInfo slInfo) throws IOException, InterruptedException {
 
         List<String> folders = Arrays.asList(slInfo.getBuildFilesFolders().split("\\s*,\\s*"));
-        List<FileBackupInfo> pomFiles = getPomFiles(folders, slInfo.getBuildFilesPatterns(), logger);
+        List<FileBackupInfo> pomFiles = getPomFiles(folders, slInfo.getBuildFilesPatterns(), logger, pomPath);
 
         MavenIntegrationInfo info = new MavenIntegrationInfo(
                 pomFiles,
@@ -615,7 +623,7 @@ public class BeginAnalysis extends Builder {
 
     }
 
-    private List<FileBackupInfo> getPomFiles(List<String> folders, String patterns, Logger logger) throws IOException, InterruptedException {
+    private List<FileBackupInfo> getPomFiles(List<String> folders, String patterns, Logger logger, String pomPath) throws IOException, InterruptedException {
         List<FileBackupInfo> pomFiles = new ArrayList<>();
         boolean isParentPomInList = false;
         VirtualChannel channel = Computer.currentComputer().getChannel();
@@ -626,7 +634,7 @@ public class BeginAnalysis extends Builder {
             List<String> remotePoms = new FilePath(channel, folder).act(new SearchFileCallable(patterns));
             for (String matchingPom : remotePoms) {
                 logger.debug("Adding pom:" + matchingPom);
-                if (matchingPom.equalsIgnoreCase(this.pomPath))
+                if (matchingPom.equalsIgnoreCase(pomPath))
                     isParentPomInList = true;
                 pomFiles.add(new FileBackupInfo(matchingPom, null));
             }
@@ -634,7 +642,7 @@ public class BeginAnalysis extends Builder {
 
 
         if (!isParentPomInList) {
-            pomFiles.add(new FileBackupInfo(this.pomPath, null));
+            pomFiles.add(new FileBackupInfo(pomPath, null));
         }
 
         return pomFiles;
@@ -648,14 +656,14 @@ public class BeginAnalysis extends Builder {
                 found = true;
                 logger.debug("There was no need to add a new RestoreBuildFile since there is one. Current one:" + item.toString());
                 logger.debug("Updating RestoreBuildFile.parentPomFile");
-                ((RestoreBuildFile) item).setParentPomFile(this.pomPath);
+                ((RestoreBuildFile) item).setParentPomFile(pomPath);
                 //If found, this was added manually. Remove the check box.
                 break;
             }
         }
 
         if (!found) {
-            RestoreBuildFile restoreBuildFile = new RestoreBuildFile(true, buildFilesFolders, this.pomPath);
+            RestoreBuildFile restoreBuildFile = new RestoreBuildFile(true, buildFilesFolders, pomPath);
             publishersList.add(restoreBuildFile);
         }
     }
@@ -688,12 +696,10 @@ public class BeginAnalysis extends Builder {
     }
 
     private void printSLInfo(SeaLightsPluginInfo slInfo, Logger logger) {
-        Method[] methods = slInfo.getClass().getMethods();
-        for (Method method : methods) {
+        List<Method> getters = ReflectionUtils.getGettersMethods(slInfo);
+        for (Method method : getters) {
             String methodName = method.getName();
             Object value;
-            if (!(methodName.startsWith("get") || methodName.startsWith("is")) || methodName.equals("getClass"))
-                continue;
             try {
                 value = method.invoke(slInfo);
                 logger.debug(methodName + " : " + value);

@@ -10,8 +10,6 @@ import hudson.tasks.Builder;
 import io.sealigths.plugins.sealightsjenkins.utils.CustomFile;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.export.Exported;
-import org.kohsuke.stapler.export.ExportedBean;
 
 import java.io.IOException;
 
@@ -22,16 +20,15 @@ public class BeginAnalysisBuildStep extends Builder {
 
     public final boolean enableSeaLights;
     public final BeginAnalysis beginAnalysis;
-    public final String relativePathToEffectivePom;
-
+    public final String pomPath;
 
     @DataBoundConstructor
-    public BeginAnalysisBuildStep(boolean enableSeaLights, BeginAnalysis beginAnalysis, String relativePathToEffectivePom)
+    public BeginAnalysisBuildStep(boolean enableSeaLights, BeginAnalysis beginAnalysis, String pomPath)
             throws IOException {
 
         this.enableSeaLights = enableSeaLights;
-        this.relativePathToEffectivePom = relativePathToEffectivePom;
         this.beginAnalysis = beginAnalysis;
+        this.pomPath = pomPath;
     }
 
     public boolean isEnableSeaLights() {
@@ -42,6 +39,9 @@ public class BeginAnalysisBuildStep extends Builder {
         return beginAnalysis;
     }
 
+    public String getPomPath() {
+        return pomPath;
+    }
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
@@ -51,11 +51,10 @@ public class BeginAnalysisBuildStep extends Builder {
 
         Logger logger = new Logger(listener.getLogger());
         CleanupManager cleanupManager = new CleanupManager(logger);
-        CustomFile customFile = new CustomFile(logger, cleanupManager, relativePathToEffectivePom);
+        CustomFile customFile = new CustomFile(logger, cleanupManager, pomPath);
         customFile.copyToSlave();
-        beginAnalysis.setRelativePathToEffectivePom(relativePathToEffectivePom);
 
-        return beginAnalysis.perform(build,launcher,listener, cleanupManager, logger);
+        return beginAnalysis.perform(build, cleanupManager, logger, pomPath);
     }
 
     @Override
