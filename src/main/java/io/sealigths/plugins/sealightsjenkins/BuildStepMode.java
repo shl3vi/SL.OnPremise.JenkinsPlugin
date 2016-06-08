@@ -35,16 +35,16 @@ public class BuildStepMode implements Describable<BuildStepMode>, ExtensionPoint
 
     public static class BuildStepModeDescriptor extends Descriptor<BuildStepMode> {
 
-        private String buildNameSelection;
+        private String selectedMode;
 
-        protected BuildStepModeDescriptor(final Class<? extends BuildStepMode> clazz, final String buildNameSelection) {
+        protected BuildStepModeDescriptor(final Class<? extends BuildStepMode> clazz, final String selectedMode) {
             super(clazz);
-            this.buildNameSelection = buildNameSelection;
+            this.selectedMode = selectedMode;
         }
 
         @Override
         public String getDisplayName() {
-            return buildNameSelection;
+            return selectedMode;
         }
 
         public DescriptorExtensionList<BuildStepMode, BuildStepModeDescriptor> getRepositoryLocationDescriptors() {

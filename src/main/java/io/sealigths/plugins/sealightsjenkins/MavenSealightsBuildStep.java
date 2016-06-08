@@ -14,6 +14,7 @@ import hudson.util.ArgumentListBuilder;
 import hudson.util.NullStream;
 import hudson.util.StreamTaskListener;
 import hudson.util.VariableResolver;
+import io.sealigths.plugins.sealightsjenkins.enums.BuildStepModes;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import jenkins.model.Jenkins;
 import jenkins.mvn.GlobalMavenConfig;
@@ -41,12 +42,13 @@ import java.util.regex.Pattern;
 public class MavenSealightsBuildStep extends Builder {
 
     public final BeginAnalysis beginAnalysis;
-    public final boolean enableSeaLights;
+    public BuildStepMode buildStepMode;
+
     /**
      * The targets and other maven options.
      * Can be separated by SP or NL.
      */
-    public final String targets;
+    public String targets;
 
     /**
      * Identifies {@link MavenInstallation} to be used.
@@ -104,14 +106,13 @@ public class MavenSealightsBuildStep extends Builder {
     private static final Pattern GS_PATTERN = Pattern.compile("(^| )-gs ");
 
     @DataBoundConstructor
-    public MavenSealightsBuildStep(BeginAnalysis beginAnalysis, boolean enableSeaLights,
-                                   String targets, String name, String pom, String properties,
+    public MavenSealightsBuildStep(BeginAnalysis beginAnalysis, BuildStepMode buildStepMode,
+                                   String name, String pom, String properties,
                                    String jvmOptions, boolean usePrivateRepository,
                                    SettingsProvider settings, GlobalSettingsProvider globalSettings) {
         this.beginAnalysis = beginAnalysis;
-        this.enableSeaLights = enableSeaLights;
+        this.buildStepMode = buildStepMode;
 
-        this.targets = targets;
         this.mavenName = name;
         this.pom = Util.fixEmptyAndTrim(pom);
         this.properties = Util.fixEmptyAndTrim(properties);
@@ -125,12 +126,12 @@ public class MavenSealightsBuildStep extends Builder {
         return beginAnalysis;
     }
 
-    public boolean isEnableSeaLights() {
-        return enableSeaLights;
+    public BuildStepMode getBuildStepMode() {
+        return buildStepMode;
     }
 
     public String getTargets() {
-        return targets;
+            return targets;
     }
 
     /**
@@ -181,13 +182,14 @@ public class MavenSealightsBuildStep extends Builder {
         return null;
     }
 
-
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 
         Logger logger = new Logger(listener.getLogger());
         CleanupManager cleanupManager = new CleanupManager(logger);
+        this.targets = getTargets(this.buildStepMode);
 
+        boolean enableSeaLights = !this.buildStepMode.equals(BuildStepModes.Off);
         MavenBuildStepHelper mavenBuildStepHelper = new MavenBuildStepHelper(enableSeaLights, cleanupManager, this.beginAnalysis);
         try {
             if (enableSeaLights) {
@@ -295,7 +297,19 @@ public class MavenSealightsBuildStep extends Builder {
         }
         return true;
     }
-    
+
+    private String getTargets(BuildStepMode buildStepMode) {
+        String t = null;
+        if (BuildStepModes.InvokeMavenCommand.equals(buildStepMode.getCurrentMode())) {
+            BuildStepMode.InvokeMavenCommandView mavenMode = (BuildStepMode.InvokeMavenCommandView) buildStepMode;
+            t = mavenMode.getTargets();
+        } else if (BuildStepModes.Off.equals(buildStepMode.getCurrentMode())) {
+            BuildStepMode.OffView offMode = (BuildStepMode.OffView) buildStepMode;
+            t = offMode.getTargets();
+        }
+        return  t;
+    }
+
     /**
      * Allows the derived type to make additional modifications to the arguments list.
      *
@@ -449,6 +463,10 @@ public class MavenSealightsBuildStep extends Builder {
         @Override
         public Builder newInstance(StaplerRequest req, JSONObject formData) throws FormException {
             return req.bindJSON(MavenSealightsBuildStep.class, formData);
+        }
+
+        public DescriptorExtensionList<BuildStepMode, BuildStepMode.BuildStepModeDescriptor> getBuildStepModeDescriptorList() {
+            return Jenkins.getInstance().getDescriptorList(BuildStepMode.class);
         }
     }
 

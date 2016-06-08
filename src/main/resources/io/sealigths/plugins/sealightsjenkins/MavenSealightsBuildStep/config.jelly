@@ -23,44 +23,58 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  <j:if test="${!empty(descriptor.installations)}">
-    <f:entry title="${%Maven Version}">
-      <select class="setting-input" name="maven.name">
-        <option value="(Default)">(${%Default})</option>
-        <j:forEach var="inst" items="${descriptor.installations}">
-          <f:option selected="${inst.name==instance.maven.name}" value="${inst.name}">${inst.name}</f:option>
-        </j:forEach>
-      </select>
-    </f:entry>
-  </j:if>
-  <f:entry title="${%Goals}">
-    <f:expandableTextbox field="targets" />
-  </f:entry>
-  <f:entry field="enableSeaLights" title="Enable SeaLights">
-    <f:checkbox checked="${it.enableSeaLights}" />
-  </f:entry>
-  <f:advanced>
-    <f:entry title="${%POM}" help="/plugin/maven-plugin/root-pom.html">
-      <f:textbox field="pom"/>
-    </f:entry>
-    <f:entry field="properties" title="${%Properties}">
-      <f:textarea/>
-    </f:entry>
-    <f:entry title="${%JVM Options}" help="/plugin/maven-plugin/maven-opts.html">
-      <f:expandableTextbox field="jvmOptions"/>
-    </f:entry>
-    <f:entry field="usePrivateRepository" title="${%Use private Maven repository}" help="/plugin/maven-plugin/private-repository.html">
-      <f:checkbox checked="${it.usesPrivateRepository()}" />
-    </f:entry>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
+         xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 
-    <f:dropdownDescriptorSelector title="${%Settings file}"  field="settings" default="${descriptor.defaultSettingsProvider}"/>
-    <f:dropdownDescriptorSelector title="${%Global Settings file}" field="globalSettings"  default="${descriptor.defaultGlobalSettingsProvider}"/>
-  </f:advanced>
-  <f:advanced title="SeaLights">
-    <f:entry>
-      <f:property field="beginAnalysis"/>
-    </f:entry>
-  </f:advanced>
+    <j:if test="${!empty(descriptor.installations)}">
+        <f:entry title="${%Maven Version}">
+            <select class="setting-input" name="maven.name">
+                <option value="(Default)">(${%Default})</option>
+                <j:forEach var="inst" items="${descriptor.installations}">
+                    <f:option selected="${inst.name==instance.maven.name}" value="${inst.name}">${inst.name}</f:option>
+                </j:forEach>
+            </select>
+        </f:entry>
+    </j:if>
+
+
+    <f:dropdownList name="buildStepMode" title="Build Step Mode">
+        <j:forEach var="currentDescriptor" items="${descriptor.buildStepModeDescriptorList}" varStatus="loop">
+            <f:dropdownListBlock title="${currentDescriptor.displayName}" value="${loop.index}"
+                                 selected="${currentDescriptor == instance.buildStepMode.descriptor}"
+                                 staplerClass="${currentDescriptor.clazz.name}">
+                <j:set var="instance" value="${instance.buildStepMode}"/>
+                <j:set var="descriptor" value="${instance.descriptor}"/>
+                <st:include page="${currentDescriptor.configPage}" from="${currentDescriptor}"/>
+            </f:dropdownListBlock>
+        </j:forEach>
+    </f:dropdownList>
+
+
+    <f:advanced>
+        <f:entry title="${%POM}" help="/plugin/maven-plugin/root-pom.html">
+            <f:textbox field="pom"/>
+        </f:entry>
+        <f:entry field="properties" title="${%Properties}">
+            <f:textarea/>
+        </f:entry>
+        <f:entry title="${%JVM Options}" help="/plugin/maven-plugin/maven-opts.html">
+            <f:expandableTextbox field="jvmOptions"/>
+        </f:entry>
+        <f:entry field="usePrivateRepository" title="${%Use private Maven repository}"
+                 help="/plugin/maven-plugin/private-repository.html">
+            <f:checkbox checked="${it.usesPrivateRepository()}"/>
+        </f:entry>
+
+        <f:dropdownDescriptorSelector title="${%Settings file}" field="settings"
+                                      default="${descriptor.defaultSettingsProvider}"/>
+        <f:dropdownDescriptorSelector title="${%Global Settings file}" field="globalSettings"
+                                      default="${descriptor.defaultGlobalSettingsProvider}"/>
+    </f:advanced>
+    <f:advanced title="SeaLights">
+        <f:entry>
+            <f:property field="beginAnalysis"/>
+        </f:entry>
+    </f:advanced>
 
 </j:jelly>

@@ -8,7 +8,6 @@ import hudson.model.Descriptor;
 import hudson.model.Hudson;
 import hudson.util.FormValidation;
 import io.sealigths.plugins.sealightsjenkins.utils.StringUtils;
-import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.export.Exported;
@@ -33,7 +32,7 @@ public class BuildName implements Describable<BuildName>, ExtensionPoint, Serial
 
     @Override
     public Descriptor<BuildName> getDescriptor() {
-        return Jenkins.getInstance().getDescriptorOrDie(getClass());
+        return Hudson.getInstance().getDescriptorOrDie(getClass());
     }
 
     public static class BuildNameDescriptor extends Descriptor<BuildName> {

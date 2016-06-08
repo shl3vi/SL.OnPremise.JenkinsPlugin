@@ -90,7 +90,7 @@ public class MavenBuildStepHelper {
         return mavenInstallation;
     }
 
-    public boolean runInitializeTestListenerGoal(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Logger logger, String pom, String targets, String properties, MavenSealightsBuildStep mavenBuildStep) throws IOException, InterruptedException {
+    private boolean runInitializeTestListenerGoal(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Logger logger, String pom, String targets, String properties, MavenSealightsBuildStep mavenBuildStep) throws IOException, InterruptedException {
 
         String normalizedTarget = targets.replaceAll("[\t\r\n]+", " ");
         normalizedTarget = getSystemPropertiesArgs(normalizedTarget) + " sealights:initialize-test-listener -e";
