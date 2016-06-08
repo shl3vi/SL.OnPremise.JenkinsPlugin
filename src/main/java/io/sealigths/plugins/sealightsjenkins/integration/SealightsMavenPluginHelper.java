@@ -14,11 +14,14 @@ import static io.sealigths.plugins.sealightsjenkins.utils.StringUtils.isNullOrEm
  * Created by Nadav on 6/2/2016.
  */
 public class SealightsMavenPluginHelper {
-    private final String SL_MVN_VERSION = "1.0.0";
+    public static final String SL_MVN_JAR_NAME = "sl-maven-plugin";
+    private static final String SL_MVN_GROUP_ID = "io.sealights.on-premise.agents.plugin";
+    private static final String SL_MVN_ARTIFACT_ID = "sealights-maven-plugin";
+    private static final String SL_MVN_VERSION = "1.0.0";
+
     private Logger logger;
 
-    public SealightsMavenPluginHelper(Logger logger)
-    {
+    public SealightsMavenPluginHelper(Logger logger) {
         this.logger = logger;
     }
 
@@ -38,12 +41,29 @@ public class SealightsMavenPluginHelper {
 
     }
 
+
+    public String getPluginInstallationCommand(String mavenPluginFilePath) throws FileNotFoundException {
+        StringBuilder command = new StringBuilder();
+        command.append("install:install-file -Dfile=");
+        command.append(mavenPluginFilePath);
+        command.append(" -DgroupId=");
+        command.append(SL_MVN_GROUP_ID);
+        command.append(" -DartifactId=");
+        command.append(SL_MVN_ARTIFACT_ID);
+        command.append(" -Dversion=");
+        command.append(getPluginVersion());
+        command.append(" -Dpackaging=jar");
+
+        return command.toString();
+    }
+
+
     public String toPluginText(SeaLightsPluginInfo pluginInfo, TestingFramework testingFramework) {
 
         StringBuilder plugin = new StringBuilder();
         plugin.append("<groupId>io.sealights.on-premise.agents.plugin</groupId>");
         plugin.append("<artifactId>sealights-maven-plugin</artifactId>");
-        plugin.append("<version>" + getPluginVersion()+"</version>");
+        plugin.append("<version>" + getPluginVersion() + "</version>");
         plugin.append("<configuration>");
 
         if (!pluginInfo.isEnabled()) {

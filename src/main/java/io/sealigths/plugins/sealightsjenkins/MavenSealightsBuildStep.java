@@ -2,22 +2,19 @@ package io.sealigths.plugins.sealightsjenkins;
 
 import hudson.*;
 import hudson.model.*;
-import hudson.remoting.VirtualChannel;
-import hudson.slaves.NodeProperty;
-import hudson.slaves.NodePropertyDescriptor;
 import hudson.slaves.NodeSpecific;
-import hudson.slaves.SlaveComputer;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.tasks._maven.MavenConsoleAnnotator;
-import hudson.tools.*;
-import hudson.util.*;
-import io.sealigths.plugins.sealightsjenkins.integration.JarsHelper;
-import io.sealigths.plugins.sealightsjenkins.integration.SealightsMavenPluginHelper;
-import io.sealigths.plugins.sealightsjenkins.utils.CommandLineHelper;
-import io.sealigths.plugins.sealightsjenkins.utils.CustomFile;
+import hudson.tools.DownloadFromUrlInstaller;
+import hudson.tools.ToolDescriptor;
+import hudson.tools.ToolInstallation;
+import hudson.tools.ToolProperty;
+import hudson.util.ArgumentListBuilder;
+import hudson.util.NullStream;
+import hudson.util.StreamTaskListener;
+import hudson.util.VariableResolver;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
-import jenkins.MasterToSlaveFileCallable;
 import jenkins.model.Jenkins;
 import jenkins.mvn.GlobalMavenConfig;
 import jenkins.mvn.GlobalSettingsProvider;
@@ -29,24 +26,19 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.regex.Pattern;
 
-import static io.sealigths.plugins.sealightsjenkins.TestingFramework.AUTO_DETECT;
-
 /**
  * Created by shahar on 5/3/2016.
  */
 public class MavenSealightsBuildStep extends Builder {
-
 
     public final BeginAnalysis beginAnalysis;
     public final boolean enableSeaLights;
@@ -190,97 +182,18 @@ public class MavenSealightsBuildStep extends Builder {
     }
 
 
-    /**
-     * Looks for <tt>pom.xlm</tt> or <tt>project.xml</tt> to determine the maven executable
-     * name.
-     */
-    private static final class DecideDefaultMavenCommand extends MasterToSlaveFileCallable<String> {
-        private static final long serialVersionUID = -2327576423452215146L;
-        // command line arguments.
-        private final String arguments;
-
-        public DecideDefaultMavenCommand(String arguments) {
-            this.arguments = arguments;
-        }
-
-        public String invoke(File ws, VirtualChannel channel) throws IOException {
-            String seed = null;
-
-            // check for the -f option
-            StringTokenizer tokens = new StringTokenizer(arguments);
-            while (tokens.hasMoreTokens()) {
-                String t = tokens.nextToken();
-                if (t.equals("-f") && tokens.hasMoreTokens()) {
-                    File file = new File(ws, tokens.nextToken());
-                    if (!file.exists())
-                        continue;   // looks like an error, but let the execution fail later
-                    seed = file.isDirectory() ?
-                        /* in M1, you specify a directory in -f */ "maven"
-                        /* in M2, you specify a POM file name.  */ : "mvn";
-                    break;
-                }
-            }
-
-            if (seed == null) {
-                // as of 1.212 (2008 April), I think Maven2 mostly replaced Maven1, so
-                // switching to err on M2 side.
-                seed = new File(ws, "project.xml").exists() ? "maven" : "mvn";
-            }
-
-            return seed;
-        }
-    }
-
-
-    private boolean beginAnalysisBuildStep(
-            AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener,
-            Logger logger, CleanupManager cleanupManager) throws IOException, InterruptedException {
         beginAnalysis.perform(build, cleanupManager, logger, pom);
-
-        if (AUTO_DETECT.equals(beginAnalysis.getTestingFramework())) {
-            if (!runInitializeTestListenerGoal(build, launcher, listener, logger)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private ToolLocationNodeProperty.ToolLocation getMavenNodeToolsForCurrentComputer(Logger logger, String mavenName) {
-        List<Node> nodes = Jenkins.getInstance().getNodes();
-        for (Node node : nodes) {
-            String nodeName = node.getNodeName();
-            String computerName = Computer.currentComputer().getName();
-            logger.info("Current node:" + nodeName + ", Computer name:" + computerName);
-
-            if (!nodeName.equalsIgnoreCase(computerName))
-                continue;
-
-            DescribableList<NodeProperty<?>, NodePropertyDescriptor> nodeProperties = node.getNodeProperties();
-            for (NodeProperty prop : nodeProperties) {
-                if (!(prop instanceof ToolLocationNodeProperty))
-                    continue;
-
-                ToolLocationNodeProperty toolsLocation = (ToolLocationNodeProperty) prop;
-                for (ToolLocationNodeProperty.ToolLocation location : toolsLocation.getLocations()) {
-                    if (location.getName().equalsIgnoreCase(mavenName) && location.getType() instanceof hudson.tasks.Maven.MavenInstallation.DescriptorImpl)
-                        return location;
-                }
-            }
-        }
-        return null;
-    }
-
-
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 
         Logger logger = new Logger(listener.getLogger());
         CleanupManager cleanupManager = new CleanupManager(logger);
 
+        MavenBuildStepHelper mavenBuildStepHelper = new MavenBuildStepHelper(enableSeaLights, cleanupManager, this.beginAnalysis);
         try {
             if (enableSeaLights) {
-                installSealightsMavenPlugin(build, launcher, listener, cleanupManager);
-                if (!beginAnalysisBuildStep(build, launcher, listener, logger, cleanupManager)) {
+                mavenBuildStepHelper.installSealightsMavenPlugin(build, launcher, listener, this.pom, this.properties, this);
+                if (!mavenBuildStepHelper.beginAnalysisBuildStep(build, launcher, listener, logger, this.pom, this.targets, this.properties, this)) {
                     logger.error("Begin Analysis step returned false. This likely due to an Exit Code > 0 from Maven.");
                     return false;
                 }
@@ -316,7 +229,7 @@ public class MavenSealightsBuildStep extends Builder {
 
                 } else {
                     mi = mi.forNode(Computer.currentComputer().getNode(), listener);
-                    mi = overrideMavenHomeIfNeed(mi, logger);
+                    mi = mavenBuildStepHelper.overrideMavenHomeIfNeed(mi, logger);
                     mi = mi.forEnvironment(env);
                     String exec = mi.getExecutable(launcher);
                     if (exec == null) {
@@ -334,12 +247,7 @@ public class MavenSealightsBuildStep extends Builder {
                     String settingsPath = SettingsProvider.getSettingsRemotePath(getSettings(), build, listener);
 
                     if (StringUtils.isNotBlank(settingsPath)) {
-                        if (Computer.currentComputer() instanceof SlaveComputer) {
-                            String originalSettings = settingsPath;
-                            settingsPath = toTempSettingsFile(settingsPath);
-                            CustomFile customFile = new CustomFile(logger, cleanupManager ,originalSettings);
-                            customFile.copyToSlave(settingsPath);
-                        }
+                        mavenBuildStepHelper.copySettingsFileToSlave(settingsPath, logger);
                         args.add("-s", settingsPath);
                     }
                 }
@@ -347,12 +255,7 @@ public class MavenSealightsBuildStep extends Builder {
                     String settingsPath = GlobalSettingsProvider.getSettingsRemotePath(getGlobalSettings(), build, listener);
 
                     if (StringUtils.isNotBlank(settingsPath)) {
-                        if (Computer.currentComputer() instanceof SlaveComputer) {
-                            String originalSettings = settingsPath;
-                            settingsPath = toTempSettingsFile(settingsPath);
-                            CustomFile customFile = new CustomFile(logger, cleanupManager ,originalSettings);
-                            customFile.copyToSlave(settingsPath);
-                        }
+                        mavenBuildStepHelper.copySettingsFileToSlave(settingsPath, logger);
                         args.add("-gs", settingsPath);
                     }
                 }
@@ -389,170 +292,11 @@ public class MavenSealightsBuildStep extends Builder {
                 startIndex = endIndex + 1;
             } while (startIndex < targets.length());
         } finally {
-            if (enableSeaLights && beginAnalysis.isAutoRestoreBuildFile())
-                cleanupManager.clean();
-                restoreBuildFile(build, launcher, listener);
+            mavenBuildStepHelper.tryRestore(build, launcher, listener);
         }
         return true;
     }
-
-    private String toTempSettingsFile(String settingsPath) {
-        settingsPath =  UUID.randomUUID().toString() + "-" +Paths.get(settingsPath).getFileName().toString();
-        String osTempFolder = System.getProperty("java.io.tmpdir");
-        String tempFile = Paths.get(osTempFolder, settingsPath).toAbsolutePath().toString();
-        settingsPath = tempFile;
-        return settingsPath;
-    }
-
-    private MavenInstallation overrideMavenHomeIfNeed(MavenInstallation mavenInstallation, Logger logger) {
-        ToolLocationNodeProperty.ToolLocation nodeTools = getMavenNodeToolsForCurrentComputer(logger, mavenInstallation.getName());
-        if (nodeTools != null) {
-            //If the computer has node tools, update the maven installation to use the 'home' value from the tools.
-            return new MavenInstallation(mavenInstallation.getName(), nodeTools.getHome(), mavenInstallation.getProperties().toList());
-
-        }
-        return mavenInstallation;
-    }
-
-    private void restoreBuildFile(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
-        RestoreBuildFile restoreBuildFile = new RestoreBuildFile(beginAnalysis.isAutoRestoreBuildFile(), beginAnalysis.getBuildFilesFolders(), beginAnalysis.getPomPath());
-        restoreBuildFile.perform(build, launcher, listener);
-    }
-
-    private String getSystemPropertiesArgs(String cmdLine) {
-        List<String> argsAsList = CommandLineHelper.toArgsArray(cmdLine);
-        StringBuilder sysProps = new StringBuilder();
-        for (String arg : argsAsList) {
-            if (arg.startsWith("-D")) {
-                sysProps.append(arg);
-                sysProps.append(" ");
-            }
-        }
-        return sysProps.toString();
-
-    }
-
-
-    private boolean invokeMavenCommand(
-            AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String normalizedTarget, Logger logger) throws IOException, InterruptedException {
-        VariableResolver<String> vr = build.getBuildVariableResolver();
-        EnvVars env = build.getEnvironment(listener);
-        String pom = env.expand(this.pom);
-        ArgumentListBuilder args = new ArgumentListBuilder();
-        MavenInstallation mi = getMaven();
-
-        if (mi == null) {
-            String execName = build.getWorkspace().act(new DecideDefaultMavenCommand(normalizedTarget));
-            args.add(execName);
-
-        } else {
-            mi = mi.forNode(Computer.currentComputer().getNode(), listener);
-            mi = overrideMavenHomeIfNeed(mi, logger);
-            mi = mi.forEnvironment(env);
-            String exec = mi.getExecutable(launcher);
-            if (exec == null) {
-                listener.fatalError("Couldn't find any executable in " + mi.getHome()/*Messages.Maven_NoExecutable(mi.getHome())*/);
-                return false;
-            }
-            args.add(exec);
-        }
-        if (pom != null)
-            args.add("-f", pom);
-
-//
-//        if(!S_PATTERN.matcher(targets).find()){ // check the given target/goals do not contain settings parameter already
-//            String settingsPath = SettingsProvider.getSettingsRemotePath(getSettings(), build, listener);
-//            if(StringUtils.isNotBlank(settingsPath)){
-//                args.add("-s", settingsPath);
-//            }
-//        }
-//        if(!GS_PATTERN.matcher(targets).find()){
-//            String settingsPath = GlobalSettingsProvider.getSettingsRemotePath(getGlobalSettings(), build, listener);
-//            if(StringUtils.isNotBlank(settingsPath)){
-//                args.add("-gs", settingsPath);
-//            }
-//        }
-
-        Set<String> sensitiveVars = build.getSensitiveBuildVariables();
-
-        args.addKeyValuePairs("-D", build.getBuildVariables(), sensitiveVars);
-        final VariableResolver<String> resolver = new VariableResolver.Union<String>(new VariableResolver.ByMap<String>(env), vr);
-        args.addKeyValuePairsFromPropertyString("-D", this.properties, resolver, sensitiveVars);
-        if (usesPrivateRepository()) {
-            args.add("-Dmaven.repo.local=" + build.getWorkspace().child(".repository"));
-
-        }
-        args.addTokenized(normalizedTarget);
-        wrapUpArguments(args, normalizedTarget, build, launcher, listener);
-
-        buildEnvVars(env, mi);
-
-        if (!launcher.isUnix()) {
-            args = args.toWindowsCommand();
-        }
-        try {
-            MavenConsoleAnnotator mca = new MavenConsoleAnnotator(listener.getLogger(), build.getCharset());
-            int r = launcher.launch().cmds(args).envs(env).stdout(mca).pwd(build.getModuleRoot()).join();
-            if (0 != r) {
-                return false;
-            }
-        } catch (IOException e) {
-            Util.displayIOException(e, listener);
-            e.printStackTrace(listener.fatalError("command execution failed"/*Messages.Maven_ExecFailed()*/));
-            return false;
-        }
-        return true;
-    }
-
-    private boolean installSealightsMavenPlugin(
-            AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, CleanupManager cleanupManager)
-            throws IOException, InterruptedException {
-
-        Logger logger = new Logger(listener.getLogger());
-
-        String slMavenPluginJar = JarsHelper.loadJarAndSaveAsTempFile(SL_MVN_JAR_NAME);
-        CustomFile customFile = new CustomFile(logger, cleanupManager, slMavenPluginJar);
-        customFile.copyToSlave();
-
-        String normalizedTarget = getSLMavenPluginInstallationCommand(slMavenPluginJar, logger);
-        logger.info("Installing sealights-maven plugin");
-        logger.info("Command: " + normalizedTarget);
-
-        return invokeMavenCommand(build, launcher, listener, normalizedTarget, logger);
-    }
-
-
-    public boolean runInitializeTestListenerGoal(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Logger logger) throws IOException, InterruptedException {
-
-        String normalizedTarget = targets.replaceAll("[\t\r\n]+", " ");
-        normalizedTarget = getSystemPropertiesArgs(normalizedTarget) + " sealights:initialize-test-listener -e";
-
-        return invokeMavenCommand(build, launcher, listener, normalizedTarget, logger);
-    }
-
-    private final String SL_MVN_JAR_NAME = "sl-maven-plugin";
-    private final String SL_MVN_GROUP_ID = "io.sealights.on-premise.agents.plugin";
-    private final String SL_MVN_ARTIFACT_ID = "sealights-maven-plugin";
-    private final String SL_MVN_VERSION = "1.0.0";
-
-    private String getSLMavenPluginInstallationCommand(String mavenPluginFilePath, Logger logger) throws FileNotFoundException {
-
-        SealightsMavenPluginHelper slPluginHelper = new SealightsMavenPluginHelper(logger);
-
-        StringBuilder command = new StringBuilder();
-        command.append("install:install-file -Dfile=");
-        command.append(mavenPluginFilePath);
-        command.append(" -DgroupId=");
-        command.append(SL_MVN_GROUP_ID);
-        command.append(" -DartifactId=");
-        command.append(SL_MVN_ARTIFACT_ID);
-        command.append(" -Dversion=");
-        command.append(slPluginHelper.getPluginVersion());
-        command.append(" -Dpackaging=jar");
-
-        return command.toString();
-    }
-
+    
     /**
      * Allows the derived type to make additional modifications to the arguments list.
      *
@@ -566,6 +310,14 @@ public class MavenSealightsBuildStep extends Builder {
      * @since 1.344
      */
     protected void wrapUpArguments(ArgumentListBuilder args, String normalizedTarget, AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+    }
+
+    public void sealightsWrapUpArguments(ArgumentListBuilder args, String normalizedTarget, AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+        wrapUpArguments(args, normalizedTarget, build, launcher, listener);
+    }
+
+    public void sealightsBuildEnvVars(EnvVars env, MavenInstallation mi) throws IOException, InterruptedException {
+        buildEnvVars(env, mi);
     }
 
     /**

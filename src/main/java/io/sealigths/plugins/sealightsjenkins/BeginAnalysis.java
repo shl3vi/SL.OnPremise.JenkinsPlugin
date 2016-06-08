@@ -1,9 +1,6 @@
 package io.sealigths.plugins.sealightsjenkins;
 
-import hudson.DescriptorExtensionList;
-import hudson.Extension;
-import hudson.FilePath;
-import hudson.Launcher;
+import hudson.*;
 import hudson.model.*;
 import hudson.remoting.VirtualChannel;
 import hudson.tasks.BuildStepDescriptor;
@@ -33,6 +30,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Created by shahar on 5/9/2016.
@@ -404,7 +403,7 @@ public class BeginAnalysis extends Builder {
 
     public boolean perform(
             AbstractBuild<?, ?> build, CleanupManager cleanupManager, Logger logger, String pomPath)
-            throws IOException, InterruptedException {
+	    throws IOException, InterruptedException {
 
         try {
             setDefaultValues(logger);
@@ -451,12 +450,15 @@ public class BeginAnalysis extends Builder {
 
     private String getParentPomPath(Logger logger, String workingDir, String pomPath) {
         if (!StringUtils.isNullOrEmpty(pomPath)) {
+            JenkinsUtils jenkinsUtils = new JenkinsUtils();
+            pomPath = jenkinsUtils.expandPathVariable(build, pomPath);
             Path pathToPom = Paths.get(pomPath);
             if (!pathToPom.isAbsolute()) {
                 pomPath = this.joinPaths(workingDir, pomPath);
             }
         } else {
             pomPath = this.joinPaths(workingDir, "pom.xml");
+        }
         }
 
         logger.info("Absolute path to pom file: " + pomPath);
