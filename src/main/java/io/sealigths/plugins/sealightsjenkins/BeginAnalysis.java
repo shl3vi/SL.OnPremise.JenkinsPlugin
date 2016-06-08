@@ -403,7 +403,7 @@ public class BeginAnalysis extends Builder {
 
     public boolean perform(
             AbstractBuild<?, ?> build, CleanupManager cleanupManager, Logger logger, String pomPath)
-	    throws IOException, InterruptedException {
+            throws IOException, InterruptedException {
 
         try {
             setDefaultValues(logger);
@@ -419,7 +419,7 @@ public class BeginAnalysis extends Builder {
 
             String workingDir = ws.getRemote();
 
-            this.pomPath = getParentPomPath(logger, workingDir, pomPath);
+            this.pomPath = getParentPomPath(build, logger, workingDir, pomPath);
 
             if (this.autoRestoreBuildFile) {
                 tryAddRestoreBuildFilePublisher(build, logger);
@@ -433,7 +433,7 @@ public class BeginAnalysis extends Builder {
 
             doMavenIntegration(logger, slInfo);
 
-        }catch(Exception e){
+        } catch (Exception e) {
             logger.error("Error occurred while performing Sealights Analysis build step.", e);
         }
 
@@ -443,12 +443,15 @@ public class BeginAnalysis extends Builder {
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener
     ) throws IOException, InterruptedException {
+        String DEFAULT_POM_PATH = "";
         Logger logger = new Logger(listener.getLogger());
         CleanupManager cleanupManager = new CleanupManager(logger);
-        return perform(build, cleanupManager, logger, "");
+        return perform(build, cleanupManager, logger, DEFAULT_POM_PATH);
     }
 
-    private String getParentPomPath(Logger logger, String workingDir, String pomPath) {
+    //TODO: add unit-tests for this method
+    private String getParentPomPath(AbstractBuild<?, ?> build, Logger logger, String workingDir, String pomPath) {
+
         if (!StringUtils.isNullOrEmpty(pomPath)) {
             JenkinsUtils jenkinsUtils = new JenkinsUtils();
             pomPath = jenkinsUtils.expandPathVariable(build, pomPath);
@@ -458,7 +461,7 @@ public class BeginAnalysis extends Builder {
             }
         } else {
             pomPath = this.joinPaths(workingDir, "pom.xml");
-        }
+
         }
 
         logger.info("Absolute path to pom file: " + pomPath);
@@ -679,7 +682,7 @@ public class BeginAnalysis extends Builder {
         logger.debug("--------------Sealights Jenkins Plugin Configuration--------------");
         logger.debug("Plugin Version:" + getPluginVersion());
 
-        ReflectionUtils.printGetters(slInfo, logger);
+        printSLInfo(slInfo, logger);
 
         logger.debug("Enable Multiple Build Files: " + enableMultipleBuildFiles);
         logger.debug("Multiple Build Files: " + multipleBuildFiles);
@@ -690,6 +693,20 @@ public class BeginAnalysis extends Builder {
         logger.debug("Auto Restore Build File:" + autoRestoreBuildFile);
 
         logger.debug("--------------Sealights Jenkins Plugin Configuration--------------");
+    }
+
+    private void printSLInfo(SeaLightsPluginInfo slInfo, Logger logger) {
+        List<Method> getters = ReflectionUtils.getGettersMethods(slInfo);
+        for (Method method : getters) {
+            String methodName = method.getName();
+            Object value;
+            try {
+                value = method.invoke(slInfo);
+                logger.debug(methodName + " : " + value);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                logger.error("Error while trying to print method: " + methodName, e);
+            }
+        }
     }
 
     private String getPluginVersion() {

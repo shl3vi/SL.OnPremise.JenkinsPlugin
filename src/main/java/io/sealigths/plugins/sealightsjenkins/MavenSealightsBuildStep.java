@@ -181,8 +181,6 @@ public class MavenSealightsBuildStep extends Builder {
         return null;
     }
 
-
-        beginAnalysis.perform(build, cleanupManager, logger, pom);
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 
