@@ -42,7 +42,7 @@ public class MavenBuildStepHelper {
 
 
     public MavenBuildStepHelper(BuildStepModes currentMode, CleanupManager cleanupManager, BeginAnalysis beginAnalysis) {
-        this.isSealightsEnabled = !(currentMode.equals(BuildStepModes.Off));
+        this.isSealightsEnabled = (currentMode.equals(BuildStepModes.PrepareSealights) || currentMode.equals(BuildStepModes.InvokeMavenCommandWithSealights));
         this.cleanupManager = cleanupManager;
         this.beginAnalysis = beginAnalysis;
         this.currentMode = currentMode;
