@@ -71,7 +71,7 @@ public class BeginAnalysisBuildStep extends Builder {
 
         @Override
         public String getDisplayName() {
-            return "SeaLights Continuous Testing - Begin Analysis";
+            return "SeaLights Continuous Testing - Begin Analysis - DEPRECATED";
         }
     }
 

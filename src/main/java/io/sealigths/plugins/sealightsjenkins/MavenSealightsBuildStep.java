@@ -14,6 +14,7 @@ import hudson.util.ArgumentListBuilder;
 import hudson.util.NullStream;
 import hudson.util.StreamTaskListener;
 import hudson.util.VariableResolver;
+import io.sealigths.plugins.sealightsjenkins.enums.BuildStepModes;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import jenkins.model.Jenkins;
 import jenkins.mvn.GlobalMavenConfig;
@@ -41,12 +42,13 @@ import java.util.regex.Pattern;
 public class MavenSealightsBuildStep extends Builder {
 
     public final BeginAnalysis beginAnalysis;
-    public final boolean enableSeaLights;
+    public BuildStepMode buildStepMode;
+
     /**
      * The targets and other maven options.
      * Can be separated by SP or NL.
      */
-    public final String targets;
+    public String targets;
 
     /**
      * Identifies {@link MavenInstallation} to be used.
@@ -104,14 +106,13 @@ public class MavenSealightsBuildStep extends Builder {
     private static final Pattern GS_PATTERN = Pattern.compile("(^| )-gs ");
 
     @DataBoundConstructor
-    public MavenSealightsBuildStep(BeginAnalysis beginAnalysis, boolean enableSeaLights,
-                                   String targets, String name, String pom, String properties,
+    public MavenSealightsBuildStep(BeginAnalysis beginAnalysis, BuildStepMode buildStepMode,
+                                   String name, String pom, String properties,
                                    String jvmOptions, boolean usePrivateRepository,
                                    SettingsProvider settings, GlobalSettingsProvider globalSettings) {
         this.beginAnalysis = beginAnalysis;
-        this.enableSeaLights = enableSeaLights;
+        this.buildStepMode = buildStepMode;
 
-        this.targets = targets;
         this.mavenName = name;
         this.pom = Util.fixEmptyAndTrim(pom);
         this.properties = Util.fixEmptyAndTrim(properties);
@@ -125,8 +126,8 @@ public class MavenSealightsBuildStep extends Builder {
         return beginAnalysis;
     }
 
-    public boolean isEnableSeaLights() {
-        return enableSeaLights;
+    public BuildStepMode getBuildStepMode() {
+        return buildStepMode;
     }
 
     public String getTargets() {
@@ -186,115 +187,154 @@ public class MavenSealightsBuildStep extends Builder {
 
         Logger logger = new Logger(listener.getLogger());
         CleanupManager cleanupManager = new CleanupManager(logger);
+        BuildStepModes currentMode = this.buildStepMode.getCurrentMode();
+        if (currentMode.equals(BuildStepModes.Off))
+        {
+            logger.info("Skipping build step '" + new DescriptorImpl().getDisplayName() + "' due to the selected value of its 'Action' field.");
+            return true;
+        }
 
-        MavenBuildStepHelper mavenBuildStepHelper = new MavenBuildStepHelper(enableSeaLights, cleanupManager, this.beginAnalysis);
+        this.targets = getTargets(this.buildStepMode);
+        boolean isSealightsEnabled = (currentMode.equals(BuildStepModes.InvokeMavenCommandWithSealights) || currentMode.equals(BuildStepModes.PrepareSealights));
+        MavenBuildStepHelper mavenBuildStepHelper = new MavenBuildStepHelper(currentMode, cleanupManager, this.beginAnalysis);
         try {
-            if (enableSeaLights) {
+            if (isSealightsEnabled) {
                 mavenBuildStepHelper.installSealightsMavenPlugin(build, launcher, listener, this.pom, this.properties, this);
                 if (!mavenBuildStepHelper.beginAnalysisBuildStep(build, launcher, listener, logger, this.pom, this.targets, this.properties, this)) {
                     logger.error("Begin Analysis step returned false. This likely due to an Exit Code > 0 from Maven.");
                     return false;
                 }
+
+                //The prepare step should not invoke maven.
+                if ((currentMode.equals(BuildStepModes.PrepareSealights))) {
+                    logger.info("Prepare Sealights has finished.");
+                    return true;
+                }
             } else {
-                logger.info("'Enable SeaLights' is set to false. Skipping...");
+                logger.info("Sealights is disabled. Running Maven without Sealights.");
             }
+            
+            //If we reached here, we need to invoke maven since this is either InvokeMavenCommandWithSealights or InvokeMavenCommnad and in both of them we want to invoke maven.
+            if (!tryInvokeMaven(build, launcher, listener, mavenBuildStepHelper, logger))
+                return false;
 
-            VariableResolver<String> vr = build.getBuildVariableResolver();
-            EnvVars env = build.getEnvironment(listener);
-            String targets = Util.replaceMacro(this.targets, vr);
-            targets = env.expand(targets);
-            String pom = env.expand(this.pom);
-
-            int startIndex = 0;
-            int endIndex;
-
-            do {
-                // split targets into multiple invokations of maven separated by |
-                endIndex = targets.indexOf('|', startIndex);
-                if (-1 == endIndex) {
-                    endIndex = targets.length();
-                }
-
-                String normalizedTarget = targets
-                        .substring(startIndex, endIndex)
-                        .replaceAll("[\t\r\n]+", " ");
-
-                ArgumentListBuilder args = new ArgumentListBuilder();
-                MavenInstallation mi = getMaven();
-                if (mi == null) {
-                    String execName = build.getWorkspace().act(new DecideDefaultMavenCommand(normalizedTarget));
-                    args.add(execName);
-
-                } else {
-                    mi = mi.forNode(Computer.currentComputer().getNode(), listener);
-                    mi = mavenBuildStepHelper.overrideMavenHomeIfNeed(mi, logger);
-                    mi = mi.forEnvironment(env);
-                    String exec = mi.getExecutable(launcher);
-                    if (exec == null) {
-                        listener.fatalError("Couldn't find any executable in " + mi.getHome()/*Messages.Maven_NoExecutable(mi.getHome())*/);
-                        return false;
-                    }
-                    args.add(exec);
-
-                }
-                if (pom != null)
-                    args.add("-f", pom);
-
-
-                if (!S_PATTERN.matcher(targets).find()) { // check the given target/goals do not contain settings parameter already
-                    String settingsPath = SettingsProvider.getSettingsRemotePath(getSettings(), build, listener);
-
-                    if (StringUtils.isNotBlank(settingsPath)) {
-                        mavenBuildStepHelper.copySettingsFileToSlave(settingsPath, logger);
-                        args.add("-s", settingsPath);
-                    }
-                }
-                if (!GS_PATTERN.matcher(targets).find()) {
-                    String settingsPath = GlobalSettingsProvider.getSettingsRemotePath(getGlobalSettings(), build, listener);
-
-                    if (StringUtils.isNotBlank(settingsPath)) {
-                        mavenBuildStepHelper.copySettingsFileToSlave(settingsPath, logger);
-                        args.add("-gs", settingsPath);
-                    }
-                }
-
-                Set<String> sensitiveVars = build.getSensitiveBuildVariables();
-
-                args.addKeyValuePairs("-D", build.getBuildVariables(), sensitiveVars);
-                final VariableResolver<String> resolver = new VariableResolver.Union<String>(new VariableResolver.ByMap<String>(env), vr);
-                args.addKeyValuePairsFromPropertyString("-D", this.properties, resolver, sensitiveVars);
-                if (usesPrivateRepository()) {
-                    args.add("-Dmaven.repo.local=" + build.getWorkspace().child(".repository"));
-
-                }
-                args.addTokenized(normalizedTarget);
-                wrapUpArguments(args, normalizedTarget, build, launcher, listener);
-
-                buildEnvVars(env, mi);
-
-                if (!launcher.isUnix()) {
-                    args = args.toWindowsCommand();
-                }
-
-                try {
-                    MavenConsoleAnnotator mca = new MavenConsoleAnnotator(listener.getLogger(), build.getCharset());
-                    int r = launcher.launch().cmds(args).envs(env).stdout(mca).pwd(build.getModuleRoot()).join();
-                    if (0 != r) {
-                        return false;
-                    }
-                } catch (IOException e) {
-                    Util.displayIOException(e, listener);
-                    e.printStackTrace(listener.fatalError("command execution failed"/*Messages.Maven_ExecFailed()*/));
-                    return false;
-                }
-                startIndex = endIndex + 1;
-            } while (startIndex < targets.length());
         } finally {
             mavenBuildStepHelper.tryRestore(build, launcher, listener);
         }
         return true;
     }
-    
+
+    private boolean tryInvokeMaven(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, MavenBuildStepHelper mavenBuildStepHelper, Logger logger) throws IOException, InterruptedException {
+        VariableResolver<String> vr = build.getBuildVariableResolver();
+        EnvVars env = build.getEnvironment(listener);
+        String targets = Util.replaceMacro(this.targets, vr);
+        targets = env.expand(targets);
+        String pom = env.expand(this.pom);
+
+        int startIndex = 0;
+        int endIndex;
+
+        do {
+            // split targets into multiple invokations of maven separated by |
+            endIndex = targets.indexOf('|', startIndex);
+            if (-1 == endIndex) {
+                endIndex = targets.length();
+            }
+
+            String normalizedTarget = targets
+                    .substring(startIndex, endIndex)
+                    .replaceAll("[\t\r\n]+", " ");
+
+            ArgumentListBuilder args = new ArgumentListBuilder();
+            MavenInstallation mi = getMaven();
+            if (mi == null) {
+                String execName = build.getWorkspace().act(new DecideDefaultMavenCommand(normalizedTarget));
+                args.add(execName);
+
+            } else {
+                mi = mi.forNode(Computer.currentComputer().getNode(), listener);
+                mi = mavenBuildStepHelper.overrideMavenHomeIfNeed(mi, logger);
+                mi = mi.forEnvironment(env);
+                String exec = mi.getExecutable(launcher);
+                if (exec == null) {
+                    listener.fatalError("Couldn't find any executable in " + mi.getHome()/*Messages.Maven_NoExecutable(mi.getHome())*/);
+                    return false;
+                }
+                args.add(exec);
+
+            }
+            if (pom != null)
+                args.add("-f", pom);
+
+
+            if (!S_PATTERN.matcher(targets).find()) { // check the given target/goals do not contain settings parameter already
+                String settingsPath = SettingsProvider.getSettingsRemotePath(getSettings(), build, listener);
+
+                if (StringUtils.isNotBlank(settingsPath)) {
+                    mavenBuildStepHelper.copySettingsFileToSlave(settingsPath, logger);
+                    args.add("-s", settingsPath);
+                }
+            }
+            if (!GS_PATTERN.matcher(targets).find()) {
+                String settingsPath = GlobalSettingsProvider.getSettingsRemotePath(getGlobalSettings(), build, listener);
+
+                if (StringUtils.isNotBlank(settingsPath)) {
+                    mavenBuildStepHelper.copySettingsFileToSlave(settingsPath, logger);
+                    args.add("-gs", settingsPath);
+                }
+            }
+
+            Set<String> sensitiveVars = build.getSensitiveBuildVariables();
+
+            args.addKeyValuePairs("-D", build.getBuildVariables(), sensitiveVars);
+            final VariableResolver<String> resolver = new VariableResolver.Union<String>(new VariableResolver.ByMap<String>(env), vr);
+            args.addKeyValuePairsFromPropertyString("-D", this.properties, resolver, sensitiveVars);
+            if (usesPrivateRepository()) {
+                args.add("-Dmaven.repo.local=" + build.getWorkspace().child(".repository"));
+
+            }
+            args.addTokenized(normalizedTarget);
+            wrapUpArguments(args, normalizedTarget, build, launcher, listener);
+
+            buildEnvVars(env, mi);
+
+            if (!launcher.isUnix()) {
+                args = args.toWindowsCommand();
+            }
+
+            try {
+                MavenConsoleAnnotator mca = new MavenConsoleAnnotator(listener.getLogger(), build.getCharset());
+                int r = launcher.launch().cmds(args).envs(env).stdout(mca).pwd(build.getModuleRoot()).join();
+                if (0 != r) {
+                    return false;
+                }
+            } catch (IOException e) {
+                Util.displayIOException(e, listener);
+                e.printStackTrace(listener.fatalError("command execution failed"/*Messages.Maven_ExecFailed()*/));
+                return false;
+            }
+            startIndex = endIndex + 1;
+        } while (startIndex < targets.length());
+
+        return true;
+    }
+
+    private String getTargets(BuildStepMode buildStepMode) {
+        String t = "";
+        if (BuildStepModes.InvokeMavenCommandWithSealights.equals(buildStepMode.getCurrentMode())) {
+            BuildStepMode.InvokeMavenCommandView mavenMode = (BuildStepMode.InvokeMavenCommandView) buildStepMode;
+            t = mavenMode.getTargets();
+        } else if (BuildStepModes.InvokeMavenCommand.equals(buildStepMode.getCurrentMode())) {
+            BuildStepMode.DisableSealightsView offMode = (BuildStepMode.DisableSealightsView) buildStepMode;
+            t = offMode.getTargets();
+        }
+
+        if (targets == null)
+            targets = "";
+
+        return t;
+    }
+
     /**
      * Allows the derived type to make additional modifications to the arguments list.
      *
@@ -448,6 +488,11 @@ public class MavenSealightsBuildStep extends Builder {
         @Override
         public Builder newInstance(StaplerRequest req, JSONObject formData) throws FormException {
             return req.bindJSON(MavenSealightsBuildStep.class, formData);
+        }
+
+        public DescriptorExtensionList<BuildStepMode, BuildStepMode.BuildStepModeDescriptor> getBuildStepModeDescriptorList() {
+            DescriptorExtensionList<BuildStepMode, BuildStepMode.BuildStepModeDescriptor> descriptorList = Jenkins.getInstance().getDescriptorList(BuildStepMode.class);
+            return descriptorList;
         }
     }
 

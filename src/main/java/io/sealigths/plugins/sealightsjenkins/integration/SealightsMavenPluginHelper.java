@@ -30,7 +30,7 @@ public class SealightsMavenPluginHelper {
         try {
             version = FileAndFolderUtils.readFileFromResources("sl-maven-plugin-version.txt", logger);
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            logger.error("Failed to read 'sl-maven-plugin-version.txt'", e);
         }
         if (StringUtils.isNotBlank(version)) {
             return version;

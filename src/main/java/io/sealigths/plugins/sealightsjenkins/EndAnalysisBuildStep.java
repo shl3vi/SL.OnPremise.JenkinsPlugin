@@ -50,7 +50,7 @@ public class EndAnalysisBuildStep extends Builder{
         }
 
         public String getDisplayName() {
-            return "SeaLights Continuous Testing - End Analysis";
+            return "SeaLights Continuous Testing - Cleanup";
         }
         
     }
