@@ -18,6 +18,11 @@ public enum BuildNamingStrategy {
         @Override public String getDisplayName() {
             return "Specify a custom build name. (Allows passing expressions)";
         }
+    },
+    LATEST_BUILD() {
+        @Override public String getDisplayName() {
+            return "Report on latest build. This option should be used only with execution type of 'Test Only'.";
+        }
     };
     public abstract String getDisplayName();
 }

@@ -9,9 +9,9 @@ public enum ExecutionType {
             return "Build & Tests";
         }
     },
-    ONLY_LISTENER() {
+    TESTS_ONLY() {
         @Override public String getDisplayName() {
-            return "Only Tests";
+            return "Tests Only";
         }
     };
     public abstract String getDisplayName();
