@@ -15,6 +15,7 @@ import hudson.tools.ToolLocationNodeProperty;
 import hudson.util.ArgumentListBuilder;
 import hudson.util.DescribableList;
 import hudson.util.VariableResolver;
+import io.sealigths.plugins.sealightsjenkins.enums.BuildStepModes;
 import io.sealigths.plugins.sealightsjenkins.integration.JarsHelper;
 import io.sealigths.plugins.sealightsjenkins.integration.SealightsMavenPluginHelper;
 import io.sealigths.plugins.sealightsjenkins.utils.CommandLineHelper;
@@ -35,14 +36,16 @@ import static io.sealigths.plugins.sealightsjenkins.TestingFramework.AUTO_DETECT
  */
 public class MavenBuildStepHelper {
     private boolean isSealightsEnabled;
+    private BuildStepModes currentMode;
     private CleanupManager cleanupManager;
     private BeginAnalysis beginAnalysis;
 
 
-    public MavenBuildStepHelper(boolean isSealightsEnabled, CleanupManager cleanupManager, BeginAnalysis beginAnalysis) {
-        this.isSealightsEnabled = isSealightsEnabled;
+    public MavenBuildStepHelper(BuildStepModes currentMode, CleanupManager cleanupManager, BeginAnalysis beginAnalysis) {
+        this.isSealightsEnabled = !(currentMode.equals(BuildStepModes.Off));
         this.cleanupManager = cleanupManager;
         this.beginAnalysis = beginAnalysis;
+        this.currentMode = currentMode;
     }
 
     public void installSealightsMavenPlugin(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String pom, String properties, MavenSealightsBuildStep mavenBuildStep) throws IOException, InterruptedException {
@@ -90,7 +93,6 @@ public class MavenBuildStepHelper {
     }
 
     private boolean runInitializeTestListenerGoal(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Logger logger, String pom, String targets, String properties, MavenSealightsBuildStep mavenBuildStep) throws IOException, InterruptedException {
-
         String normalizedTarget = targets.replaceAll("[\t\r\n]+", " ");
         normalizedTarget = getSystemPropertiesArgs(normalizedTarget) + " sealights:initialize-test-listener -e";
 
@@ -195,7 +197,8 @@ public class MavenBuildStepHelper {
 
 
     public void tryRestore(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
-        if(!this.isSealightsEnabled)
+        //Only the maven step has to restore as a single transaction.
+        if(!this.currentMode.equals(BuildStepModes.InvokeMavenCommandWithSealights))
             return;
 
         if (beginAnalysis.isAutoRestoreBuildFile()) {

@@ -38,7 +38,7 @@ THE SOFTWARE.
     </j:if>
 
 
-    <f:dropdownList name="buildStepMode" title="Build Step Mode">
+    <f:dropdownList name="buildStepMode" title="Action">
         <j:forEach var="currentDescriptor" items="${descriptor.buildStepModeDescriptorList}" varStatus="loop">
             <f:dropdownListBlock title="${currentDescriptor.displayName}" value="${loop.index}"
                                  selected="${currentDescriptor == instance.buildStepMode.descriptor}"

@@ -54,11 +54,27 @@ public class BuildStepMode implements Describable<BuildStepMode>, ExtensionPoint
 
     public static class OffView extends BuildStepMode {
 
+        @DataBoundConstructor
+        public OffView() {
+            super(BuildStepModes.Off);
+        }
+
+        @Extension
+        public static class OffDescriptor extends BuildStepModeDescriptor {
+            public OffDescriptor() {
+                super(OffView.class, BuildStepModes.Off.getDisplayName());
+            }
+        }
+
+    }
+
+    public static class DisableSealightsView extends BuildStepMode {
+
         private String targets;
 
         @DataBoundConstructor
-        public OffView(String targets) {
-            super(BuildStepModes.Off);
+        public DisableSealightsView(String targets) {
+            super(BuildStepModes.InvokeMavenCommand);
             this.targets = targets;
         }
 
@@ -71,9 +87,9 @@ public class BuildStepMode implements Describable<BuildStepMode>, ExtensionPoint
         }
 
         @Extension
-        public static class OffDescriptor extends BuildStepModeDescriptor {
-            public OffDescriptor() {
-                super(OffView.class, BuildStepModes.Off.getDisplayName());
+        public static class DisableSealightsDescriptor extends BuildStepModeDescriptor {
+            public DisableSealightsDescriptor() {
+                super(DisableSealightsView.class, BuildStepModes.InvokeMavenCommand.getDisplayName());
             }
         }
 
@@ -84,7 +100,7 @@ public class BuildStepMode implements Describable<BuildStepMode>, ExtensionPoint
 
         @DataBoundConstructor
         public InvokeMavenCommandView(String targets) {
-            super(BuildStepModes.InvokeMavenCommand);
+            super(BuildStepModes.InvokeMavenCommandWithSealights);
             this.targets = targets;
         }
 
@@ -99,7 +115,7 @@ public class BuildStepMode implements Describable<BuildStepMode>, ExtensionPoint
         @Extension
         public static class InvokeMavenCommandDescriptor extends BuildStepModeDescriptor {
             public InvokeMavenCommandDescriptor() {
-                super(InvokeMavenCommandView.class, BuildStepModes.InvokeMavenCommand.getDisplayName());
+                super(InvokeMavenCommandView.class, BuildStepModes.InvokeMavenCommandWithSealights.getDisplayName());
             }
         }
 
