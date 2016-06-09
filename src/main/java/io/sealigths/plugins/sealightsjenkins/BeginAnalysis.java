@@ -8,6 +8,7 @@ import hudson.tasks.Builder;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import io.sealigths.plugins.sealightsjenkins.entities.FileBackupInfo;
+import io.sealigths.plugins.sealightsjenkins.exceptions.SeaLightsIllegalStateException;
 import io.sealigths.plugins.sealightsjenkins.integration.JarsHelper;
 import io.sealigths.plugins.sealightsjenkins.integration.MavenIntegration;
 import io.sealigths.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
@@ -402,7 +403,7 @@ public class BeginAnalysis extends Builder {
 
     public boolean perform(
             AbstractBuild<?, ?> build, CleanupManager cleanupManager, Logger logger, String pomPath)
-            throws IOException, InterruptedException {
+            throws IOException, InterruptedException, SeaLightsIllegalStateException {
 
         try {
             setDefaultValues(logger);
@@ -434,12 +435,11 @@ public class BeginAnalysis extends Builder {
 
         } catch (Exception e) {
             // for cases when trying 'Latest-Build' when not on 'Tests Only' mode.
-            if (e instanceof IllegalStateException) {
+            if (e instanceof SeaLightsIllegalStateException) {
                 throw e;
             }
             logger.error("Error occurred while performing Sealights Analysis build step.", e);
         }
-
 
         return true;
     }
@@ -450,7 +450,12 @@ public class BeginAnalysis extends Builder {
         String DEFAULT_POM_PATH = "";
         Logger logger = new Logger(listener.getLogger());
         CleanupManager cleanupManager = new CleanupManager(logger);
-        return perform(build, cleanupManager, logger, DEFAULT_POM_PATH);
+        try {
+            return perform(build, cleanupManager, logger, DEFAULT_POM_PATH);
+        } catch (SeaLightsIllegalStateException e) {
+            logger.error(e.getMessage());
+            return false;
+        }
     }
 
     //TODO: add unit-tests for this method
@@ -541,7 +546,7 @@ public class BeginAnalysis extends Builder {
         String finalBuildName = null;
         if (BuildNamingStrategy.LATEST_BUILD.equals(buildName.getBuildNamingStrategy())) {
             if (!ExecutionType.TESTS_ONLY.equals(executionType)) {
-                throw new IllegalStateException("The '"
+                throw new SeaLightsIllegalStateException("The '"
                         + BuildNamingStrategy.LATEST_BUILD.getDisplayName()
                         + "' option is set. This option is allowed only with execution type of '"
                         + ExecutionType.TESTS_ONLY.getDisplayName()
@@ -565,7 +570,7 @@ public class BeginAnalysis extends Builder {
     }
 
     private SeaLightsPluginInfo createSeaLightsPluginInfo(
-            AbstractBuild<?, ?> build, FilePath ws, Logger logger, String tmpApiJar) throws IllegalStateException {
+            AbstractBuild<?, ?> build, FilePath ws, Logger logger, String tmpApiJar) throws SeaLightsIllegalStateException {
 
         SeaLightsPluginInfo slInfo = new SeaLightsPluginInfo();
         setGlobalConfiguration(slInfo);
