@@ -8,11 +8,13 @@ import hudson.tasks.Builder;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import io.sealigths.plugins.sealightsjenkins.entities.FileBackupInfo;
+import io.sealigths.plugins.sealightsjenkins.exceptions.SeaLightsIllegalStateException;
 import io.sealigths.plugins.sealightsjenkins.integration.JarsHelper;
 import io.sealigths.plugins.sealightsjenkins.integration.MavenIntegration;
 import io.sealigths.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
 import io.sealigths.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
 import io.sealigths.plugins.sealightsjenkins.utils.*;
+import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -30,8 +32,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.regex.Pattern;
 
 /**
  * Created by shahar on 5/9/2016.
@@ -403,7 +403,7 @@ public class BeginAnalysis extends Builder {
 
     public boolean perform(
             AbstractBuild<?, ?> build, CleanupManager cleanupManager, Logger logger, String pomPath)
-            throws IOException, InterruptedException {
+            throws IOException, InterruptedException, SeaLightsIllegalStateException {
 
         try {
             setDefaultValues(logger);
@@ -434,6 +434,10 @@ public class BeginAnalysis extends Builder {
             doMavenIntegration(logger, slInfo);
 
         } catch (Exception e) {
+            // for cases when trying 'Latest-Build' when not on 'Tests Only' mode.
+            if (e instanceof SeaLightsIllegalStateException) {
+                throw e;
+            }
             logger.error("Error occurred while performing Sealights Analysis build step.", e);
         }
 
@@ -446,7 +450,12 @@ public class BeginAnalysis extends Builder {
         String DEFAULT_POM_PATH = "";
         Logger logger = new Logger(listener.getLogger());
         CleanupManager cleanupManager = new CleanupManager(logger);
-        return perform(build, cleanupManager, logger, DEFAULT_POM_PATH);
+        try {
+            return perform(build, cleanupManager, logger, DEFAULT_POM_PATH);
+        } catch (SeaLightsIllegalStateException e) {
+            logger.error(e.getMessage());
+            return false;
+        }
     }
 
     //TODO: add unit-tests for this method
@@ -532,10 +541,23 @@ public class BeginAnalysis extends Builder {
         return finalBuildName;
     }
 
-    private String getFinalBuildName(AbstractBuild<?, ?> build, Logger logger) {
+    private String getFinalBuildName(AbstractBuild<?, ?> build, Logger logger) throws IllegalStateException {
+
         String finalBuildName = null;
+        if (BuildNamingStrategy.LATEST_BUILD.equals(buildName.getBuildNamingStrategy())) {
+            if (!ExecutionType.TESTS_ONLY.equals(executionType)) {
+                throw new SeaLightsIllegalStateException("The '"
+                        + BuildNamingStrategy.LATEST_BUILD.getDisplayName()
+                        + "' option is set. This option is allowed only with execution type of '"
+                        + ExecutionType.TESTS_ONLY.getDisplayName()
+                        + "'.");
+            }
+            return null;
+        }
+
         if (BuildNamingStrategy.MANUAL.equals(buildName.getBuildNamingStrategy())) {
             finalBuildName = getManualBuildName();
+
         } else if (BuildNamingStrategy.JENKINS_UPSTREAM.equals(buildName.getBuildNamingStrategy())) {
             finalBuildName = getUpstreamBuildName(build, logger);
         }
@@ -548,7 +570,7 @@ public class BeginAnalysis extends Builder {
     }
 
     private SeaLightsPluginInfo createSeaLightsPluginInfo(
-            AbstractBuild<?, ?> build, FilePath ws, Logger logger, String tmpApiJar) {
+            AbstractBuild<?, ?> build, FilePath ws, Logger logger, String tmpApiJar) throws SeaLightsIllegalStateException {
 
         SeaLightsPluginInfo slInfo = new SeaLightsPluginInfo();
         setGlobalConfiguration(slInfo);
@@ -792,7 +814,7 @@ public class BeginAnalysis extends Builder {
         }
 
         public DescriptorExtensionList<BuildName, BuildName.BuildNameDescriptor> getBuildNameDescriptorList() {
-            return Hudson.getInstance().getDescriptorList(BuildName.class);
+            return Jenkins.getInstance().getDescriptorList(BuildName.class);
         }
     }
 }

@@ -54,7 +54,6 @@ public class BuildName implements Describable<BuildName>, ExtensionPoint, Serial
         }
     }
 
-
     public static class DefaultBuildName extends BuildName {
 
         @DataBoundConstructor
@@ -128,7 +127,20 @@ public class BuildName implements Describable<BuildName>, ExtensionPoint, Serial
                 return FormValidation.ok();
             }
         }
-
     }
 
+    public static class LatestBuildName extends BuildName {
+
+        @DataBoundConstructor
+        public LatestBuildName() {
+            super(BuildNamingStrategy.LATEST_BUILD);
+        }
+
+        @Extension
+        public static class LatestBuildNameDescriptor extends BuildNameDescriptor {
+            public LatestBuildNameDescriptor() {
+                super(LatestBuildName.class, BuildNamingStrategy.LATEST_BUILD.getDisplayName());
+            }
+        }
+    }
 }
