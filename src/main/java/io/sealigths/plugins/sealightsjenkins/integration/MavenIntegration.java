@@ -94,7 +94,7 @@ public class MavenIntegration {
     private String getEventListenerPackage(TestingFramework testingFramework) {
         if ("testng".equalsIgnoreCase(testingFramework.name())) {
             return "io.sealights.onpremise.agents.java.agent.integrations.testng.TestListener";
-        } else if ("junit".equalsIgnoreCase(testingFramework.name())) {
+        } else if ("junit_4".equalsIgnoreCase(testingFramework.name())) {
             return "io.sealights.onpremise.agents.java.agent.integrations.junit.SlRunListener";
         }
         return "";
@@ -116,8 +116,10 @@ public class MavenIntegration {
         if (testingFramework.equals(TestingFramework.AUTO_DETECT)) {
             testingFrameworkListeners = null; //Used to pass control to the maven plugin.
         }
-        pomFile.updateSurefirePlugin(testingFrameworkListeners, apiAgentPath);
-
+        if (!testingFramework.equals(TestingFramework.JUNIT_3)) {
+            //# JUnit 3 doesn't need to add a listener to the pom (currently unsupported by Surefire).
+            pomFile.updateSurefirePlugin(testingFrameworkListeners, apiAgentPath);
+        }
         savePom(fileBackupInfo, pomFile);
     }
 

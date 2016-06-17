@@ -6,7 +6,6 @@ import io.sealigths.plugins.sealightsjenkins.LogLevel;
 import io.sealigths.plugins.sealightsjenkins.TestingFramework;
 import io.sealigths.plugins.sealightsjenkins.entities.FileBackupInfo;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
-import org.apache.commons.collections.functors.ExceptionClosure;
 import org.apache.commons.io.FileUtils;
 import org.custommonkey.xmlunit.DetailedDiff;
 import org.custommonkey.xmlunit.XMLUnit;
@@ -129,8 +128,13 @@ public class MavenIntegrationTest {
         performTest("21_If_name_tag_is_not_listener_add_name_tag_with_our_listener");
     }
 
+    @Test
+    public void injectSeaLightsPluginWithJunit3ListenerToAPomWithoutThePluginButWithSurefire() throws Exception {
+        performTest("22_Inject_SeaLights_plugin_with_junit3_listener_to_a_pom_without_the_plugin_but_with_surefire", TestingFramework.JUNIT_3);
+    }
+
     private void performTest(String testCase) throws Exception {
-        performTest(testCase, TestingFramework.JUNIT);
+        performTest(testCase, TestingFramework.JUNIT_4);
     }
 
     private void performTest(String testCase, TestingFramework testingFramework) throws Exception {
@@ -206,7 +210,7 @@ public class MavenIntegrationTest {
         String target = path + "/actual.xml";
         List<FileBackupInfo> files = new ArrayList<>();
         files.add(new FileBackupInfo(source, target));
-        MavenIntegrationInfo info = new MavenIntegrationInfo(files, slInfo, TestingFramework.JUNIT);
+        MavenIntegrationInfo info = new MavenIntegrationInfo(files, slInfo, TestingFramework.JUNIT_4);
         info.setTestingFramework(TestingFramework.TESTNG);
         info.setSeaLightsPluginInfo(slInfo);
 

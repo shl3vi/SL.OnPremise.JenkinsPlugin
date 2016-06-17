@@ -9,14 +9,19 @@ public enum TestingFramework {
             return "testNG";
         }
     },
-    JUNIT() {
+    JUNIT_4() {
         @Override public String getDisplayName() {
-            return "JUnit";
+            return "JUnit 4";
         }
     },
-    JUNIT_AND_TESTNG() {
+    JUNIT_3() {
         @Override public String getDisplayName() {
-            return "JUnit_&_testNG";
+            return "JUnit 3";
+        }
+    },
+    JUNIT4_AND_TESTNG() {
+        @Override public String getDisplayName() {
+            return "JUnit 4 & testNG";
         }
     },
     AUTO_DETECT() {
