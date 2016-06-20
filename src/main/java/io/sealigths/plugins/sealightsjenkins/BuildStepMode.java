@@ -121,10 +121,23 @@ public class BuildStepMode implements Describable<BuildStepMode>, ExtensionPoint
 
     }
 
+
     public static class PrepareSealightsView extends BuildStepMode {
+
+        private String additionalMavenArguments;
+
         @DataBoundConstructor
-        public PrepareSealightsView() {
+        public PrepareSealightsView(String additionalMavenArguments) {
             super(BuildStepModes.PrepareSealights);
+            this.additionalMavenArguments = additionalMavenArguments;
+        }
+
+        public String getAdditionalMavenArguments() {
+            return additionalMavenArguments;
+        }
+
+        public void setAdditionalMavenArguments(String additionalMavenArguments) {
+            this.additionalMavenArguments = additionalMavenArguments;
         }
 
         @Extension

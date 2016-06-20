@@ -66,13 +66,13 @@ public class MavenBuildStepHelper {
         invokeMavenCommand(build, launcher, listener, normalizedTarget, logger, pom, properties, mavenBuildStep);
     }
 
-    public boolean beginAnalysisBuildStep(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Logger logger, String pom, String targets, String properties, MavenSealightsBuildStep mavenBuildStep) throws IOException, InterruptedException {
+    public boolean beginAnalysisBuildStep(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Logger logger, String pom, String additionalMavenArguments, String properties, MavenSealightsBuildStep mavenBuildStep) throws IOException, InterruptedException {
         if (!isSealightsEnabled)
             return true;
 
         beginAnalysis.perform(build, cleanupManager, logger, pom);
         if (AUTO_DETECT.equals(beginAnalysis.getTestingFramework())) {
-            if (!runInitializeTestListenerGoal(build, launcher, listener, logger, pom, targets, properties, mavenBuildStep)) {
+            if (!runInitializeTestListenerGoal(build, launcher, listener, logger, pom, additionalMavenArguments, properties, mavenBuildStep)) {
                 return false;
             }
         }
@@ -92,10 +92,8 @@ public class MavenBuildStepHelper {
         return mavenInstallation;
     }
 
-    private boolean runInitializeTestListenerGoal(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Logger logger, String pom, String targets, String properties, MavenSealightsBuildStep mavenBuildStep) throws IOException, InterruptedException {
-        String normalizedTarget = targets.replaceAll("[\t\r\n]+", " ");
-        normalizedTarget = getSystemPropertiesArgs(normalizedTarget) + " sealights:initialize-test-listener -e";
-
+    private boolean runInitializeTestListenerGoal(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Logger logger, String pom, String additionalMavenArguments, String properties, MavenSealightsBuildStep mavenBuildStep) throws IOException, InterruptedException {
+        String normalizedTarget = additionalMavenArguments + " sealights:initialize-test-listener -e";
         return invokeMavenCommand(build, launcher, listener, normalizedTarget, logger, pom, properties, mavenBuildStep);
     }
 
@@ -167,20 +165,6 @@ public class MavenBuildStepHelper {
             return false;
         }
         return true;
-    }
-
-
-    private String getSystemPropertiesArgs(String cmdLine) {
-        List<String> argsAsList = CommandLineHelper.toArgsArray(cmdLine);
-        StringBuilder sysProps = new StringBuilder();
-        for (String arg : argsAsList) {
-            if (arg.startsWith("-D")) {
-                sysProps.append(arg);
-                sysProps.append(" ");
-            }
-        }
-        return sysProps.toString();
-
     }
 
     public void copySettingsFileToSlave(String settingsPath, Logger logger) throws IOException, InterruptedException {
