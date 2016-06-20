@@ -15,6 +15,7 @@ import hudson.util.NullStream;
 import hudson.util.StreamTaskListener;
 import hudson.util.VariableResolver;
 import io.sealigths.plugins.sealightsjenkins.enums.BuildStepModes;
+import io.sealigths.plugins.sealightsjenkins.utils.CommandLineHelper;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import jenkins.model.Jenkins;
 import jenkins.mvn.GlobalMavenConfig;
@@ -199,8 +200,10 @@ public class MavenSealightsBuildStep extends Builder {
         MavenBuildStepHelper mavenBuildStepHelper = new MavenBuildStepHelper(currentMode, cleanupManager, this.beginAnalysis);
         try {
             if (isSealightsEnabled) {
+                String additionalMavenArguments = getAdditionalArgumentsForSealightsInitialize();
+
                 mavenBuildStepHelper.installSealightsMavenPlugin(build, launcher, listener, this.pom, this.properties, this);
-                if (!mavenBuildStepHelper.beginAnalysisBuildStep(build, launcher, listener, logger, this.pom, this.targets, this.properties, this)) {
+                if (!mavenBuildStepHelper.beginAnalysisBuildStep(build, launcher, listener, logger, this.pom, additionalMavenArguments, this.properties, this)) {
                     logger.error("Begin Analysis step returned false. This likely due to an Exit Code > 0 from Maven.");
                     return false;
                 }
@@ -222,6 +225,31 @@ public class MavenSealightsBuildStep extends Builder {
             mavenBuildStepHelper.tryRestore(build, launcher, listener);
         }
         return true;
+    }
+
+    private String getSystemPropertiesArgs(String cmdLine) {
+        List<String> argsAsList = CommandLineHelper.toArgsArray(cmdLine);
+        StringBuilder sysProps = new StringBuilder();
+        for (String arg : argsAsList) {
+            if (arg.startsWith("-D")) {
+                sysProps.append(arg);
+                sysProps.append(" ");
+            }
+        }
+        return sysProps.toString();
+
+    }
+
+    private String getAdditionalArgumentsForSealightsInitialize(){
+        if (buildStepMode instanceof BuildStepMode.InvokeMavenCommandView){
+            String normalizedTarget = targets.replaceAll("[\t\r\n]+", " ");
+            return getSystemPropertiesArgs(normalizedTarget);
+        }
+        if (buildStepMode instanceof BuildStepMode.PrepareSealightsView){
+            return ((BuildStepMode.PrepareSealightsView)buildStepMode).getAdditionalMavenArguments();
+        }
+
+        return "";
     }
 
     private boolean tryInvokeMaven(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, MavenBuildStepHelper mavenBuildStepHelper, Logger logger) throws IOException, InterruptedException {
