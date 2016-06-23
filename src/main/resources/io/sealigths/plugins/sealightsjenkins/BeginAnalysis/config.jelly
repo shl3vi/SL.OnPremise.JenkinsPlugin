@@ -26,7 +26,7 @@
 
         <f:dropdownList name="buildName" title="Build Name">
             <j:forEach var="currentDescriptor" items="${descriptor.buildNameDescriptorList}" varStatus="loop">
-                <f:dropdownListBlock title="${currentDescriptor.displayName}" value="${loop.index}" selected="${currentDescriptor == instance.buildName.descriptor || (instance.buildName.descriptor == null &amp;&amp; currentDescriptor.displayName == 'Use the job name from Jenkins (by default, an auto-incrementing number)')}" staplerClass="${currentDescriptor.clazz.name}">
+                <f:dropdownListBlock title="${currentDescriptor.displayName}" value="${loop.index}" selected="${currentDescriptor == instance.buildName.descriptor || (instance.buildName.descriptor == null &amp;&amp; currentDescriptor.default)}" staplerClass="${currentDescriptor.clazz.name}">
                     <j:set var="instance" value="${instance.buildName}" />
                     <j:set var="descriptor" value="${instance.descriptor}" />
                     <st:include page="${currentDescriptor.configPage}" from="${currentDescriptor}"/>
