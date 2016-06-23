@@ -44,6 +44,10 @@ public class BuildName implements Describable<BuildName>, ExtensionPoint, Serial
             this.buildNameSelection = buildNameSelection;
         }
 
+        public boolean isDefault(){
+            return false;
+        }
+
         @Override
         public String getDisplayName() {
             return buildNameSelection;
@@ -65,6 +69,11 @@ public class BuildName implements Describable<BuildName>, ExtensionPoint, Serial
         public static class DefaultBuildNameDescriptor extends BuildNameDescriptor {
             public DefaultBuildNameDescriptor() {
                 super(DefaultBuildName.class, BuildNamingStrategy.JENKINS_BUILD.getDisplayName());
+            }
+
+            @Override
+            public boolean isDefault(){
+                return true;
             }
         }
 
