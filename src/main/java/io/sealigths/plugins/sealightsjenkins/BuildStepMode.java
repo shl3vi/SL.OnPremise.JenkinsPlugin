@@ -42,6 +42,10 @@ public class BuildStepMode implements Describable<BuildStepMode>, ExtensionPoint
             this.selectedMode = selectedMode;
         }
 
+        public boolean isDefault(){
+            return false;
+        }
+
         @Override
         public String getDisplayName() {
             return selectedMode;
@@ -114,8 +118,14 @@ public class BuildStepMode implements Describable<BuildStepMode>, ExtensionPoint
 
         @Extension
         public static class InvokeMavenCommandDescriptor extends BuildStepModeDescriptor {
+
             public InvokeMavenCommandDescriptor() {
                 super(InvokeMavenCommandView.class, BuildStepModes.InvokeMavenCommandWithSealights.getDisplayName());
+            }
+
+            @Override
+            public boolean isDefault(){
+                return true;
             }
         }
 
