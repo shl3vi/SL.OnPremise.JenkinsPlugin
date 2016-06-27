@@ -41,7 +41,7 @@ THE SOFTWARE.
     <f:dropdownList name="buildStepMode" title="Action">
         <j:forEach var="currentDescriptor" items="${descriptor.buildStepModeDescriptorList}" varStatus="loop">
             <f:dropdownListBlock title="${currentDescriptor.displayName}" value="${loop.index}"
-                                 selected="${currentDescriptor == instance.buildStepMode.descriptor}"
+                                 selected="${currentDescriptor == instance.buildStepMode.descriptor || (instance.buildStepMode.descriptor == null &amp;&amp; currentDescriptor.default)}"
                                  staplerClass="${currentDescriptor.clazz.name}">
                 <j:set var="instance" value="${instance.buildStepMode}"/>
                 <j:set var="descriptor" value="${instance.descriptor}"/>
