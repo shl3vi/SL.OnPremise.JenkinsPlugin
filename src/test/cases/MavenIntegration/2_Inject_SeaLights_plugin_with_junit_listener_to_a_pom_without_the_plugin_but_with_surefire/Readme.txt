@@ -1,2 +1,0 @@
-In this test a pom exists which contain the Maven SureFire plugin. The test should verify that the SureFire plugin gets an additional "configuration" element
-with the JUnit listener. In addition, SeaLights plugin is added as a sibling of the SureFire plugin.

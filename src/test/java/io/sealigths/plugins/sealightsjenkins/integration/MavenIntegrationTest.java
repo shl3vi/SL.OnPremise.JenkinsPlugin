@@ -18,133 +18,64 @@ import java.util.List;
 
 public class MavenIntegrationTest {
 
-    String PATH = System.getProperty("user.dir") + "/src/test/cases/MavenIntegration/";
-    boolean SAVE_POM_USING_JENKINS_API = false;
+    private String PATH = System.getProperty("user.dir") + "/src/test/cases/MavenIntegration/";
 
     @Test
-    public void injectSeaLightsPluginWithTestngListenerToAPomWithoutThePluginButWithSurefire() throws Exception {
-        performTest(
-                "1_Inject_SeaLights_plugin_with_testng_listener_to_a_pom_without_the_plugin_but_with_surefire", TestingFramework.TESTNG);
+    public void injectSeaLightsPluginToAPomWithoutThePlugin() throws Exception {
+        performTest("1_Inject_SeaLights_plugin_to_a_pom_without_the_plugin");
     }
 
     @Test
-    public void injectSeaLightsPluginWithJunitListenerToAPomWithoutThePluginButWithSurefire() throws Exception {
-        performTest("2_Inject_SeaLights_plugin_with_junit_listener_to_a_pom_without_the_plugin_but_with_surefire");
+    public void injectSeaLightsPluginToAPomWithSingleProfile() throws Exception {
+        performTest("2_Inject_SeaLights_plugin_to_a_pom_with_a_single_profile");
     }
 
     @Test
-    public void injectSeaLightsPluginToAPomWithSingleProfileWithSurefire() throws Exception {
-        performTest("3_Inject_SeaLights_plugin_to_a_pom_with_a_single_profile_with_surefire");
-    }
-
-    @Test
-    public void injectSeaLightsPluginToAPomWithTwoProfilesWithSurefire() throws Exception {
-        performTest("4_Inject_SeaLights_plugin_to_a_pom_with_a_two_profiles_with_surefire");
-    }
-
-    @Test
-    public void injectSeaLightsPluginToAPomWithTwoProfilesWithSurefireAndAnotherSurefireNotInProfile() throws Exception {
-        performTest("5_Inject_SeaLights_plugin_to_a_pom_with_a_two_profiles_with_surefire_and_another_surefire_not_in_profile");
-    }
-
-    @Test
-    public void injectSeaLightsPluginToAPomWithProfileWhichHasSurefireAndAnotherDoesnt() throws Exception {
-        performTest("6_Inject_SeaLights_plugin_to_a_pom_with_a_profile_which_has_surefire_and_another_doesnt");
-    }
-
-    @Test
-    public void injectSeaLightsPluginToAPomWithSurefireThatHasExistingConfigurationElement() throws Exception {
-        performTest("7_Inject_SeaLights_plugin_to_a_pom_with_surefire_that_has_existing_configuration_element");
-    }
-
-    @Test
-    public void injectSeaLightsPluginToAPomWithSurefireThatHasExistingConfigurationElementWithArgLineElementThatDoesntChainOldValues() throws Exception {
-        performTest("8_Inject_SeaLights_plugin_to_a_pom_with_surefire_that_has_existing_configuration_element_with_argLine_element_that_doesnt_chain_old_values");
-    }
-
-
-    @Test
-    public void injectSeaLightsPluginToAPomWithSurefireThatHasExistingConfigurationElementWithArgLineElementThatDoesChainOldValues() throws Exception {
-        performTest("9_Inject_SeaLights_plugin_to_a_pom_with_surefire_that_has_existing_configuration_element_with_argLine_element_that_does_chain_old_values");
-    }
-
-    @Test
-    public void injectSeaLightsPluginToAPomWithSurefireInsidePluginManagementElement() throws Exception {
-        performTest("10_Inject_SeaLights_plugin_to_a_pom_with_surefire_inside_pluginManagement_element");
-    }
-
-    @Test
-    public void injectSeaLightsPluginToAPomWithAdditionalClassPathElementInsideSurefire() throws Exception {
-        performTest("11_Inject_SeaLights_plugin_to_a_pom_with_additionalClasspathElement_inside_surefire");
-    }
-
-    @Test
-    public void insertSeaLightsListenerWhenWithNameWithoutValue() throws Exception {
-        performTest("12_Insert_Sealights_listener_when_with_name_without_value");
-    }
-
-    @Test
-    public void insertSeaLightsListenerWhenWithoutNameWithoutValue() throws Exception {
-        performTest("13_Insert_Sealights_listener_when_without_name_without_value");
-    }
-
-    @Test
-    public void insertSeaLightsListenerWhenWithNameWithDifferentValue() throws Exception {
-        performTest("14_Insert_Sealights_listener_when_with_name_with_value_different_from_ours");
-    }
-
-    @Test
-    public void dontInjectSeaLightsAdditionalClassPathElementWhenAlreadyExist() throws Exception {
-        performTest("15_dont_Insert_Sealights_additionalClassPathElement_when_already_exist");
+    public void injectSeaLightsPluginToAPomWithTwoProfiles() throws Exception {
+        performTest("3_Inject_SeaLights_plugin_to_a_pom_with_a_two_profiles");
     }
 
     @Test
     public void injectSeaLightsWhenBuildElementNotExist() throws Exception {
-        performTest("16_Inject_SeaLights_when_build_element_not_exist");
+        performTest("4_Inject_SeaLights_when_build_element_not_exist");
     }
 
     @Test(expected = FileNotFoundException.class)
     public void dontInjectSeaLightsPluginIfAlreadyInjected() throws Exception {
-        performTest("17_Dont_inject_Sealights_plugin_if_already_injected");
+        performTest("5_Dont_inject_Sealights_plugin_if_already_injected");
     }
 
     @Test(expected = FileNotFoundException.class)
     public void dontInjectSeaLightsPluginIfAlreadyInjectedInPluginManagement() throws Exception {
-        performTest("18_Dont_inject_Sealights_plugin_if_already_injected_in_pluginManagement");
+        performTest("6_Dont_inject_Sealights_plugin_if_already_injected_in_pluginManagement");
     }
 
     @Test(expected = FileNotFoundException.class)
     public void dontInjectSeaLightsPluginIfAlreadyInjectedInPlugins() throws Exception {
-        performTest("19_Dont_inject_Sealights_plugin_if_already_injected_in_plugins");
+        performTest("7_Dont_inject_Sealights_plugin_if_already_injected_in_plugins");
     }
 
     @Test(expected = FileNotFoundException.class)
     public void dontInjectSeaLightsPluginIfAlreadyInjectedInProfile() throws Exception {
-        performTest("20_Dont_inject_Sealights_plugin_if_already_injected_in_profile");
+        performTest("8_Dont_inject_Sealights_plugin_if_already_injected_in_profile");
     }
 
-    @Test()
-    public void ifNameTagIsNotListenerAddNameTagWithOurListener() throws Exception {
-        performTest("21_If_name_tag_is_not_listener_add_name_tag_with_our_listener");
+    @Test(expected = FileNotFoundException.class)
+    public void dontIntegrateIfUnsupportedForkModePresent() throws Exception {
+        performTest("9_Dont_integrate_if_unsupported_forkMode_present");
     }
 
-    @Test
-    public void injectSeaLightsPluginWithJunit3ListenerToAPomWithoutThePluginButWithSurefire() throws Exception {
-        performTest("22_Inject_SeaLights_plugin_with_junit3_listener_to_a_pom_without_the_plugin_but_with_surefire", TestingFramework.JUNIT_3);
+    @Test(expected = FileNotFoundException.class)
+    public void dontIntegrateIfUnsupportedForkCountPresent() throws Exception {
+        performTest("10_Dont_integrate_if_unsupported_forkCount_present");
     }
 
     private void performTest(String testCase) throws Exception {
-        performTest(testCase, TestingFramework.JUNIT_4);
-    }
-
-    private void performTest(String testCase, TestingFramework testingFramework) throws Exception {
         //Arrange
-        TestingFramework TESTING_FRAMEWORK= testingFramework;
-        String TEST_CASE = testCase;
-        String testFolder = getTestFolder(TEST_CASE);
+        final boolean SAVE_POM_USING_JENKINS_API = false;
+        String testFolder = getTestFolder(testCase);
 
         MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
-        mavenIntegrationInfo.setTestingFramework(TESTING_FRAMEWORK);
         MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
 
         //Act
@@ -157,7 +88,7 @@ public class MavenIntegrationTest {
         assertXMLEquals(expected, actual);
     }
 
-    public static void assertXMLEquals(String expectedXML, String actualXML) throws Exception {
+    private static void assertXMLEquals(String expectedXML, String actualXML) throws Exception {
         XMLUnit.setIgnoreWhitespace(true);
         XMLUnit.setIgnoreAttributeOrder(true);
 

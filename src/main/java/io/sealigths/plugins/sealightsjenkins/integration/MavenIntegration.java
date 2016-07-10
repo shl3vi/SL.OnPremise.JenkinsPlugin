@@ -118,7 +118,7 @@ public class MavenIntegration {
         }
         if (!testingFramework.equals(TestingFramework.JUNIT_3)) {
             //# JUnit 3 doesn't need to add a listener to the pom (currently unsupported by Surefire).
-            pomFile.updateSurefirePlugin(testingFrameworkListeners, apiAgentPath);
+//            pomFile.updateSurefirePlugin(testingFrameworkListeners, apiAgentPath);
         }
         savePom(fileBackupInfo, pomFile);
     }
