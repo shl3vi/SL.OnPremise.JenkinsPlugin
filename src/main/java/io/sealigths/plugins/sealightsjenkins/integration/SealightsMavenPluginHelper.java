@@ -1,7 +1,6 @@
 package io.sealigths.plugins.sealightsjenkins.integration;
 
 import io.sealigths.plugins.sealightsjenkins.ExecutionType;
-import io.sealigths.plugins.sealightsjenkins.TestingFramework;
 import io.sealigths.plugins.sealightsjenkins.utils.FileAndFolderUtils;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import org.apache.commons.lang.StringUtils;
@@ -58,7 +57,7 @@ public class SealightsMavenPluginHelper {
     }
 
 
-    public String toPluginText(SeaLightsPluginInfo pluginInfo, TestingFramework testingFramework) {
+    public String toPluginText(SeaLightsPluginInfo pluginInfo) {
 
         StringBuilder plugin = new StringBuilder();
         plugin.append("<groupId>io.sealights.on-premise.agents.plugin</groupId>");
@@ -96,7 +95,6 @@ public class SealightsMavenPluginHelper {
         }
 
         tryAppendValue(plugin, pluginInfo.getFilesIncluded(), "filesincluded");
-        tryAppendValue(plugin, pluginInfo.getApiJar(), "apiJar");
         tryAppendValue(plugin, pluginInfo.getScannerJar(), "buildScannerJar");
         tryAppendValue(plugin, pluginInfo.getListenerJar(), "testListenerJar");
         tryAppendValue(plugin, pluginInfo.getListenerConfigFile(), "testListenerConfigFile");
@@ -118,8 +116,6 @@ public class SealightsMavenPluginHelper {
         }
 
         tryAppendValue(plugin, pluginInfo.getLogFolder(), "logFolder");
-        plugin.append("<enableTestListenerInitialization>" + testingFramework.equals(TestingFramework.AUTO_DETECT) + "</enableTestListenerInitialization>");
-
 
         plugin.append("</configuration>");
         plugin.append("<executions>");

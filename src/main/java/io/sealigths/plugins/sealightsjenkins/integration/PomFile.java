@@ -125,7 +125,7 @@ public class PomFile {
                     //Not a surefire plugin
                     continue;
                 }
-                if (isSurefireValid(element)) {
+                if (!isSurefireValid(element)) {
                     return false;
                 }
             }

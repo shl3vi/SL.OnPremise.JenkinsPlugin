@@ -3,7 +3,6 @@ package io.sealigths.plugins.sealightsjenkins.integration;
 import io.sealigths.plugins.sealightsjenkins.BuildStrategy;
 import io.sealigths.plugins.sealightsjenkins.ExecutionType;
 import io.sealigths.plugins.sealightsjenkins.LogLevel;
-import io.sealigths.plugins.sealightsjenkins.TestingFramework;
 import io.sealigths.plugins.sealightsjenkins.entities.FileBackupInfo;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import org.apache.commons.io.FileUtils;
@@ -130,7 +129,6 @@ public class MavenIntegrationTest {
 
         slInfo.setListenerJar("c:\\fake-test-listener.jar");
         slInfo.setScannerJar("c:\\fake-build-scanner.jar");
-        slInfo.setApiJar("c:\\sl-api.jar");
         slInfo.setBuildStrategy(BuildStrategy.ONE_BUILD);
 
         slInfo.setLogEnabled(false);
@@ -141,8 +139,7 @@ public class MavenIntegrationTest {
         String target = path + "/actual.xml";
         List<FileBackupInfo> files = new ArrayList<>();
         files.add(new FileBackupInfo(source, target));
-        MavenIntegrationInfo info = new MavenIntegrationInfo(files, slInfo, TestingFramework.JUNIT_4);
-        info.setTestingFramework(TestingFramework.TESTNG);
+        MavenIntegrationInfo info = new MavenIntegrationInfo(files, slInfo);
         info.setSeaLightsPluginInfo(slInfo);
 
         return info;

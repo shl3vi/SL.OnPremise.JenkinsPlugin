@@ -56,7 +56,6 @@ public class BeginAnalysis extends Builder {
     private String workspacepath;
     private String buildScannerJar;
     private String testListenerJar;
-    private String apiJar;
     private String testListenerConfigFile;
     private boolean autoRestoreBuildFile;
     private String buildFilesPatterns;
@@ -64,7 +63,6 @@ public class BeginAnalysis extends Builder {
     private boolean logEnabled;
     private String logFolder;
     private LogDestination logDestination = LogDestination.CONSOLE;
-    private TestingFramework testingFramework = TestingFramework.AUTO_DETECT;
     private LogLevel logLevel = LogLevel.OFF;
     private BuildStrategy buildStrategy = BuildStrategy.ONE_BUILD;
     private BuildName buildName;
@@ -80,18 +78,17 @@ public class BeginAnalysis extends Builder {
                          boolean overrideJars, boolean multipleBuildFiles, String environment,
                          String packagesIncluded, String packagesExcluded, String filesIncluded,
                          String filesExcluded, String classLoadersExcluded, boolean recursive,
-                         String workspacepath, String buildScannerJar, String testListenerJar, String apiJar,
+                         String workspacepath, String buildScannerJar, String testListenerJar,
                          String testListenerConfigFile, boolean autoRestoreBuildFile,
                          String buildFilesPatterns, String buildFilesFolders,
                          boolean logEnabled, LogDestination logDestination, String logFolder,
-                         TestingFramework testingFramework, BuildStrategy buildStrategy,
+                         BuildStrategy buildStrategy,
                          BuildName buildName, ExecutionType executionType,
                          String override_customerId, String override_url, String override_proxy) throws IOException {
 
         this.override_customerId = override_customerId;
         this.override_url = override_url;
         this.override_proxy = override_proxy;
-
         this.appName = appName;
         this.moduleName = moduleName;
         this.branch = branch;
@@ -107,7 +104,6 @@ public class BeginAnalysis extends Builder {
         this.buildName = buildName;
         this.autoRestoreBuildFile = autoRestoreBuildFile;
         this.environment = environment;
-        this.testingFramework = testingFramework;
         this.executionType = executionType;
         this.multipleBuildFiles = multipleBuildFiles;
         this.overrideJars = overrideJars;
@@ -122,7 +118,6 @@ public class BeginAnalysis extends Builder {
 
         this.buildScannerJar = buildScannerJar;
         this.testListenerJar = testListenerJar;
-        this.apiJar = apiJar;
     }
 
     private void setDefaultValuesForStrings(Logger logger) {
@@ -145,9 +140,6 @@ public class BeginAnalysis extends Builder {
 
         if (this.logDestination == null)
             this.logDestination = LogDestination.CONSOLE;
-
-        if (this.testingFramework == null)
-            this.testingFramework = TestingFramework.AUTO_DETECT;
 
         if (this.logLevel == null)
             this.logLevel = LogLevel.OFF;
@@ -270,11 +262,6 @@ public class BeginAnalysis extends Builder {
     }
 
     @Exported
-    public String getApiJar() {
-        return apiJar;
-    }
-
-    @Exported
     public String getTestListenerConfigFile() {
         return testListenerConfigFile;
     }
@@ -325,16 +312,6 @@ public class BeginAnalysis extends Builder {
     }
 
     @Exported
-    public TestingFramework getTestingFramework() {
-        return testingFramework;
-    }
-
-    @Exported
-    public void setTestingFramework(TestingFramework testingFramework) {
-        this.testingFramework = testingFramework;
-    }
-
-    @Exported
     public LogLevel getLogLevel() {
         return logLevel;
     }
@@ -369,26 +346,6 @@ public class BeginAnalysis extends Builder {
         return override_proxy;
     }
 
-    private String handleApiJar(Logger logger, String tmpApiJar, CleanupManager cleanupManager) throws IOException, InterruptedException {
-
-        boolean deleteApiJarOnExit = false;
-        if (org.apache.commons.lang.StringUtils.isBlank(tmpApiJar)) {
-            //The user didn't specify a specific version of the test listener. Use an embedded one.
-            tmpApiJar = JarsHelper.loadJarAndSaveAsTempFile("sl-api");
-            deleteApiJarOnExit = true;
-        } else {
-            logger.info("The user specified a version for the 'apiJar'. Overriding embedded version with:'" + apiJar + "'");
-        }
-
-        if (!StringUtils.isNullOrEmpty(tmpApiJar)) {
-            CustomFile customFile = new CustomFile(logger, cleanupManager, tmpApiJar);
-            customFile.copyToSlave(deleteApiJarOnExit);
-        }
-
-        return tmpApiJar;
-
-    }
-
     private void copyAgentsToSlaveIfNeeded(Logger logger, CleanupManager cleanupManager) throws IOException, InterruptedException {
         if (!StringUtils.isNullOrEmpty(buildScannerJar)) {
             CustomFile customFile = new CustomFile(logger, cleanupManager, buildScannerJar);
@@ -414,8 +371,6 @@ public class BeginAnalysis extends Builder {
             }
 
             copyAgentsToSlaveIfNeeded(logger, cleanupManager);
-            String tmpApiJar = apiJar;
-            tmpApiJar = handleApiJar(logger, tmpApiJar, cleanupManager);
 
             String workingDir = ws.getRemote();
 
@@ -425,7 +380,7 @@ public class BeginAnalysis extends Builder {
                 tryAddRestoreBuildFilePublisher(build, logger);
             }
 
-            SeaLightsPluginInfo slInfo = createSeaLightsPluginInfo(build, ws, logger, tmpApiJar);
+            SeaLightsPluginInfo slInfo = createSeaLightsPluginInfo(build, ws, logger);
 
             printFields(slInfo, logger);
 
@@ -505,8 +460,7 @@ public class BeginAnalysis extends Builder {
 
         MavenIntegrationInfo info = new MavenIntegrationInfo(
                 pomFiles,
-                slInfo,
-                testingFramework
+                slInfo
         );
         MavenIntegration mavenIntegration = new MavenIntegration(logger, info);
         mavenIntegration.integrate();
@@ -570,7 +524,7 @@ public class BeginAnalysis extends Builder {
     }
 
     private SeaLightsPluginInfo createSeaLightsPluginInfo(
-            AbstractBuild<?, ?> build, FilePath ws, Logger logger, String tmpApiJar) throws SeaLightsIllegalStateException {
+            AbstractBuild<?, ?> build, FilePath ws, Logger logger) throws SeaLightsIllegalStateException {
 
         SeaLightsPluginInfo slInfo = new SeaLightsPluginInfo();
         setGlobalConfiguration(slInfo);
@@ -597,7 +551,6 @@ public class BeginAnalysis extends Builder {
         slInfo.setListenerJar(testListenerJar);
         slInfo.setListenerConfigFile(testListenerConfigFile);
         slInfo.setScannerJar(buildScannerJar);
-        slInfo.setApiJar(tmpApiJar);
         slInfo.setBuildStrategy(buildStrategy);
         slInfo.setEnvironment(environment);
         slInfo.setLogEnabled(!(LogLevel.OFF.equals(logLevel)));
@@ -710,7 +663,6 @@ public class BeginAnalysis extends Builder {
         logger.debug("Multiple Build Files: " + multipleBuildFiles);
         logger.debug("Override Jars: " + overrideJars);
         logger.debug("Pom Path:" + pomPath);
-        logger.debug("Testing Framework: " + testingFramework);
         logger.debug("Build Naming Strategy (from selection): " + buildName.getBuildNamingStrategy());
         logger.debug("Auto Restore Build File:" + autoRestoreBuildFile);
 

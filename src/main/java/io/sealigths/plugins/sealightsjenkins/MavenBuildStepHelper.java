@@ -18,7 +18,6 @@ import hudson.util.VariableResolver;
 import io.sealigths.plugins.sealightsjenkins.enums.BuildStepModes;
 import io.sealigths.plugins.sealightsjenkins.integration.JarsHelper;
 import io.sealigths.plugins.sealightsjenkins.integration.SealightsMavenPluginHelper;
-import io.sealigths.plugins.sealightsjenkins.utils.CommandLineHelper;
 import io.sealigths.plugins.sealightsjenkins.utils.CustomFile;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
 import jenkins.model.Jenkins;
@@ -29,7 +28,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static io.sealigths.plugins.sealightsjenkins.TestingFramework.AUTO_DETECT;
 
 /**
  * Created by Nadav on 6/5/2016.
@@ -71,11 +69,6 @@ public class MavenBuildStepHelper {
             return true;
 
         beginAnalysis.perform(build, cleanupManager, logger, pom);
-        if (AUTO_DETECT.equals(beginAnalysis.getTestingFramework())) {
-            if (!runInitializeTestListenerGoal(build, launcher, listener, logger, pom, additionalMavenArguments, properties, mavenBuildStep)) {
-                return false;
-            }
-        }
         return true;
     }
 
@@ -90,11 +83,6 @@ public class MavenBuildStepHelper {
 
         }
         return mavenInstallation;
-    }
-
-    private boolean runInitializeTestListenerGoal(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Logger logger, String pom, String additionalMavenArguments, String properties, MavenSealightsBuildStep mavenBuildStep) throws IOException, InterruptedException {
-        String normalizedTarget = additionalMavenArguments + " sealights:initialize-test-listener -e";
-        return invokeMavenCommand(build, launcher, listener, normalizedTarget, logger, pom, properties, mavenBuildStep);
     }
 
     private boolean invokeMavenCommand(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String normalizedTarget, Logger logger, String projectPom, String properties, MavenSealightsBuildStep mavenBuildStep) throws IOException, InterruptedException {
