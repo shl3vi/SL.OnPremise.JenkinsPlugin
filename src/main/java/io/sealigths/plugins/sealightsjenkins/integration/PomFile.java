@@ -33,8 +33,6 @@ public class PomFile {
     protected String filename;
     private Document document;
 
-    private static String PLUGIN_TEMPLATE = "plugin[artifactId='#ARTIFACT_ID#']";
-
     public PomFile(String filename, Logger log) {
         this.filename = filename;
         this.log = log;
@@ -56,8 +54,40 @@ public class PomFile {
             Element docElement = doc.getDocumentElement();
             addPlugin(pluginBodyAsXml, docElement);
             addPluginToAllProfiles(pluginBodyAsXml, docElement);
+            verifySurefireArgLineModification(docElement);
         } catch (XPathExpressionException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void verifySurefireArgLineModification(Element docElement){
+        if (docElement == null) {
+            log.warning("Couldn't read pom file (documentElement is null) while trying to verify surefire 'argLine' modification.");
+            return;
+        }
+
+        try {
+            List<Element> pluginElements = getElements("//plugin", docElement);
+            for (Element plugin : pluginElements) {
+                if (!isNodeExist(plugin, "./artifactId[.='maven-surefire-plugin']")) {
+                    //Not a surefire plugin
+                    continue;
+                }
+                List<Element> argLineElements = getElements("./configuration/argLine", plugin);
+                if (argLineElements.size() > 0){
+                    modifySurefireArgLine(argLineElements.get(0));
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed while trying to verify surefire 'argLine' modification. Error:", e);
+        }
+    }
+
+    private void modifySurefireArgLine(Element argLine) {
+        String currentValue = argLine.getTextContent();
+        if (!currentValue.contains("${argLine}")) {
+            currentValue = "${argLine} " + currentValue;
+            argLine.setTextContent(currentValue);
         }
     }
 
@@ -71,7 +101,8 @@ public class PomFile {
         }
     }
 
-    public void addPlugin(String pluginBodyAsXml, Element parentElement) throws XPathExpressionException {
+
+    private void addPlugin(String pluginBodyAsXml, Element parentElement) throws XPathExpressionException {
         List<Element> buildElements = getOrCreateElements("build", parentElement);
 
         for (Element buildElement : buildElements) {
@@ -88,8 +119,7 @@ public class PomFile {
         List<Element> pluginsElements = getOrCreateElements("plugins", parentElement);
         try {
 
-            for (int i = 0; i < pluginsElements.size(); i++) {
-                Element pluginsElement = pluginsElements.get(i);
+            for (Element pluginsElement : pluginsElements) {
                 addPluginToPluginsElement(pluginBodyAsXml, pluginsElement);
             }
 
@@ -143,11 +173,22 @@ public class PomFile {
             return false;
         }
         if (!isValidForkMode(surefirePlugin)) {
-            log.warning("Found an unsupported 'forkMode' value of SureFire. Value cannot be 'never' or 'always'. Recommended value is 'once'.");
-            System.err.println("[SeaLights Jenkins Plugin] - WARNING - Found an unsupported 'forkMode' value of SureFire. Value cannot be 'never' or 'always'. Recommended value is 'once'.");
+            log.warning("Found an unsupported 'forkMode' value of SureFire. Value cannot be 'never' or combination of 'perthread' with 'threadCount' of 0.");
+            System.err.println("[SeaLights Jenkins Plugin] - WARNING - Found an unsupported 'forkMode' value of SureFire. Value cannot be 'never' or combination of 'perthread' with 'threadCount' of 0..");
+            return false;
+        }
+
+        if (isParallelExist(surefirePlugin)){
+            log.warning("Found an unsupported 'parallel' value of SureFire.");
+            System.err.println("[SeaLights Jenkins Plugin] - WARNING - Found an unsupported 'parallel' tag of SureFire.");
             return false;
         }
         return true;
+    }
+
+    private boolean isParallelExist(Element surefirePlugin) throws XPathExpressionException {
+        List<Element> forkModeElements = getElements("./configuration/parallel", surefirePlugin);
+        return !forkModeElements.isEmpty();
     }
 
     private boolean isValidForkMode(Element surefirePlugin) throws XPathExpressionException {
@@ -157,7 +198,21 @@ public class PomFile {
 
         Element forkMode = forkModeElements.get(0);
         String currentValue = forkMode.getTextContent();
-        return !"perthread".equalsIgnoreCase(currentValue);
+
+        return !(
+                ("perthread".equalsIgnoreCase(currentValue) && isValidPerThreadForkMode(surefirePlugin))
+                || "never".equalsIgnoreCase(currentValue));
+    }
+
+    private boolean isValidPerThreadForkMode(Element surefirePlugin) throws XPathExpressionException {
+        List<Element> threadCountElements = getElements("./configuration/threadCount", surefirePlugin);
+        if (threadCountElements.isEmpty())
+            //threadCount is '0' by default and its unsupported.
+            return false;
+
+        Element threadCountElement = threadCountElements.get(0);
+        String currentValue = threadCountElement.getTextContent();
+        return !"0".equals(currentValue);
     }
 
     private boolean isValidForkCount(Element surefirePlugin) throws XPathExpressionException {
@@ -167,7 +222,7 @@ public class PomFile {
 
         Element forkCount = forkCountElements.get(0);
         String currentValue = forkCount.getTextContent();
-        return "0".equals(currentValue) || "1".equals(currentValue);
+        return !"0".equals(currentValue);
     }
 
     public void save(String filename) throws TransformerException, IOException, InterruptedException {
@@ -219,14 +274,13 @@ public class PomFile {
     }
 
     private boolean isPluginExistInElement(String artifactId, Element parent, boolean includeAllDescendants) throws XPathExpressionException {
-        String xpath = PLUGIN_TEMPLATE;
+        String xpath = "plugin[artifactId='#ARTIFACT_ID#']";
         if (includeAllDescendants)
             xpath = "//" + xpath;
 
         xpath = xpath.replace("#ARTIFACT_ID#", artifactId);
         return isNodeExist(parent, xpath);
     }
-
 
     private boolean isNodeExist(Element parent, String xpathToNode) throws XPathExpressionException {
         XPath xPath = XPathFactory.newInstance().newXPath();

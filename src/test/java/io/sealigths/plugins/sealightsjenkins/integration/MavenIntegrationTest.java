@@ -60,13 +60,38 @@ public class MavenIntegrationTest {
     }
 
     @Test(expected = FileNotFoundException.class)
-    public void dontIntegrateIfUnsupportedForkModePresent() throws Exception {
-        performTest("9_Dont_integrate_if_unsupported_forkMode_present");
+    public void dontIntegrateIfUnsupportedForkModeNeverPresent() throws Exception {
+        performTest("9_Dont_integrate_if_unsupported_forkMode_never_present");
+    }
+
+    @Test(expected = FileNotFoundException.class)
+    public void dontIntegrateIfUnsupportedForkModePerthreadWithoutThreadCountPresent() throws Exception {
+        performTest("10_Dont_integrate_if_unsupported_forkMode_perthread_without_threadCount_present");
+    }
+
+    @Test(expected = FileNotFoundException.class)
+    public void dontIntegrateIfUnsupportedForkModePerthreadWithThreadCount0Present() throws Exception {
+        performTest("11_Dont_integrate_if_unsupported_forkMode_perthread_with_threadCount_0_present");
     }
 
     @Test(expected = FileNotFoundException.class)
     public void dontIntegrateIfUnsupportedForkCountPresent() throws Exception {
-        performTest("10_Dont_integrate_if_unsupported_forkCount_present");
+        performTest("12_Dont_integrate_if_unsupported_forkCount_present");
+    }
+
+    @Test(expected = FileNotFoundException.class)
+    public void dontIntegrateIfUnsupportedParallelPresent() throws Exception {
+        performTest("13_Dont_integrate_if_unsupported_parallel_present");
+    }
+
+    @Test
+    public void injectSeaLightsPluginToPomWith_surefire_that_has_argLine_element_that_doesnt_chain_old_values() throws Exception {
+        performTest("14_Inject_SeaLights_plugin_to_pom_with_surefire_that_has_argLine_element_that_doesnt_chain_old_values");
+    }
+
+    @Test
+    public void injectSeaLightsPluginToPomWith_surefire_that_has_argLine_element_that_chain_old_values() throws Exception {
+        performTest("15_Inject_SeaLights_plugin_to_pom_with_surefire_that_has_argLine_element_that_chain_old_values");
     }
 
     private void performTest(String testCase) throws Exception {
