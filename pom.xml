@@ -174,7 +174,6 @@
                                         <fileset>
                                             <directory>${resources.folder}</directory>
                                             <includes>
-                                                <include>sl-api.jar</include>
                                                 <include>sl-build-scanner.jar</include>
                                                 <include>sl-test-listener.jar</include>
                                             </includes>
@@ -227,8 +226,6 @@
                                         <unzip src="${resources.folder}/sealights-java-${sealights.version}.tgz"
                                                dest="${resources.folder}/"/>
                                         <echo message="Finished unzipping. Copying the files to the resources folder."/>
-                                        <copy file="${artifacts.folder}/sl-api-${sealights.version}.jar"
-                                              tofile="${resources.folder}/sl-api.jar"/>
                                         <copy file="${artifacts.folder}/sl-test-listener-${sealights.version}.jar"
                                               tofile="${resources.folder}/sl-test-listener.jar"/>
                                         <copy file="${artifacts.folder}/sl-build-scanner-${sealights.version}.jar"

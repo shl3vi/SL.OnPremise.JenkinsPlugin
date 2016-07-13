@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>io.demo</groupId>
+    <artifactId>io.demo.junit-integration</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.19</version>
+                </plugin>
+                <plugin>
+                    <groupId>io.sealights.on-premise.agents.plugin</groupId>
+                    <artifactId>sealights-maven-plugin</artifactId>
+                    <version>1.0.0</version>
+                    <configuration>
+                        <customerid>fake-customer-id-123</customerid>
+                        <server>http://fake-server-url.com</server>
+                        <appName>fake-app-name</appName>
+                        <moduleName>fake-module-name</moduleName>
+                        <workspacepath>c:\fake-worakpsacepath</workspacepath>
+                        <build>1</build>
+                        <branch>fake-branch</branch>
+                        <packagesincluded>com.fake.*</packagesincluded>
+                        <packagesexcluded>*FastClassByGuice*, *ByCGLIB*, *EnhancerByMockitoWithCGLIB*, *EnhancerBySpringCGLIB*, com.fake.excluded.*</packagesexcluded>
+                        <filesincluded>*.class</filesincluded>
+                        <buildScannerJar>c:\fake-build-scanner.jar</buildScannerJar>
+                        <testListenerJar>c:\fake-test-listener.jar</testListenerJar>
+                        <logLevel>INFO</logLevel>
+                        <logFolder>c:\fake-log-folder</logFolder>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>a1</id>
+                            <goals>
+                                <goal>build-scanner</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>a2</id>
+                            <goals>
+                                <goal>test-listener</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.19</version>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

@@ -177,7 +177,6 @@ public class SeaLightsPluginInfo {
 
     private String scannerJar;
     private String listenerJar;
-    private String apiJar;
     private String listenerConfigFile;
 
     public String getScannerJar() {
@@ -242,14 +241,6 @@ public class SeaLightsPluginInfo {
 
     public void setBuildStrategy(BuildStrategy buildStrategy) {
         this.buildStrategy = buildStrategy;
-    }
-
-    public String getApiJar() {
-        return apiJar;
-    }
-
-    public void setApiJar(String apiJar) {
-        this.apiJar = apiJar;
     }
 
     public void setEnvironment(String environment) {

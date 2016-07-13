@@ -1,6 +1,5 @@
 package io.sealigths.plugins.sealightsjenkins.integration;
 
-import io.sealigths.plugins.sealightsjenkins.TestingFramework;
 import io.sealigths.plugins.sealightsjenkins.entities.FileBackupInfo;
 
 import java.util.List;
@@ -10,14 +9,12 @@ import java.util.List;
  */
 public class MavenIntegrationInfo {
     private List<FileBackupInfo> pomFiles;
-    private TestingFramework testingFramework;
     private SeaLightsPluginInfo seaLightsPluginInfo;
 
 
-    public MavenIntegrationInfo(List<FileBackupInfo> pomFiles, SeaLightsPluginInfo seaLightsPluginInfo, TestingFramework testingFramework) {
+    public MavenIntegrationInfo(List<FileBackupInfo> pomFiles, SeaLightsPluginInfo seaLightsPluginInfo) {
         this.pomFiles = pomFiles;
         this.seaLightsPluginInfo = seaLightsPluginInfo;
-        this.testingFramework = testingFramework;
     }
 
     public SeaLightsPluginInfo getSeaLightsPluginInfo() {
@@ -27,15 +24,6 @@ public class MavenIntegrationInfo {
     public void setSeaLightsPluginInfo(SeaLightsPluginInfo seaLightsPluginInfo) {
         this.seaLightsPluginInfo = seaLightsPluginInfo;
     }
-
-    public TestingFramework getTestingFramework() {
-        return testingFramework;
-    }
-
-    public void setTestingFramework(TestingFramework testingFramework) {
-        this.testingFramework = testingFramework;
-    }
-
 
     public List<FileBackupInfo> getPomFiles() {
         return pomFiles;

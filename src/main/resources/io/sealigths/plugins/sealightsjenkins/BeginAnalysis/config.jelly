@@ -9,10 +9,6 @@
         <f:textbox default="$${GIT_BRANCH}" value="${branch}"/>
     </f:entry>
 
-    <f:entry title="Testing Framework" field="testingFramework" >
-        <f:enum>${it.displayName}</f:enum>
-    </f:entry>
-
     <f:entry title="Monitored Application Packages" field="packagesIncluded"
              description="Java packages that will be analyzed by SeaLights. Supports wildcards (* = any string, ? = any character). Should start with '*'. For example: '*org.eclipse.*'">
         <f:textbox value="${packagesIncluded}"/>
@@ -113,11 +109,6 @@
             <f:entry title="Test Listener JAR Path" field="testListenerJar"
                      description="Overrides the default Test Listener JAR with a path to a different Test Listener JAR. Leave empty to use the default one.">
                 <f:textbox value="${instance.testListenerJar}"/>
-            </f:entry>
-
-            <f:entry title="API JAR Path" field="apiJar"
-                     description="Overrides the default API JAR with a path to a different one. Leave empty to use the default one.">
-                <f:textbox value="${instance.apiJar}"/>
             </f:entry>
         </f:advanced>
 

@@ -1,8 +1,6 @@
 package io.sealigths.plugins.sealightsjenkins;
 
-/**
- * Created by shahar on 4/24/2016.
- */
+@Deprecated
 public enum TestingFramework {
     TESTNG() {
         @Override public String getDisplayName() {

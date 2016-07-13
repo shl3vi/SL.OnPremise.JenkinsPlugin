@@ -3,13 +3,9 @@ package io.sealigths.plugins.sealightsjenkins.integration;
 import hudson.FilePath;
 import hudson.model.Computer;
 import hudson.remoting.VirtualChannel;
-import io.sealigths.plugins.sealightsjenkins.TestingFramework;
 import io.sealigths.plugins.sealightsjenkins.entities.FileBackupInfo;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
-import io.sealigths.plugins.sealightsjenkins.utils.StringUtils;
 
-import javax.xml.transform.stream.StreamResult;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 
@@ -91,35 +87,12 @@ public class MavenIntegration {
         sourceFile.copyTo(targeFile);
     }
 
-    private String getEventListenerPackage(TestingFramework testingFramework) {
-        if ("testng".equalsIgnoreCase(testingFramework.name())) {
-            return "io.sealights.onpremise.agents.java.agent.integrations.testng.TestListener";
-        } else if ("junit_4".equalsIgnoreCase(testingFramework.name())) {
-            return "io.sealights.onpremise.agents.java.agent.integrations.junit.SlRunListener";
-        }
-        return "";
-    }
-
-
     private void integrateToAllProfiles(FileBackupInfo fileBackupInfo, PomFile pomFile) {
         SeaLightsPluginInfo seaLightsPluginInfo = this.mavenIntegrationInfo.getSeaLightsPluginInfo();
-        TestingFramework testingFramework = mavenIntegrationInfo.getTestingFramework();
         SealightsMavenPluginHelper slHelper = new SealightsMavenPluginHelper(log);
-        String xml = slHelper.toPluginText(seaLightsPluginInfo, testingFramework);
+        String xml = slHelper.toPluginText(seaLightsPluginInfo);
 
         pomFile.addPlugin(xml);
-
-        String testingFrameworkListeners = getEventListenerPackage(testingFramework);
-
-        String apiAgentPath = mavenIntegrationInfo.getSeaLightsPluginInfo().getApiJar();
-
-        if (testingFramework.equals(TestingFramework.AUTO_DETECT)) {
-            testingFrameworkListeners = null; //Used to pass control to the maven plugin.
-        }
-        if (!testingFramework.equals(TestingFramework.JUNIT_3)) {
-            //# JUnit 3 doesn't need to add a listener to the pom (currently unsupported by Surefire).
-            pomFile.updateSurefirePlugin(testingFrameworkListeners, apiAgentPath);
-        }
         savePom(fileBackupInfo, pomFile);
     }
 
