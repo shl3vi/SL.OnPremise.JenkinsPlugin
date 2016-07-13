@@ -56,6 +56,7 @@ public class BeginAnalysis extends Builder {
     private String workspacepath;
     private String buildScannerJar;
     private String testListenerJar;
+    private transient String apiJar;
     private String testListenerConfigFile;
     private boolean autoRestoreBuildFile;
     private String buildFilesPatterns;
@@ -63,6 +64,7 @@ public class BeginAnalysis extends Builder {
     private boolean logEnabled;
     private String logFolder;
     private LogDestination logDestination = LogDestination.CONSOLE;
+    private transient TestingFramework testingFramework;
     private LogLevel logLevel = LogLevel.OFF;
     private BuildStrategy buildStrategy = BuildStrategy.ONE_BUILD;
     private BuildName buildName;
