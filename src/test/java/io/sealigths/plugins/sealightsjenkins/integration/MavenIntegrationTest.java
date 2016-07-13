@@ -5,6 +5,7 @@ import io.sealigths.plugins.sealightsjenkins.ExecutionType;
 import io.sealigths.plugins.sealightsjenkins.LogLevel;
 import io.sealigths.plugins.sealightsjenkins.entities.FileBackupInfo;
 import io.sealigths.plugins.sealightsjenkins.utils.Logger;
+import io.sealigths.plugins.sealightsjenkins.utils.PathUtils;
 import org.apache.commons.io.FileUtils;
 import org.custommonkey.xmlunit.DetailedDiff;
 import org.custommonkey.xmlunit.XMLUnit;
@@ -17,7 +18,7 @@ import java.util.List;
 
 public class MavenIntegrationTest {
 
-    private String PATH = System.getProperty("user.dir") + "/src/test/cases/MavenIntegration/";
+    private String PATH = PathUtils.join(System.getProperty("user.dir"),"src","test","cases","MavenIntegration");
 
     @Test
     public void injectSeaLightsPluginToAPomWithoutThePlugin() throws Exception {
@@ -119,13 +120,13 @@ public class MavenIntegrationTest {
         String testFolder = getTestFolder(testCase);
 
         MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
-        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.out)),mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
+        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.err)),mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
 
         //Act
         mavenIntegration.integrate(false);
 
-        String expectedFileName = testFolder + "/expected.xml";
-        String actualFileName = testFolder + "/actual.xml";
+        String expectedFileName = PathUtils.join(testFolder ,"expected.xml");
+        String actualFileName = PathUtils.join(testFolder, "actual.xml");
 
         if (shouldFindActual) {
             //Assert
@@ -136,7 +137,7 @@ public class MavenIntegrationTest {
             deleteActualPom(actualFileName);
 
         }else{
-            File actual = new File(testFolder + "/actual.xml");
+            File actual = new File(actualFileName);
             Assert.assertFalse("'actual.xml' should not have been created as we should not modify the pom.", actual.exists());
         }
     }
@@ -213,6 +214,6 @@ public class MavenIntegrationTest {
 
     private String getTestFolder(String testCaseName)
     {
-        return PATH + testCaseName;
+        return PathUtils.join(PATH, testCaseName);
     }
 }
