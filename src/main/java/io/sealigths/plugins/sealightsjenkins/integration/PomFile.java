@@ -178,11 +178,11 @@ public class PomFile {
             return false;
         }
 
-        if (isParallelExist(surefirePlugin)){
-            log.warning("Found an unsupported 'parallel' value of SureFire.");
-            System.err.println("[SeaLights Jenkins Plugin] - WARNING - Found an unsupported 'parallel' tag of SureFire.");
-            return false;
-        }
+//        if (isParallelExist(surefirePlugin)){
+//            log.warning("Found an unsupported 'parallel' value of SureFire.");
+//            System.err.println("[SeaLights Jenkins Plugin] - WARNING - Found an unsupported 'parallel' tag of SureFire.");
+//            return false;
+//        }
         return true;
     }
 
@@ -200,7 +200,7 @@ public class PomFile {
         String currentValue = forkMode.getTextContent();
 
         return !(
-                ("perthread".equalsIgnoreCase(currentValue) && isValidPerThreadForkMode(surefirePlugin))
+                ("perthread".equalsIgnoreCase(currentValue) && !isValidPerThreadForkMode(surefirePlugin))
                 || "never".equalsIgnoreCase(currentValue));
     }
 

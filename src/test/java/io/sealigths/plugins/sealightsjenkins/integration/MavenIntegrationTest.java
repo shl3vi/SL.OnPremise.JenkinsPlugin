@@ -39,62 +39,81 @@ public class MavenIntegrationTest {
         performTest("4_Inject_SeaLights_when_build_element_not_exist");
     }
 
-    @Test(expected = FileNotFoundException.class)
+    @Test
     public void dontInjectSeaLightsPluginIfAlreadyInjected() throws Exception {
-        performTest("5_Dont_inject_Sealights_plugin_if_already_injected");
-    }
-
-    @Test(expected = FileNotFoundException.class)
-    public void dontInjectSeaLightsPluginIfAlreadyInjectedInPluginManagement() throws Exception {
-        performTest("6_Dont_inject_Sealights_plugin_if_already_injected_in_pluginManagement");
-    }
-
-    @Test(expected = FileNotFoundException.class)
-    public void dontInjectSeaLightsPluginIfAlreadyInjectedInPlugins() throws Exception {
-        performTest("7_Dont_inject_Sealights_plugin_if_already_injected_in_plugins");
-    }
-
-    @Test(expected = FileNotFoundException.class)
-    public void dontInjectSeaLightsPluginIfAlreadyInjectedInProfile() throws Exception {
-        performTest("8_Dont_inject_Sealights_plugin_if_already_injected_in_profile");
-    }
-
-    @Test(expected = FileNotFoundException.class)
-    public void dontIntegrateIfUnsupportedForkModeNeverPresent() throws Exception {
-        performTest("9_Dont_integrate_if_unsupported_forkMode_never_present");
-    }
-
-    @Test(expected = FileNotFoundException.class)
-    public void dontIntegrateIfUnsupportedForkModePerthreadWithoutThreadCountPresent() throws Exception {
-        performTest("10_Dont_integrate_if_unsupported_forkMode_perthread_without_threadCount_present");
-    }
-
-    @Test(expected = FileNotFoundException.class)
-    public void dontIntegrateIfUnsupportedForkModePerthreadWithThreadCount0Present() throws Exception {
-        performTest("11_Dont_integrate_if_unsupported_forkMode_perthread_with_threadCount_0_present");
-    }
-
-    @Test(expected = FileNotFoundException.class)
-    public void dontIntegrateIfUnsupportedForkCountPresent() throws Exception {
-        performTest("12_Dont_integrate_if_unsupported_forkCount_present");
-    }
-
-    @Test(expected = FileNotFoundException.class)
-    public void dontIntegrateIfUnsupportedParallelPresent() throws Exception {
-        performTest("13_Dont_integrate_if_unsupported_parallel_present");
+        performTest("5_Dont_inject_Sealights_plugin_if_already_injected", false);
     }
 
     @Test
+    public void dontInjectSeaLightsPluginIfAlreadyInjectedInPluginManagement() throws Exception {
+        performTest("6_Dont_inject_Sealights_plugin_if_already_injected_in_pluginManagement", false);
+    }
+
+    @Test
+    public void dontInjectSeaLightsPluginIfAlreadyInjectedInPlugins() throws Exception {
+        performTest("7_Dont_inject_Sealights_plugin_if_already_injected_in_plugins", false);
+    }
+
+    @Test
+    public void dontInjectSeaLightsPluginIfAlreadyInjectedInProfile() throws Exception {
+        performTest("8_Dont_inject_Sealights_plugin_if_already_injected_in_profile", false);
+    }
+
+    @Test
+    public void dontIntegrateIfUnsupportedForkModeNeverPresent() throws Exception {
+        performTest("9_Dont_integrate_if_unsupported_forkMode_never_present", false);
+    }
+
+    @Test
+    public void injectSeaLightsIfSupportedForkModeOptionPresent() throws Exception {
+        performTest("10_Inject_SeaLights_if_supported_forkMode_option_present");
+    }
+
+    @Test
+    public void dontIntegrateIfUnsupportedForkModePerthreadWithoutThreadCountPresent() throws Exception {
+        performTest("11_Dont_integrate_if_unsupported_forkMode_perthread_without_threadCount_present", false);
+    }
+
+    @Test
+    public void dontIntegrateIfUnsupportedForkModePerthreadWithThreadCount0Present() throws Exception {
+        performTest("12_Dont_integrate_if_unsupported_forkMode_perthread_with_threadCount_0_present", false);
+    }
+
+    @Test
+    public void injectSeaLightsIfExistForkModePerthreadWithThreadCountGreaterThan0Present() throws Exception {
+        performTest("13_Inject_SeaLights_if_exist_forkMode_perthread_with_threadCount_greater_than_0_present");
+    }
+
+    @Test
+    public void dontIntegrateIfUnsupportedForkCountPresent() throws Exception {
+        performTest("14_Dont_integrate_if_unsupported_forkCount_present", false);
+    }
+
+    @Test
+    public void injectSeaLightsIfForkCountGreaterThan0() throws Exception {
+        performTest("15_Inject_SeaLights_if_forkCount_greater_than_0");
+    }
+
+//    @Test
+//    public void dontIntegrateIfUnsupportedParallelPresent() throws Exception {
+//        performTest("16_Dont_integrate_if_unsupported_parallel_present", false);
+//    }
+
+    @Test
     public void injectSeaLightsPluginToPomWith_surefire_that_has_argLine_element_that_doesnt_chain_old_values() throws Exception {
-        performTest("14_Inject_SeaLights_plugin_to_pom_with_surefire_that_has_argLine_element_that_doesnt_chain_old_values");
+        performTest("17_Inject_SeaLights_plugin_to_pom_with_surefire_that_has_argLine_element_that_doesnt_chain_old_values");
     }
 
     @Test
     public void injectSeaLightsPluginToPomWith_surefire_that_has_argLine_element_that_chain_old_values() throws Exception {
-        performTest("15_Inject_SeaLights_plugin_to_pom_with_surefire_that_has_argLine_element_that_chain_old_values");
+        performTest("18_Inject_SeaLights_plugin_to_pom_with_surefire_that_has_argLine_element_that_chain_old_values");
     }
 
     private void performTest(String testCase) throws Exception {
+        performTest(testCase, true);
+    }
+
+    private void performTest(String testCase, boolean shouldFindActual) throws Exception {
         //Arrange
         final boolean SAVE_POM_USING_JENKINS_API = false;
         String testFolder = getTestFolder(testCase);
@@ -105,11 +124,33 @@ public class MavenIntegrationTest {
         //Act
         mavenIntegration.integrate(false);
 
-        //Assert
-        String expected = readFile(testFolder + "/expected.xml");
-        String actual = readFile(testFolder + "/actual.xml");
+        String expectedFileName = testFolder + "/expected.xml";
+        String actualFileName = testFolder + "/actual.xml";
 
-        assertXMLEquals(expected, actual);
+        if (shouldFindActual) {
+            //Assert
+            String expected = readFile(expectedFileName);
+            String actual = readFile(actualFileName);
+
+            assertXMLEquals(expected, actual);
+            deleteActualPom(actualFileName);
+
+        }else{
+            File actual = new File(testFolder + "/actual.xml");
+            Assert.assertFalse("'actual.xml' should not have been created as we should not modify the pom.", actual.exists());
+        }
+    }
+
+    private void deleteActualPom(String filePath){
+        try{
+            File fileToDelete = new File(filePath);
+            boolean deleted = fileToDelete.delete();
+            if (!deleted){
+                System.out.println("Failed while trying to delete '" + filePath + "' file. Please delete manually");
+            }
+        }catch(Exception e){
+            System.out.println("Failed while trying to delete '" + filePath + "' file. Please delete manually");
+        }
     }
 
     private static void assertXMLEquals(String expectedXML, String actualXML) throws Exception {

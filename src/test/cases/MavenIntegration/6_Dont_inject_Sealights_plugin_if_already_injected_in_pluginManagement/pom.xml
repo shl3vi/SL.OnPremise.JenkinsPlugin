@@ -23,18 +23,6 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>2.19</version>
-                    <configuration>
-                        <additionalClasspathElements>
-                            <additionalClasspathElement>../config/test</additionalClasspathElement>
-                            <additionalClasspathElement>c:\sl-api.jar</additionalClasspathElement>
-                        </additionalClasspathElements>
-                        <properties>
-                            <property>
-                                <name>listener</name>
-                                <value>io.sealights.onpremise.agents.java.agent.integrations.junit.SlRunListener</value>
-                            </property>
-                        </properties>
-                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>io.sealights.on-premise.agents.plugin</groupId>
@@ -49,9 +37,7 @@
                         <build>1</build>
                         <branch>fake-branch</branch>
                         <packagesincluded>com.fake.*</packagesincluded>
-                        <packagesexcluded>*FastClassByGuice*, *ByCGLIB*, *EnhancerByMockitoWithCGLIB*,
-                            *EnhancerBySpringCGLIB*, com.fake.excluded.*
-                        </packagesexcluded>
+                        <packagesexcluded>*FastClassByGuice*, *ByCGLIB*, *EnhancerByMockitoWithCGLIB*, *EnhancerBySpringCGLIB*, com.fake.excluded.*</packagesexcluded>
                         <filesincluded>*.class</filesincluded>
                         <buildScannerJar>c:\fake-build-scanner.jar</buildScannerJar>
                         <testListenerJar>c:\fake-test-listener.jar</testListenerJar>
@@ -71,12 +57,6 @@
                                 <goal>test-listener</goal>
                             </goals>
                         </execution>
-                        <execution>
-                            <id>a3</id>
-                            <goals>
-                                <goal>initialize-test-listener</goal>
-                            </goals>
-                        </execution>
                     </executions>
                 </plugin>
             </plugins>
@@ -86,17 +66,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.19</version>
-                <configuration>
-                    <properties>
-                        <property>
-                            <name>listener</name>
-                            <value>io.sealights.onpremise.agents.java.agent.integrations.junit.SlRunListener</value>
-                        </property>
-                    </properties>
-                    <additionalClasspathElements>
-                        <additionalClasspathElement>c:\sl-api.jar</additionalClasspathElement>
-                    </additionalClasspathElements>
-                </configuration>
             </plugin>
         </plugins>
     </build>
