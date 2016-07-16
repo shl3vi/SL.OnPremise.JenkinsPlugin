@@ -9,7 +9,6 @@ import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import io.sealigths.plugins.sealightsjenkins.entities.FileBackupInfo;
 import io.sealigths.plugins.sealightsjenkins.exceptions.SeaLightsIllegalStateException;
-import io.sealigths.plugins.sealightsjenkins.integration.JarsHelper;
 import io.sealigths.plugins.sealightsjenkins.integration.MavenIntegration;
 import io.sealigths.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
 import io.sealigths.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
@@ -22,8 +21,10 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -63,6 +64,7 @@ public class BeginAnalysis extends Builder {
     private String buildFilesFolders;
     private boolean logEnabled;
     private String logFolder;
+    private String sealightsProperties;
     private LogDestination logDestination = LogDestination.CONSOLE;
     private transient TestingFramework testingFramework;
     private LogLevel logLevel = LogLevel.OFF;
@@ -84,9 +86,9 @@ public class BeginAnalysis extends Builder {
                          String testListenerConfigFile, boolean autoRestoreBuildFile,
                          String buildFilesPatterns, String buildFilesFolders,
                          boolean logEnabled, LogDestination logDestination, String logFolder,
-                         BuildStrategy buildStrategy,
-                         BuildName buildName, ExecutionType executionType,
-                         String override_customerId, String override_url, String override_proxy) throws IOException {
+                         BuildStrategy buildStrategy, BuildName buildName, ExecutionType executionType,
+                         String override_customerId, String override_url, String override_proxy,
+                         String sealightsProperties) throws IOException {
 
         this.override_customerId = override_customerId;
         this.override_url = override_url;
@@ -120,6 +122,8 @@ public class BeginAnalysis extends Builder {
 
         this.buildScannerJar = buildScannerJar;
         this.testListenerJar = testListenerJar;
+
+        this.sealightsProperties = Util.fixEmptyAndTrim(sealightsProperties);
     }
 
     private void setDefaultValuesForStrings(Logger logger) {
@@ -140,6 +144,9 @@ public class BeginAnalysis extends Builder {
 
     private void setDefaultValues(Logger logger) {
 
+        if (this.sealightsProperties == null){
+            this.sealightsProperties = "";
+        }
         if (this.logDestination == null)
             this.logDestination = LogDestination.CONSOLE;
 
@@ -346,6 +353,16 @@ public class BeginAnalysis extends Builder {
     @Exported
     public String getOverride_proxy() {
         return override_proxy;
+    }
+
+    @Exported
+    public String getSealightsProperties() {
+        return sealightsProperties;
+    }
+
+    @Exported
+    public void setSealightsProperties(String sealightsProperties) {
+        this.sealightsProperties = sealightsProperties;
     }
 
     private void copyAgentsToSlaveIfNeeded(Logger logger, CleanupManager cleanupManager) throws IOException, InterruptedException {
@@ -659,6 +676,7 @@ public class BeginAnalysis extends Builder {
         logger.debug("--------------Sealights Jenkins Plugin Configuration--------------");
         logger.debug("Plugin Version:" + getPluginVersion());
 
+        printSLProperties(logger);
         printSLInfo(slInfo, logger);
 
         logger.debug("Enable Multiple Build Files: " + enableMultipleBuildFiles);
@@ -669,6 +687,35 @@ public class BeginAnalysis extends Builder {
         logger.debug("Auto Restore Build File:" + autoRestoreBuildFile);
 
         logger.debug("--------------Sealights Jenkins Plugin Configuration--------------");
+    }
+
+    private void printSLProperties(Logger logger) {
+        try {
+            logger.debug("SeaLights Properties:");
+            BufferedReader br = new BufferedReader(new StringReader(sealightsProperties));
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (!isValidSeaLightsProperty(line)) {
+                    logger.debug("Found a non valid line in SeaLights properties. Skipping.");
+                    continue;
+                }
+                int equalsCharacter = line.indexOf('=');
+                String key = line.substring(0, equalsCharacter);
+                String value = line.substring(equalsCharacter+1);
+                logger.debug("[PROPERTY] - property.key: " + key + " property.value: " + value);
+            }
+        } catch (Exception e) {
+            logger.error("Error while trying to read line in SeaLights properties.", e);
+        }
+    }
+
+    private boolean isValidSeaLightsProperty(String property) {
+        if (StringUtils.isNullOrEmpty(property))
+            return false;
+        if (!property.contains("="))
+            return false;
+
+        return true;
     }
 
     private void printSLInfo(SeaLightsPluginInfo slInfo, Logger logger) {

@@ -16,6 +16,10 @@
 
     <f:advanced>
 
+        <f:entry field="sealightsProperties" title="SeaLights Properties">
+            <f:textarea/>
+        </f:entry>
+
         <f:entry title="Execution Type" field="executionType" >
             <f:enum>${it.displayName}</f:enum>
         </f:entry>
