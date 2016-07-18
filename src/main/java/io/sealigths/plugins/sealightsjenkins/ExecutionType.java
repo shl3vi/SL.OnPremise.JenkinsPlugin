@@ -13,6 +13,13 @@ public enum ExecutionType {
         @Override public String getDisplayName() {
             return "Tests Only";
         }
+    },
+
+    @Deprecated
+    ONLY_LISTENER() {
+        @Override public String getDisplayName() {
+            return "Only Tests";
+        }
     };
     public abstract String getDisplayName();
 }

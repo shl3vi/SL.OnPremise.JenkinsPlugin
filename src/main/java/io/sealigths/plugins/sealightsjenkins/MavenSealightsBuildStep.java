@@ -1,6 +1,8 @@
 package io.sealigths.plugins.sealightsjenkins;
 
 import hudson.*;
+import hudson.init.InitMilestone;
+import hudson.init.Initializer;
 import hudson.model.*;
 import hudson.slaves.NodeSpecific;
 import hudson.tasks.BuildStepDescriptor;
@@ -45,6 +47,9 @@ public class MavenSealightsBuildStep extends Builder {
     public final BeginAnalysis beginAnalysis;
     public BuildStepMode buildStepMode;
 
+    @Deprecated
+    public transient String relativePathToEffectivePom;
+
     /**
      * The targets and other maven options.
      * Can be separated by SP or NL.
@@ -65,7 +70,7 @@ public class MavenSealightsBuildStep extends Builder {
      * Optional POM file path relative to the workspace.
      * Used for the Maven '-f' option.
      */
-    public final String pom;
+    public String pom;
 
     /**
      * Optional properties to be passed to Maven. Follows {@link Properties} syntax.
@@ -105,6 +110,20 @@ public class MavenSealightsBuildStep extends Builder {
 
     private static final Pattern S_PATTERN = Pattern.compile("(^| )-s ");
     private static final Pattern GS_PATTERN = Pattern.compile("(^| )-gs ");
+
+    private Object readResolve() {
+        if (StringUtils.isNotBlank(targets)) {
+            this.buildStepMode = new BuildStepMode.InvokeMavenCommandView(targets);
+        }
+        if (this.beginAnalysis.getExecutionType().equals(ExecutionType.ONLY_LISTENER)){
+            this.beginAnalysis.setExecutionType(ExecutionType.TESTS_ONLY);
+        }
+        if (StringUtils.isNotBlank(relativePathToEffectivePom)) {
+            this.pom = relativePathToEffectivePom;
+        }
+
+        return this;
+    }
 
     @DataBoundConstructor
     public MavenSealightsBuildStep(BeginAnalysis beginAnalysis, BuildStepMode buildStepMode,
@@ -430,6 +449,12 @@ public class MavenSealightsBuildStep extends Builder {
 
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
+
+        @Initializer(before = InitMilestone.PLUGINS_STARTED)
+        public static void addAliases() {
+            Items.XSTREAM2.addCompatibilityAlias("io.sealigths.plugins.sealightsjenkins.BeginAnalysisBuildStep", MavenSealightsBuildStep.class);
+        }
+
         @CopyOnWrite
         private volatile MavenInstallation[] installations = new MavenInstallation[0];
 
