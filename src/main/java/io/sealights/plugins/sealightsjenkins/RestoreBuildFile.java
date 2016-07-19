@@ -4,12 +4,11 @@ package io.sealights.plugins.sealightsjenkins;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Extension;
-import hudson.model.Computer;
+import hudson.init.InitMilestone;
+import hudson.init.Initializer;
+import hudson.model.*;
 import hudson.remoting.VirtualChannel;
 import hudson.tasks.*;
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
-import hudson.model.AbstractProject;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import io.sealights.plugins.sealightsjenkins.utils.RenameFileCallable;
 import io.sealights.plugins.sealightsjenkins.utils.SearchFileCallable;
@@ -161,6 +160,12 @@ public class RestoreBuildFile extends Recorder {
      */
     @Extension // This indicates to Jenkins that this is an implementation of an extension point.
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
+
+        @Initializer(before = InitMilestone.PLUGINS_STARTED)
+        public static void addAliases() {
+            Items.XSTREAM2.addCompatibilityAlias("io.sealigths.plugins.sealightsjenkins.RestoreBuildFile", RestoreBuildFile.class);
+        }
+
         /**
          * To persist global configuration information,
          * simply store it in a field and call save().
