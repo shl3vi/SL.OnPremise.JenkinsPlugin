@@ -2,9 +2,12 @@ package io.sealights.plugins.sealightsjenkins;
 
 import hudson.Extension;
 import hudson.Launcher;
+import hudson.init.InitMilestone;
+import hudson.init.Initializer;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.Items;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -40,6 +43,11 @@ public class EndAnalysisBuildStep extends Builder{
 
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
+
+        @Initializer(before = InitMilestone.PLUGINS_STARTED)
+        public static void addAliases() {
+            Items.XSTREAM2.addCompatibilityAlias("io.sealigths.plugins.sealightsjenkins.EndAnalysisBuildStep", EndAnalysisBuildStep.class);
+        }
 
         public DescriptorImpl() {
             load();
