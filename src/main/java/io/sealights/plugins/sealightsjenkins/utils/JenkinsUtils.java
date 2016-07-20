@@ -30,7 +30,21 @@ public class JenkinsUtils {
 
     public static Map<String, String> createMetadataFromEnvVars(EnvVars envVars){
         Map <String, String> metadata = new HashMap<>();
-        metadata.put("jobUrl", envVars.get("JOB_URL"));
+
+        String logsUrl;
+        if (!StringUtils.isNullOrEmpty(envVars.get("PROMOTED_URL"))){
+            logsUrl = envVars.get("PROMOTED_URL");
+        }else{
+            logsUrl = envVars.get("BUILD_URL");
+        }
+        metadata.put("logsUrl", logsUrl + "console");
+
+        if (!StringUtils.isNullOrEmpty(envVars.get("PROMOTED_JOB_NAME"))){
+            metadata.put("jobName", envVars.get("PROMOTED_JOB_NAME"));
+        }else{
+            metadata.put("jobName", envVars.get("JOB_NAME"));
+        }
+
         return metadata;
     }
 }
