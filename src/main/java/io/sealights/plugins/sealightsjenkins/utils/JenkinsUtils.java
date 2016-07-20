@@ -1,9 +1,12 @@
 package io.sealights.plugins.sealightsjenkins.utils;
 
+import hudson.EnvVars;
 import hudson.Util;
 import hudson.model.AbstractBuild;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -25,4 +28,9 @@ public class JenkinsUtils {
         return Util.replaceMacro(variable, build.getBuildVariables());
     }
 
+    public static Map<String, String> createMetadataFromEnvVars(EnvVars envVars){
+        Map <String, String> metadata = new HashMap<>();
+        metadata.put("jobUrl", envVars.get("JOB_URL"));
+        return metadata;
+    }
 }

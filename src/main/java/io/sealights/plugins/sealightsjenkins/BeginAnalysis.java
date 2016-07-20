@@ -358,7 +358,7 @@ public class BeginAnalysis extends Builder {
     }
 
     public boolean perform(
-            AbstractBuild<?, ?> build, BuildListener listener, CleanupManager cleanupManager, Logger logger, String pomPath)
+            AbstractBuild<?, ?> build, CleanupManager cleanupManager, Logger logger, String pomPath, Map<String, String> metadata)
             throws IOException, InterruptedException, SeaLightsIllegalStateException {
 
         try {
@@ -379,7 +379,7 @@ public class BeginAnalysis extends Builder {
                 tryAddRestoreBuildFilePublisher(build, logger);
             }
 
-            SeaLightsPluginInfo slInfo = createSeaLightsPluginInfo(build, listener, ws, logger);
+            SeaLightsPluginInfo slInfo = createSeaLightsPluginInfo(build, metadata, ws, logger);
 
             printFields(slInfo, logger);
 
@@ -405,7 +405,9 @@ public class BeginAnalysis extends Builder {
         Logger logger = new Logger(listener.getLogger());
         CleanupManager cleanupManager = new CleanupManager(logger);
         try {
-            return perform(build, listener, cleanupManager, logger, DEFAULT_POM_PATH);
+            EnvVars envVars = build.getEnvironment(listener);
+            Map<String, String> metadata = JenkinsUtils.createMetadataFromEnvVars(envVars);
+            return perform(build, cleanupManager, logger, DEFAULT_POM_PATH, metadata);
         } catch (SeaLightsIllegalStateException e) {
             logger.error(e.getMessage());
             return false;
@@ -523,12 +525,12 @@ public class BeginAnalysis extends Builder {
     }
 
     private SeaLightsPluginInfo createSeaLightsPluginInfo(
-            AbstractBuild<?, ?> build, BuildListener listener, FilePath ws, Logger logger) throws SeaLightsIllegalStateException {
+            AbstractBuild<?, ?> build, Map<String, String> metadata, FilePath ws, Logger logger) throws SeaLightsIllegalStateException {
 
         SeaLightsPluginInfo slInfo = new SeaLightsPluginInfo();
         setGlobalConfiguration(slInfo);
 
-        slInfo.setMetadata(createMetaData(build, listener, logger));
+        slInfo.setMetadata(metadata);
 
         String workingDir = ws.getRemote();
         slInfo.setEnabled(true);
@@ -575,19 +577,6 @@ public class BeginAnalysis extends Builder {
         slInfo.setBuildFilesPatterns(patternsToSearch);
 
         return slInfo;
-    }
-
-    private Map<String, String> createMetaData(AbstractBuild<?, ?> build, BuildListener listener, Logger logger) {
-        Map <String, String> metadata = new HashMap<>();
-        try {
-            EnvVars envVars = build.getEnvironment(listener);
-            metadata.put("jobUrl", envVars.get("JOB_URL"));
-
-        } catch (IOException | InterruptedException e) {
-            logger.info("Error while trying to set SeaLights plugin metadata");
-        }
-
-        return metadata;
     }
 
     private void setGlobalConfiguration(SeaLightsPluginInfo slInfo) {

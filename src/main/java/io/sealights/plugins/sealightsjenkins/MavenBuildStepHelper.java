@@ -19,12 +19,14 @@ import io.sealights.plugins.sealightsjenkins.enums.BuildStepModes;
 import io.sealights.plugins.sealightsjenkins.integration.JarsHelper;
 import io.sealights.plugins.sealightsjenkins.utils.CustomFile;
 import io.sealights.plugins.sealightsjenkins.integration.SealightsMavenPluginHelper;
+import io.sealights.plugins.sealightsjenkins.utils.JenkinsUtils;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import jenkins.model.Jenkins;
 
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -68,7 +70,9 @@ public class MavenBuildStepHelper {
         if (!isSealightsEnabled)
             return true;
 
-        beginAnalysis.perform(build, listener, cleanupManager, logger, pom);
+        EnvVars envVars = build.getEnvironment(listener);
+        Map<String, String> metadata = JenkinsUtils.createMetadataFromEnvVars(envVars);
+        beginAnalysis.perform(build, cleanupManager, logger, pom, metadata);
         return true;
     }
 

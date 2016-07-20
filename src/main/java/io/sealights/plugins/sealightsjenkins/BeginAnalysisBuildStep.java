@@ -1,5 +1,6 @@
 package io.sealights.plugins.sealightsjenkins;
 
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
@@ -9,10 +10,12 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import io.sealights.plugins.sealightsjenkins.utils.CustomFile;
 import io.sealights.plugins.sealightsjenkins.exceptions.SeaLightsIllegalStateException;
+import io.sealights.plugins.sealightsjenkins.utils.JenkinsUtils;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * Created by shahar on 5/3/2016.
@@ -56,7 +59,9 @@ public class BeginAnalysisBuildStep extends Builder {
         customFile.copyToSlave();
 
         try {
-            return beginAnalysis.perform(build, listener, cleanupManager, logger, pomPath);
+            EnvVars envVars = build.getEnvironment(listener);
+            Map<String, String> metadata = JenkinsUtils.createMetadataFromEnvVars(envVars);
+            return beginAnalysis.perform(build, cleanupManager, logger, pomPath, metadata);
         } catch (SeaLightsIllegalStateException e) {
             logger.error(e.getMessage());
             return false;
