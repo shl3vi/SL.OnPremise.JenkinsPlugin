@@ -56,7 +56,7 @@ public class BeginAnalysisBuildStep extends Builder {
         customFile.copyToSlave();
 
         try {
-            return beginAnalysis.perform(build, cleanupManager, logger, pomPath);
+            return beginAnalysis.perform(build, listener, cleanupManager, logger, pomPath);
         } catch (SeaLightsIllegalStateException e) {
             logger.error(e.getMessage());
             return false;

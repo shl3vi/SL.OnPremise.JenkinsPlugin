@@ -49,6 +49,10 @@
                             <testListenerJar>c:\fake-test-listener.jar</testListenerJar>
                             <logLevel>INFO</logLevel>
                             <logFolder>c:\fake-log-folder</logFolder>
+                            <metadata>
+                                <plugin>somPluginInfo</plugin>
+                                <build>someBuildInfo</build>
+                            </metadata>
                         </configuration>
                         <executions>
                             <execution>
@@ -91,6 +95,10 @@
                     <testListenerJar>c:\fake-test-listener.jar</testListenerJar>
                     <logLevel>INFO</logLevel>
                     <logFolder>c:\fake-log-folder</logFolder>
+                    <metadata>
+                        <plugin>somPluginInfo</plugin>
+                        <build>someBuildInfo</build>
+                    </metadata>
                 </configuration>
                 <executions>
                     <execution>

@@ -68,7 +68,7 @@ public class MavenBuildStepHelper {
         if (!isSealightsEnabled)
             return true;
 
-        beginAnalysis.perform(build, cleanupManager, logger, pom);
+        beginAnalysis.perform(build, listener, cleanupManager, logger, pom);
         return true;
     }
 

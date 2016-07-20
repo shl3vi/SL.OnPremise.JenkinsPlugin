@@ -14,7 +14,9 @@ import org.junit.Test;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MavenIntegrationTest {
 
@@ -196,6 +198,11 @@ public class MavenIntegrationTest {
         slInfo.setLogEnabled(false);
         slInfo.setLogLevel(LogLevel.INFO);
         slInfo.setLogFolder("c:\\fake-log-folder");
+
+        Map<String, String> metadata = new HashMap<>();
+        metadata.put("build", "someBuildInfo");
+        metadata.put("plugin", "somPluginInfo");
+        slInfo.setMetadata(metadata);
 
         String source = path + "/pom.xml";
         String target = path + "/actual.xml";
