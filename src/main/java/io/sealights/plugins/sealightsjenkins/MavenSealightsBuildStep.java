@@ -50,6 +50,9 @@ public class MavenSealightsBuildStep extends Builder {
     @Deprecated
     public transient String relativePathToEffectivePom;
 
+    @Deprecated
+    public transient String pomPath;
+
     /**
      * The targets and other maven options.
      * Can be separated by SP or NL.
@@ -113,18 +116,24 @@ public class MavenSealightsBuildStep extends Builder {
 
     private Object readResolve() {
 
-        if (StringUtils.isNotBlank(targets)) {
-            this.buildStepMode = new BuildStepMode.InvokeMavenCommandView(targets);
-        }else{
-            //assuming that users of 'MavenSealightsBuildStep' didn't left 'targets' blank.
-            //If no 'targets' is mentioned, its probably the deprecated 'beginAnalysisBuildStep'
-            this.buildStepMode = new BuildStepMode.PrepareSealightsView("");
+        //Check if we are dealing with plugin version before the BuildStepMode feature.
+        if (this.buildStepMode == null) {
+            if (StringUtils.isNotBlank(targets)) {
+                this.buildStepMode = new BuildStepMode.InvokeMavenCommandView(targets);
+            } else {
+                //assuming that users of 'MavenSealightsBuildStep' didn't left 'targets' blank.
+                //If no 'targets' is mentioned, its probably the deprecated 'beginAnalysisBuildStep'
+                this.buildStepMode = new BuildStepMode.PrepareSealightsView("");
+            }
         }
 
         if (this.beginAnalysis.getExecutionType().equals(ExecutionType.ONLY_LISTENER)){
             this.beginAnalysis.setExecutionType(ExecutionType.TESTS_ONLY);
         }
 
+        if (StringUtils.isNotBlank(pomPath)){
+            this.pom = pomPath;
+        }
         if (StringUtils.isNotBlank(relativePathToEffectivePom)) {
             this.pom = relativePathToEffectivePom;
         }
@@ -242,7 +251,7 @@ public class MavenSealightsBuildStep extends Builder {
             } else {
                 logger.info("Sealights is disabled. Running Maven without Sealights.");
             }
-            
+
             //If we reached here, we need to invoke maven since this is either InvokeMavenCommandWithSealights or InvokeMavenCommnad and in both of them we want to invoke maven.
             if (!tryInvokeMaven(build, launcher, listener, mavenBuildStepHelper, logger))
                 return false;

@@ -18,7 +18,7 @@ public enum ExecutionType {
     @Deprecated
     ONLY_LISTENER() {
         @Override public String getDisplayName() {
-            return "Only Tests";
+            return "Tests Only - DEPRECATED";
         }
     };
     public abstract String getDisplayName();
