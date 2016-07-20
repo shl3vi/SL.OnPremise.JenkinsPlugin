@@ -28,9 +28,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by shahar on 5/9/2016.
@@ -360,7 +358,7 @@ public class BeginAnalysis extends Builder {
     }
 
     public boolean perform(
-            AbstractBuild<?, ?> build, CleanupManager cleanupManager, Logger logger, String pomPath)
+            AbstractBuild<?, ?> build, CleanupManager cleanupManager, Logger logger, String pomPath, Map<String, String> metadata)
             throws IOException, InterruptedException, SeaLightsIllegalStateException {
 
         try {
@@ -381,7 +379,7 @@ public class BeginAnalysis extends Builder {
                 tryAddRestoreBuildFilePublisher(build, logger);
             }
 
-            SeaLightsPluginInfo slInfo = createSeaLightsPluginInfo(build, ws, logger);
+            SeaLightsPluginInfo slInfo = createSeaLightsPluginInfo(build, metadata, ws, logger);
 
             printFields(slInfo, logger);
 
@@ -407,7 +405,9 @@ public class BeginAnalysis extends Builder {
         Logger logger = new Logger(listener.getLogger());
         CleanupManager cleanupManager = new CleanupManager(logger);
         try {
-            return perform(build, cleanupManager, logger, DEFAULT_POM_PATH);
+            EnvVars envVars = build.getEnvironment(listener);
+            Map<String, String> metadata = JenkinsUtils.createMetadataFromEnvVars(envVars);
+            return perform(build, cleanupManager, logger, DEFAULT_POM_PATH, metadata);
         } catch (SeaLightsIllegalStateException e) {
             logger.error(e.getMessage());
             return false;
@@ -525,10 +525,12 @@ public class BeginAnalysis extends Builder {
     }
 
     private SeaLightsPluginInfo createSeaLightsPluginInfo(
-            AbstractBuild<?, ?> build, FilePath ws, Logger logger) throws SeaLightsIllegalStateException {
+            AbstractBuild<?, ?> build, Map<String, String> metadata, FilePath ws, Logger logger) throws SeaLightsIllegalStateException {
 
         SeaLightsPluginInfo slInfo = new SeaLightsPluginInfo();
         setGlobalConfiguration(slInfo);
+
+        slInfo.setMetadata(metadata);
 
         String workingDir = ws.getRemote();
         slInfo.setEnabled(true);

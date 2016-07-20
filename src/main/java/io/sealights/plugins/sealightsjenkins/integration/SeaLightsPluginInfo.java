@@ -5,6 +5,8 @@ import io.sealights.plugins.sealightsjenkins.ExecutionType;
 import io.sealights.plugins.sealightsjenkins.LogDestination;
 import io.sealights.plugins.sealightsjenkins.LogLevel;
 
+import java.util.Map;
+
 /**
  * Created by Nadav on 4/19/2016.
  */
@@ -29,6 +31,7 @@ public class SeaLightsPluginInfo {
     private String buildFilesPatterns;
     private boolean recursiveOnBuildFilesFolders;
     private ExecutionType executionType;
+    private Map<String, String> metadata;
 
     public boolean isRecursiveOnBuildFilesFolders() {
         return recursiveOnBuildFilesFolders;
@@ -206,6 +209,13 @@ public class SeaLightsPluginInfo {
         this.listenerConfigFile = listenerConfigFile;
     }
 
+    public Map<String, String> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Map<String, String> metadata) {
+        this.metadata = metadata;
+    }
 
     private boolean logEnabled;
     private LogDestination logDestination;

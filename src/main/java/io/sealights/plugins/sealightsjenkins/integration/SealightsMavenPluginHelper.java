@@ -6,6 +6,8 @@ import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.FileNotFoundException;
+import java.util.Iterator;
+import java.util.Map;
 
 import static io.sealights.plugins.sealightsjenkins.utils.StringUtils.isNullOrEmpty;
 
@@ -63,6 +65,14 @@ public class SealightsMavenPluginHelper {
         plugin.append("<groupId>io.sealights.on-premise.agents.plugin</groupId>");
         plugin.append("<artifactId>sealights-maven-plugin</artifactId>");
         plugin.append("<version>" + getPluginVersion() + "</version>");
+
+        plugin = addConfigurationToPluginText(plugin, pluginInfo);
+        plugin = addExecutionsToPluginText(plugin, pluginInfo);
+
+        return plugin.toString();
+    }
+
+    private StringBuilder addConfigurationToPluginText(StringBuilder plugin, SeaLightsPluginInfo pluginInfo){
         plugin.append("<configuration>");
 
         if (!pluginInfo.isEnabled()) {
@@ -117,7 +127,29 @@ public class SealightsMavenPluginHelper {
 
         tryAppendValue(plugin, pluginInfo.getLogFolder(), "logFolder");
 
+        plugin = addMetadataToConfigurationInPluginText(plugin, pluginInfo);
+
         plugin.append("</configuration>");
+
+        return plugin;
+    }
+
+    private StringBuilder addMetadataToConfigurationInPluginText(StringBuilder plugin, SeaLightsPluginInfo pluginInfo){
+        Map<String, String> metadata = pluginInfo.getMetadata();
+        if (!(metadata == null || metadata.isEmpty())){
+            plugin.append("<metadata>");
+            Iterator it = metadata.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry<String, String> pair = (Map.Entry)it.next();
+                tryAppendValue(plugin, pair.getValue(), pair.getKey());
+            }
+            plugin.append("</metadata>");
+        }
+
+        return plugin;
+    }
+
+    private StringBuilder addExecutionsToPluginText(StringBuilder plugin, SeaLightsPluginInfo pluginInfo){
         plugin.append("<executions>");
 
         boolean shouldExecuteScanner = ExecutionType.FULL.equals(pluginInfo.getExecutionType());
@@ -126,8 +158,7 @@ public class SealightsMavenPluginHelper {
         appendExecution(plugin, "a2", "test-listener");
         plugin.append("</executions>");
 
-
-        return plugin.toString();
+        return plugin;
     }
 
     private void appendExecution(StringBuilder stringBuilder, String executionId, String goal) {
