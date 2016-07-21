@@ -3,9 +3,12 @@ package io.sealights.plugins.sealightsjenkins;
 import hudson.DescriptorExtensionList;
 import hudson.Extension;
 import hudson.ExtensionPoint;
+import hudson.init.InitMilestone;
+import hudson.init.Initializer;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.Hudson;
+import hudson.model.Items;
 import io.sealights.plugins.sealightsjenkins.enums.BuildStepModes;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.export.Exported;
@@ -65,6 +68,12 @@ public class BuildStepMode implements Describable<BuildStepMode>, ExtensionPoint
 
         @Extension
         public static class OffDescriptor extends BuildStepModeDescriptor {
+
+            @Initializer(before = InitMilestone.PLUGINS_STARTED)
+            public static void addAliases() {
+                Items.XSTREAM2.addCompatibilityAlias("io.sealigths.plugins.sealightsjenkins.BuildStepMode$OffView", OffView.class);
+            }
+
             public OffDescriptor() {
                 super(OffView.class, BuildStepModes.Off.getDisplayName());
             }
@@ -92,6 +101,12 @@ public class BuildStepMode implements Describable<BuildStepMode>, ExtensionPoint
 
         @Extension
         public static class DisableSealightsDescriptor extends BuildStepModeDescriptor {
+
+            @Initializer(before = InitMilestone.PLUGINS_STARTED)
+            public static void addAliases() {
+                Items.XSTREAM2.addCompatibilityAlias("io.sealigths.plugins.sealightsjenkins.BuildStepMode$DisableSealightsView", DisableSealightsView.class);
+            }
+
             public DisableSealightsDescriptor() {
                 super(DisableSealightsView.class, BuildStepModes.InvokeMavenCommand.getDisplayName());
             }
@@ -118,6 +133,11 @@ public class BuildStepMode implements Describable<BuildStepMode>, ExtensionPoint
 
         @Extension
         public static class InvokeMavenCommandDescriptor extends BuildStepModeDescriptor {
+
+            @Initializer(before = InitMilestone.PLUGINS_STARTED)
+            public static void addAliases() {
+                Items.XSTREAM2.addCompatibilityAlias("io.sealigths.plugins.sealightsjenkins.BuildStepMode$InvokeMavenCommandView", InvokeMavenCommandView.class);
+            }
 
             public InvokeMavenCommandDescriptor() {
                 super(InvokeMavenCommandView.class, BuildStepModes.InvokeMavenCommandWithSealights.getDisplayName());
@@ -152,6 +172,12 @@ public class BuildStepMode implements Describable<BuildStepMode>, ExtensionPoint
 
         @Extension
         public static class PrepareSealightsDescriptor extends BuildStepModeDescriptor {
+
+            @Initializer(before = InitMilestone.PLUGINS_STARTED)
+            public static void addAliases() {
+                Items.XSTREAM2.addCompatibilityAlias("io.sealigths.plugins.sealightsjenkins.BuildStepMode$PrepareSealightsView", PrepareSealightsView.class);
+            }
+
             public PrepareSealightsDescriptor() {
                 super(PrepareSealightsView.class, BuildStepModes.PrepareSealights.getDisplayName());
             }

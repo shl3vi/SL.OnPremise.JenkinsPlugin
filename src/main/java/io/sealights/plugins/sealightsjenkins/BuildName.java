@@ -3,9 +3,12 @@ package io.sealights.plugins.sealightsjenkins;
 import hudson.DescriptorExtensionList;
 import hudson.Extension;
 import hudson.ExtensionPoint;
+import hudson.init.InitMilestone;
+import hudson.init.Initializer;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.Hudson;
+import hudson.model.Items;
 import hudson.util.FormValidation;
 import io.sealights.plugins.sealightsjenkins.utils.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -67,6 +70,12 @@ public class BuildName implements Describable<BuildName>, ExtensionPoint, Serial
 
         @Extension
         public static class DefaultBuildNameDescriptor extends BuildNameDescriptor {
+
+            @Initializer(before = InitMilestone.PLUGINS_STARTED)
+            public static void addAliases() {
+                Items.XSTREAM2.addCompatibilityAlias("io.sealigths.plugins.sealightsjenkins.BuildName$DefaultBuildName", DefaultBuildName.class);
+            }
+
             public DefaultBuildNameDescriptor() {
                 super(DefaultBuildName.class, BuildNamingStrategy.JENKINS_BUILD.getDisplayName());
             }
@@ -99,6 +108,12 @@ public class BuildName implements Describable<BuildName>, ExtensionPoint, Serial
 
         @Extension
         public static class ManualBuildNameDescriptor extends BuildNameDescriptor {
+
+            @Initializer(before = InitMilestone.PLUGINS_STARTED)
+            public static void addAliases() {
+                Items.XSTREAM2.addCompatibilityAlias("io.sealigths.plugins.sealightsjenkins.BuildName$ManualBuildName", ManualBuildName.class);
+            }
+
             public ManualBuildNameDescriptor() {
                 super(ManualBuildName.class, BuildNamingStrategy.MANUAL.getDisplayName());
             }
@@ -126,6 +141,12 @@ public class BuildName implements Describable<BuildName>, ExtensionPoint, Serial
 
         @Extension
         public static class UpstreamBuildNameDescriptor extends BuildNameDescriptor {
+
+            @Initializer(before = InitMilestone.PLUGINS_STARTED)
+            public static void addAliases() {
+                Items.XSTREAM2.addCompatibilityAlias("io.sealigths.plugins.sealightsjenkins.BuildName$UpstreamBuildName", UpstreamBuildName.class);
+            }
+
             public UpstreamBuildNameDescriptor() {
                 super(UpstreamBuildName.class, BuildNamingStrategy.JENKINS_UPSTREAM.getDisplayName());
             }
@@ -147,6 +168,12 @@ public class BuildName implements Describable<BuildName>, ExtensionPoint, Serial
 
         @Extension
         public static class LatestBuildNameDescriptor extends BuildNameDescriptor {
+
+            @Initializer(before = InitMilestone.PLUGINS_STARTED)
+            public static void addAliases() {
+                Items.XSTREAM2.addCompatibilityAlias("io.sealigths.plugins.sealightsjenkins.BuildName$LatestBuildName", LatestBuildName.class);
+            }
+
             public LatestBuildNameDescriptor() {
                 super(LatestBuildName.class, BuildNamingStrategy.LATEST_BUILD.getDisplayName());
             }
