@@ -8,6 +8,7 @@ import org.apache.commons.lang.StringUtils;
 import java.io.FileNotFoundException;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.TreeMap;
 
 import static io.sealights.plugins.sealightsjenkins.utils.StringUtils.isNullOrEmpty;
 
@@ -135,7 +136,7 @@ public class SealightsMavenPluginHelper {
     }
 
     private StringBuilder addMetadataToConfigurationInPluginText(StringBuilder plugin, SeaLightsPluginInfo pluginInfo){
-        Map<String, String> metadata = pluginInfo.getMetadata();
+        Map<String, String> metadata = new TreeMap<String, String>(pluginInfo.getMetadata());
         if (!(metadata == null || metadata.isEmpty())){
             plugin.append("<metadata>");
             Iterator it = metadata.entrySet().iterator();
