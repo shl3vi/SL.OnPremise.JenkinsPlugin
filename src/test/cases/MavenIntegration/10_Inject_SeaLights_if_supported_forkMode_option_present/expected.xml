@@ -46,8 +46,8 @@
                             <logLevel>INFO</logLevel>
                             <logFolder>c:\fake-log-folder</logFolder>
                             <metadata>
-                                <plugin>somPluginInfo</plugin>
                                 <build>someBuildInfo</build>
+                                <plugin>somPluginInfo</plugin>
                             </metadata>
                         </configuration>
                         <executions>
@@ -97,8 +97,8 @@
                     <logLevel>INFO</logLevel>
                     <logFolder>c:\fake-log-folder</logFolder>
                     <metadata>
-                        <plugin>somPluginInfo</plugin>
                         <build>someBuildInfo</build>
+                        <plugin>somPluginInfo</plugin>
                     </metadata>
                 </configuration>
                 <executions>
