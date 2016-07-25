@@ -121,8 +121,8 @@ public class MavenSealightsBuildStep extends Builder {
             if (StringUtils.isNotBlank(targets)) {
                 this.buildStepMode = new BuildStepMode.InvokeMavenCommandView(targets);
             } else {
-                //assuming that users of 'MavenSealightsBuildStep' didn't left 'targets' blank.
-                //If no 'targets' is mentioned, its probably the deprecated 'beginAnalysisBuildStep'
+                //Assuming that users of 'MavenSealightsBuildStep' didn't left 'targets' blank.
+                //If no 'targets' is mentioned, its probably the deprecated 'beginAnalysisBuildStep'.
                 this.buildStepMode = new BuildStepMode.PrepareSealightsView("");
             }
         }
