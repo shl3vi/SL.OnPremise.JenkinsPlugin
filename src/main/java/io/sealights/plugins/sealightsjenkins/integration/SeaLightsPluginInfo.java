@@ -32,6 +32,7 @@ public class SeaLightsPluginInfo {
     private boolean recursiveOnBuildFilesFolders;
     private ExecutionType executionType;
     private Map<String, String> metadata;
+    private String filesStorage;
 
     public boolean isRecursiveOnBuildFilesFolders() {
         return recursiveOnBuildFilesFolders;
@@ -274,6 +275,14 @@ public class SeaLightsPluginInfo {
 
     public void setClassLoadersExcluded(String classLoadersExcluded) {
         this.classLoadersExcluded = classLoadersExcluded;
+    }
+
+    public String getFilesStorage() {
+        return this.filesStorage;
+    }
+
+    public void setFilesStorage(String filesStorage) {
+        this.filesStorage = filesStorage;
     }
 }
 
