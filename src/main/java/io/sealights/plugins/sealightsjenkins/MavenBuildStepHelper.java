@@ -55,7 +55,7 @@ public class MavenBuildStepHelper {
 
         Logger logger = new Logger(listener.getLogger());
 
-        String slMavenPluginJar = JarsHelper.loadJarAndSaveAsTempFile(SealightsMavenPluginHelper.SL_MVN_JAR_NAME);
+        String slMavenPluginJar = JarsHelper.loadJarAndSaveAsTempFile(SealightsMavenPluginHelper.SL_MVN_JAR_NAME, beginAnalysis.getDescriptor().getFilesStorage());
         CustomFile customFile = new CustomFile(logger, cleanupManager, slMavenPluginJar);
         customFile.copyToSlave();
 

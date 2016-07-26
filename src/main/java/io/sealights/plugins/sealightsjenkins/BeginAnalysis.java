@@ -53,7 +53,6 @@ public class BeginAnalysis extends Builder {
     private String workspacepath;
     private String buildScannerJar;
     private String testListenerJar;
-    private String filesStorage;
     private transient String apiJar;
     private String testListenerConfigFile;
     private boolean autoRestoreBuildFile;
@@ -79,7 +78,6 @@ public class BeginAnalysis extends Builder {
                          String packagesIncluded, String packagesExcluded, String filesIncluded,
                          String filesExcluded, String classLoadersExcluded, boolean recursive,
                          String workspacepath, String buildScannerJar, String testListenerJar,
-                         String filesStorage,
                          String testListenerConfigFile, boolean autoRestoreBuildFile,
                          String buildFilesPatterns, String buildFilesFolders,
                          boolean logEnabled, LogDestination logDestination, String logFolder,
@@ -119,7 +117,6 @@ public class BeginAnalysis extends Builder {
 
         this.buildScannerJar = buildScannerJar;
         this.testListenerJar = testListenerJar;
-        this.filesStorage = filesStorage;
     }
 
     private void setDefaultValuesForStrings(Logger logger) {
@@ -262,13 +259,6 @@ public class BeginAnalysis extends Builder {
     public String getTestListenerJar() {
         return testListenerJar;
     }
-
-    @Exported
-    public String getFilesStorage() {
-        return filesStorage;
-    }
-
-
 
     @Exported
     public String getTestListenerConfigFile() {
@@ -562,7 +552,6 @@ public class BeginAnalysis extends Builder {
         slInfo.setPackagesExcluded(packagesExcluded);
         slInfo.setClassLoadersExcluded(classLoadersExcluded);
         slInfo.setListenerJar(testListenerJar);
-        slInfo.setFilesStorage(filesStorage);
         slInfo.setListenerConfigFile(testListenerConfigFile);
         slInfo.setScannerJar(buildScannerJar);
         slInfo.setBuildStrategy(buildStrategy);
@@ -610,6 +599,7 @@ public class BeginAnalysis extends Builder {
             slInfo.setProxy(override_proxy);
         }
 
+        slInfo.setFilesStorage(getDescriptor().getFilesStorage());
     }
 
     private List<FileBackupInfo> getPomFiles(List<String> folders, String patterns, Logger logger, String pomPath) throws IOException, InterruptedException {
@@ -716,11 +706,11 @@ public class BeginAnalysis extends Builder {
         private String customerId;
         private String url;
         private String proxy;
+        private String filesStorage;
 
         public DescriptorImpl() {
             super(BeginAnalysis.class);
             load();
-
         }
 
         @Override
@@ -733,6 +723,7 @@ public class BeginAnalysis extends Builder {
             customerId = json.getString("customerId");
             url = json.getString("url");
             proxy = json.getString("proxy");
+            filesStorage = json.getString("filesStorage");
             save();
             return super.configure(req, json);
         }
@@ -759,6 +750,14 @@ public class BeginAnalysis extends Builder {
 
         public void setProxy(String proxy) {
             this.proxy = proxy;
+        }
+
+        public String getFilesStorage() {
+            return filesStorage;
+        }
+
+        public void setFilesStorage(String filesStorage) {
+            this.filesStorage = filesStorage;
         }
 
         public FormValidation doCheckPackagesIncluded(@QueryParameter String packagesIncluded) {
