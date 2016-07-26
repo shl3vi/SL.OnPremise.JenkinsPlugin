@@ -110,6 +110,11 @@
                      description="Overrides the default Test Listener JAR with a path to a different Test Listener JAR. Leave empty to use the default one.">
                 <f:textbox value="${instance.testListenerJar}"/>
             </f:entry>
+
+            <f:entry title="Files Storage Folder" field="filesStorage"
+                     description="Overrides the default location which Sealights stores file. By default this is the temp folder.">
+                <f:textbox value="${instance.filesStorage}"/>
+            </f:entry>
         </f:advanced>
 
         <f:advanced title="Logs" >

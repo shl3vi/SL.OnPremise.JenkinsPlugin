@@ -53,6 +53,7 @@ public class BeginAnalysis extends Builder {
     private String workspacepath;
     private String buildScannerJar;
     private String testListenerJar;
+    private String filesStorage;
     private transient String apiJar;
     private String testListenerConfigFile;
     private boolean autoRestoreBuildFile;
@@ -78,6 +79,7 @@ public class BeginAnalysis extends Builder {
                          String packagesIncluded, String packagesExcluded, String filesIncluded,
                          String filesExcluded, String classLoadersExcluded, boolean recursive,
                          String workspacepath, String buildScannerJar, String testListenerJar,
+                         String filesStorage,
                          String testListenerConfigFile, boolean autoRestoreBuildFile,
                          String buildFilesPatterns, String buildFilesFolders,
                          boolean logEnabled, LogDestination logDestination, String logFolder,
@@ -117,6 +119,7 @@ public class BeginAnalysis extends Builder {
 
         this.buildScannerJar = buildScannerJar;
         this.testListenerJar = testListenerJar;
+        this.filesStorage = filesStorage;
     }
 
     private void setDefaultValuesForStrings(Logger logger) {
@@ -259,6 +262,13 @@ public class BeginAnalysis extends Builder {
     public String getTestListenerJar() {
         return testListenerJar;
     }
+
+    @Exported
+    public String getFilesStorage() {
+        return filesStorage;
+    }
+
+
 
     @Exported
     public String getTestListenerConfigFile() {
@@ -552,6 +562,7 @@ public class BeginAnalysis extends Builder {
         slInfo.setPackagesExcluded(packagesExcluded);
         slInfo.setClassLoadersExcluded(classLoadersExcluded);
         slInfo.setListenerJar(testListenerJar);
+        slInfo.setFilesStorage(filesStorage);
         slInfo.setListenerConfigFile(testListenerConfigFile);
         slInfo.setScannerJar(buildScannerJar);
         slInfo.setBuildStrategy(buildStrategy);

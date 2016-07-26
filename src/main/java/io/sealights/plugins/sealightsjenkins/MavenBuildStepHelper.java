@@ -22,6 +22,7 @@ import io.sealights.plugins.sealightsjenkins.integration.SealightsMavenPluginHel
 import io.sealights.plugins.sealightsjenkins.utils.JenkinsUtils;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import jenkins.model.Jenkins;
+import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -159,13 +160,13 @@ public class MavenBuildStepHelper {
         return true;
     }
 
-    public void copySettingsFileToSlave(String settingsPath, Logger logger) throws IOException, InterruptedException {
+    public void copySettingsFileToSlave(String settingsPath, String filesStorage, Logger logger) throws IOException, InterruptedException {
         if (!this.isSealightsEnabled)
             return;
 
         if (Computer.currentComputer() instanceof SlaveComputer) {
             String originalSettings = settingsPath;
-            settingsPath = toTempSettingsFile(settingsPath);
+            settingsPath = toTempSettingsFile(settingsPath, filesStorage);
             CustomFile customFile = new CustomFile(logger, cleanupManager ,originalSettings);
             customFile.copyToSlave(settingsPath);
         }
@@ -188,9 +189,11 @@ public class MavenBuildStepHelper {
         restoreBuildFile.perform(build, launcher, listener);
     }
 
-    private String toTempSettingsFile(String settingsPath) {
+    private String toTempSettingsFile(String settingsPath, String filesStorage) {
         settingsPath =  UUID.randomUUID().toString() + "-" + Paths.get(settingsPath).getFileName().toString();
         String osTempFolder = System.getProperty("java.io.tmpdir");
+        if (StringUtils.isNotEmpty(filesStorage))
+            osTempFolder = filesStorage;
         String tempFile = Paths.get(osTempFolder, settingsPath).toAbsolutePath().toString();
         settingsPath = tempFile;
         return settingsPath;

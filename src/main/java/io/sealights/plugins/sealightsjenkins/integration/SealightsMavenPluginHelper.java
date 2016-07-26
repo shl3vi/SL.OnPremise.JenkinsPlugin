@@ -108,6 +108,7 @@ public class SealightsMavenPluginHelper {
         tryAppendValue(plugin, pluginInfo.getFilesIncluded(), "filesincluded");
         tryAppendValue(plugin, pluginInfo.getScannerJar(), "buildScannerJar");
         tryAppendValue(plugin, pluginInfo.getListenerJar(), "testListenerJar");
+        tryAppendValue(plugin, pluginInfo.getFilesStorage(), "filesStorage");
         tryAppendValue(plugin, pluginInfo.getListenerConfigFile(), "testListenerConfigFile");
         tryAppendValue(plugin, pluginInfo.getEnvironment(), "environment");
         tryAppendValue(plugin, pluginInfo.getFilesExcluded(), "filesexcluded");
