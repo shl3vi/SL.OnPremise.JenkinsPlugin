@@ -7,12 +7,13 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
-import io.sealights.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
-import io.sealights.plugins.sealightsjenkins.utils.*;
+import hudson.util.XStream2;
 import io.sealights.plugins.sealightsjenkins.entities.FileBackupInfo;
 import io.sealights.plugins.sealightsjenkins.exceptions.SeaLightsIllegalStateException;
 import io.sealights.plugins.sealightsjenkins.integration.MavenIntegration;
 import io.sealights.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
+import io.sealights.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
+import io.sealights.plugins.sealightsjenkins.utils.*;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -28,7 +29,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by shahar on 5/9/2016.
@@ -717,6 +721,28 @@ public class BeginAnalysis extends Builder {
         public String getDisplayName() {
             return "";
         }
+
+        @Override
+        public synchronized void load() {
+            // For backward compatibility, if we don't have our own data yet.
+            XmlFile file = getConfigFile();
+            if(!file.exists()) {// If not found our global configuration xml.
+                XStream2 xs = new XStream2();
+                xs.addCompatibilityAlias("io.sealigths.plugins.sealightsjenkins.BeginAnalysis$DescriptorImpl", DescriptorImpl.class);
+                // Try get configuration from old version configuration xml.
+                file = new XmlFile(xs,new File(Jenkins.getInstance().getRootDir(),"io.sealigths.plugins.sealightsjenkins.BeginAnalysis.xml"));
+                if (file.exists()) {
+                    try {
+                        file.unmarshal(this);
+                    } catch (IOException e) {
+                        super.load();
+                    }
+                }
+            } else {
+                super.load();
+            }
+        }
+
 
         @Override
         public boolean configure(StaplerRequest req, JSONObject json) throws FormException {

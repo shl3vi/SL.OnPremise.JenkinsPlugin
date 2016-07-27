@@ -47,6 +47,8 @@ public class MavenSealightsBuildStep extends Builder {
     public final BeginAnalysis beginAnalysis;
     public BuildStepMode buildStepMode;
 
+    public transient boolean enableSeaLights;
+
     @Deprecated
     public transient String relativePathToEffectivePom;
 
