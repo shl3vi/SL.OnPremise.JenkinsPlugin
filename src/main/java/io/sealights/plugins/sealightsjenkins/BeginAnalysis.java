@@ -14,7 +14,9 @@ import io.sealights.plugins.sealightsjenkins.integration.MavenIntegration;
 import io.sealights.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
 import io.sealights.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
 import io.sealights.plugins.sealightsjenkins.utils.*;
+import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import jenkins.model.Jenkins;
+import jenkins.model.JenkinsLocationConfiguration;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -33,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.*;
 
 /**
  * Created by shahar on 5/9/2016.
@@ -724,25 +727,31 @@ public class BeginAnalysis extends Builder {
 
         @Override
         public synchronized void load() {
-            // For backward compatibility, if we don't have our own data yet.
-            XmlFile file = getConfigFile();
-            if(!file.exists()) {// If not found our global configuration xml.
-                XStream2 xs = new XStream2();
-                xs.addCompatibilityAlias("io.sealigths.plugins.sealightsjenkins.BeginAnalysis$DescriptorImpl", DescriptorImpl.class);
-                // Try get configuration from old version configuration xml.
-                file = new XmlFile(xs,new File(Jenkins.getInstance().getRootDir(),"io.sealigths.plugins.sealightsjenkins.BeginAnalysis.xml"));
-                if (file.exists()) {
-                    try {
-                        file.unmarshal(this);
-                    } catch (IOException e) {
-                        super.load();
-                    }
-                }
-            } else {
+            if (latestConfigurationExist()) {
                 super.load();
+                return;
             }
+            tryLoadOldConfiguration();
         }
 
+        private synchronized boolean latestConfigurationExist() {
+            XmlFile updatedConfigXml = getConfigFile();
+            return updatedConfigXml.exists();
+        }
+
+        private synchronized void tryLoadOldConfiguration() {
+            XStream2 xs = new XStream2();
+            xs.addCompatibilityAlias("io.sealigths.plugins.sealightsjenkins.BeginAnalysis$DescriptorImpl", DescriptorImpl.class);
+            XmlFile oldConfigXml = new XmlFile(xs, new File(Jenkins.getInstance().getRootDir(), "io.sealigths.plugins.sealightsjenkins.BeginAnalysis.xml"));
+            if (oldConfigXml.exists()) {
+                try {
+                    // Load old configuration xml into this object ('DescriptorImpl').
+                    oldConfigXml.unmarshal(this);
+                } catch (IOException e) {
+                    LOGGER.log(Level.WARNING, "Failed to load "+oldConfigXml, e);
+                }
+            }
+        }
 
         @Override
         public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
@@ -807,5 +816,7 @@ public class BeginAnalysis extends Builder {
         public DescriptorExtensionList<BuildName, BuildName.BuildNameDescriptor> getBuildNameDescriptorList() {
             return Jenkins.getInstance().getDescriptorList(BuildName.class);
         }
+
+        private static final java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger(JenkinsLocationConfiguration.class.getName());
     }
 }
