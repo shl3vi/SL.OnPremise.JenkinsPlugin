@@ -11,6 +11,9 @@
         <f:entry title="Proxy Url (Optional)" field="proxy">
             <f:textbox value="${descriptor.proxy}"/>
         </f:entry>
-
+        <f:entry title="Files Storage Folder" field="filesStorage"
+                 description="Overrides the default location which Sealights stores files. By default this is the temp folder.">
+            <f:textbox value="${descriptor.filesStorage}"/>
+        </f:entry>
     </f:section>
 </j:jelly>

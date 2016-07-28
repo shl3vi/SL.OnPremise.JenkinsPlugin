@@ -1,7 +1,7 @@
 package io.sealights.plugins.sealightsjenkins.integration;
 
-
 import io.sealights.plugins.sealightsjenkins.utils.StringUtils;
+
 
 import java.io.*;
 import java.util.UUID;
@@ -31,15 +31,18 @@ public class JarsHelper {
     }
 
     public static String loadJarAndSaveAsTempFile(String jarNameWithoutExtension, String overrideJarLocation)
+        return loadJarAndSaveAsTempFile(jarNameWithoutExtension, null);
+    }
+
+    public static String loadJarAndSaveAsTempFile(String jarNameWithoutExtension, String overridePath)
             throws IOException {
         String jarNameWithExtension =  jarNameWithoutExtension + ".jar";
         InputStream jarStream = JarsHelper.class.getResourceAsStream("/" + jarNameWithExtension);
-        File file = null;
-        try{
-            if (jarStream == null) {
-                throw new FileNotFoundException(jarNameWithExtension);
-            }
-
+        if (jarStream == null) {
+            String message = "Failed to read embedded jar '" + jarNameWithExtension + "'.";
+            throw new FileNotFoundException(message);
+        }
+        File file;
             if (!StringUtils.isNullOrEmpty(overrideJarLocation)){
                 String tempFileName = jarNameWithoutExtension + "_" + UUID.randomUUID() + ".jar";
                 file = new File(overrideJarLocation, tempFileName);
@@ -48,15 +51,14 @@ public class JarsHelper {
                 file = File.createTempFile(jarNameWithoutExtension, ".jar");
             }
 
-            file.deleteOnExit();
-
-            copyInputStreamToFile(jarStream, file);
         }
-        finally {
-            if (jarStream != null)
-                jarStream.close();
+        else
+        {
+            file = new File(overridePath, jarNameWithExtension);
+            file.createNewFile();
         }
 
+        copyInputStreamToFile(jarStream, file);
         return file.getAbsolutePath();
     }
 }

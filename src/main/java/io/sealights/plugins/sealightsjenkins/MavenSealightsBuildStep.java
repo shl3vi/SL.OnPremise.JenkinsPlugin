@@ -47,6 +47,8 @@ public class MavenSealightsBuildStep extends Builder {
     public final BeginAnalysis beginAnalysis;
     public BuildStepMode buildStepMode;
 
+    public transient boolean enableSeaLights;
+
     @Deprecated
     public transient String relativePathToEffectivePom;
 
@@ -334,7 +336,7 @@ public class MavenSealightsBuildStep extends Builder {
                 String settingsPath = SettingsProvider.getSettingsRemotePath(getSettings(), build, listener);
 
                 if (StringUtils.isNotBlank(settingsPath)) {
-                    mavenBuildStepHelper.copySettingsFileToSlave(settingsPath, beginAnalysis.getFilesStorage(), logger);
+                    mavenBuildStepHelper.copySettingsFileToSlave(settingsPath, beginAnalysis.getDescriptor().getFilesStorage(), logger);
                     args.add("-s", settingsPath);
                 }
             }
@@ -342,7 +344,7 @@ public class MavenSealightsBuildStep extends Builder {
                 String settingsPath = GlobalSettingsProvider.getSettingsRemotePath(getGlobalSettings(), build, listener);
 
                 if (StringUtils.isNotBlank(settingsPath)) {
-                    mavenBuildStepHelper.copySettingsFileToSlave(settingsPath, beginAnalysis.getFilesStorage(), logger);
+                    mavenBuildStepHelper.copySettingsFileToSlave(settingsPath, beginAnalysis.getDescriptor().getFilesStorage(), logger);
                     args.add("-gs", settingsPath);
                 }
             }
