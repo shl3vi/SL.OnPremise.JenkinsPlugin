@@ -1,6 +1,8 @@
 package io.sealights.plugins.sealightsjenkins.integration;
 
 
+import io.sealights.plugins.sealightsjenkins.utils.StringUtils;
+
 import java.io.*;
 import java.util.UUID;
 
@@ -38,7 +40,7 @@ public class JarsHelper {
                 throw new FileNotFoundException(jarNameWithExtension);
             }
 
-            if (overrideJarLocation != null && !"".equals(overrideJarLocation)){
+            if (!StringUtils.isNullOrEmpty(overrideJarLocation)){
                 String tempFileName = jarNameWithoutExtension + "_" + UUID.randomUUID() + ".jar";
                 file = new File(overrideJarLocation, tempFileName);
                 file.createNewFile();
