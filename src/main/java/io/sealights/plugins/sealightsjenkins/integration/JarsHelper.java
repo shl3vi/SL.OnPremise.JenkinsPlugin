@@ -29,22 +29,22 @@ public class JarsHelper {
                 inputStream.close();
         }
     }
-    
+
     public static String loadJarAndSaveAsTempFile(String jarNameWithoutExtension, String overrideJarLocation) throws IOException {
-        String jarNameWithExtension =  jarNameWithoutExtension + ".jar";
+        String jarNameWithExtension = jarNameWithoutExtension + ".jar";
         InputStream jarStream = JarsHelper.class.getResourceAsStream("/" + jarNameWithExtension);
         if (jarStream == null) {
             String message = "Failed to read embedded jar '" + jarNameWithExtension + "'.";
             throw new FileNotFoundException(message);
         }
         File file;
-            if (!StringUtils.isNullOrEmpty(overrideJarLocation)){
-                String tempFileName = jarNameWithoutExtension + "_" + UUID.randomUUID() + ".jar";
-                file = new File(overrideJarLocation, tempFileName);
-                file.createNewFile();
-            }else {
-                file = File.createTempFile(jarNameWithoutExtension, ".jar");
-            }
+        if (!StringUtils.isNullOrEmpty(overrideJarLocation)) {
+            String tempFileName = jarNameWithoutExtension + "_" + UUID.randomUUID() + ".jar";
+            file = new File(overrideJarLocation, tempFileName);
+            file.createNewFile();
+        } else {
+            file = File.createTempFile(jarNameWithoutExtension, ".jar");
+        }
 
         copyInputStreamToFile(jarStream, file);
         return file.getAbsolutePath();
