@@ -29,13 +29,8 @@ public class JarsHelper {
                 inputStream.close();
         }
     }
-
-    public static String loadJarAndSaveAsTempFile(String jarNameWithoutExtension, String overrideJarLocation)
-        return loadJarAndSaveAsTempFile(jarNameWithoutExtension, null);
-    }
-
-    public static String loadJarAndSaveAsTempFile(String jarNameWithoutExtension, String overridePath)
-            throws IOException {
+    
+    public static String loadJarAndSaveAsTempFile(String jarNameWithoutExtension, String overrideJarLocation) throws IOException {
         String jarNameWithExtension =  jarNameWithoutExtension + ".jar";
         InputStream jarStream = JarsHelper.class.getResourceAsStream("/" + jarNameWithExtension);
         if (jarStream == null) {
@@ -50,13 +45,6 @@ public class JarsHelper {
             }else {
                 file = File.createTempFile(jarNameWithoutExtension, ".jar");
             }
-
-        }
-        else
-        {
-            file = new File(overridePath, jarNameWithExtension);
-            file.createNewFile();
-        }
 
         copyInputStreamToFile(jarStream, file);
         return file.getAbsolutePath();
