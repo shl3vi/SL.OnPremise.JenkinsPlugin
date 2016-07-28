@@ -7,13 +7,16 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
-import io.sealights.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
-import io.sealights.plugins.sealightsjenkins.utils.*;
+import hudson.util.XStream2;
 import io.sealights.plugins.sealightsjenkins.entities.FileBackupInfo;
 import io.sealights.plugins.sealightsjenkins.exceptions.SeaLightsIllegalStateException;
 import io.sealights.plugins.sealightsjenkins.integration.MavenIntegration;
 import io.sealights.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
+import io.sealights.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
+import io.sealights.plugins.sealightsjenkins.utils.*;
+import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import jenkins.model.Jenkins;
+import jenkins.model.JenkinsLocationConfiguration;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -28,7 +31,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.*;
 
 /**
  * Created by shahar on 5/9/2016.
@@ -719,6 +726,34 @@ public class BeginAnalysis extends Builder {
         }
 
         @Override
+        public synchronized void load() {
+            if (latestConfigurationExist()) {
+                super.load();
+                return;
+            }
+            tryLoadOldConfiguration();
+        }
+
+        private synchronized boolean latestConfigurationExist() {
+            XmlFile latestConfigXml = getConfigFile();
+            return latestConfigXml.exists();
+        }
+
+        private synchronized void tryLoadOldConfiguration() {
+            XStream2 xs = new XStream2();
+            xs.addCompatibilityAlias("io.sealigths.plugins.sealightsjenkins.BeginAnalysis$DescriptorImpl", DescriptorImpl.class);
+            XmlFile oldConfigXml = new XmlFile(xs, new File(Jenkins.getInstance().getRootDir(), "io.sealigths.plugins.sealightsjenkins.BeginAnalysis.xml"));
+            if (oldConfigXml.exists()) {
+                try {
+                    // Load old configuration xml into this object ('DescriptorImpl').
+                    oldConfigXml.unmarshal(this);
+                } catch (IOException e) {
+                    LOGGER.log(Level.WARNING, "Failed to load "+oldConfigXml, e);
+                }
+            }
+        }
+
+        @Override
         public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
             customerId = json.getString("customerId");
             url = json.getString("url");
@@ -781,5 +816,7 @@ public class BeginAnalysis extends Builder {
         public DescriptorExtensionList<BuildName, BuildName.BuildNameDescriptor> getBuildNameDescriptorList() {
             return Jenkins.getInstance().getDescriptorList(BuildName.class);
         }
+
+        private static final java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger(DescriptorImpl.class.getName());
     }
 }
