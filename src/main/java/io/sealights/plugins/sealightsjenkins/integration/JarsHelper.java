@@ -1,6 +1,8 @@
 package io.sealights.plugins.sealightsjenkins.integration;
 
+
 import java.io.*;
+import java.util.UUID;
 
 /**
  * Created by Nadav on 4/20/2016.
@@ -26,7 +28,7 @@ public class JarsHelper {
         }
     }
 
-    public static String loadJarAndSaveAsTempFile(String jarNameWithoutExtension)
+    public static String loadJarAndSaveAsTempFile(String jarNameWithoutExtension, String overrideJarLocation)
             throws IOException {
         String jarNameWithExtension =  jarNameWithoutExtension + ".jar";
         InputStream jarStream = JarsHelper.class.getResourceAsStream("/" + jarNameWithExtension);
@@ -36,7 +38,14 @@ public class JarsHelper {
                 throw new FileNotFoundException(jarNameWithExtension);
             }
 
-            file = File.createTempFile(jarNameWithoutExtension, ".jar");
+            if (overrideJarLocation != null && !"".equals(overrideJarLocation)){
+                String tempFileName = jarNameWithoutExtension + "_" + UUID.randomUUID() + ".jar";
+                file = new File(overrideJarLocation, tempFileName);
+                file.createNewFile();
+            }else {
+                file = File.createTempFile(jarNameWithoutExtension, ".jar");
+            }
+
             file.deleteOnExit();
 
             copyInputStreamToFile(jarStream, file);

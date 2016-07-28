@@ -237,7 +237,7 @@ public class MavenSealightsBuildStep extends Builder {
             if (isSealightsEnabled) {
                 String additionalMavenArguments = getAdditionalArgumentsForSealightsInitialize();
 
-                mavenBuildStepHelper.installSealightsMavenPlugin(build, launcher, listener, this.pom, this.properties, this);
+                mavenBuildStepHelper.installSealightsMavenPlugin(build, launcher, listener, this.pom, this.properties, this, this.beginAnalysis.getFilesStorage());
                 if (!mavenBuildStepHelper.beginAnalysisBuildStep(build, launcher, listener, logger, this.pom, additionalMavenArguments, this.properties, this)) {
                     logger.error("Begin Analysis step returned false. This likely due to an Exit Code > 0 from Maven.");
                     return false;
