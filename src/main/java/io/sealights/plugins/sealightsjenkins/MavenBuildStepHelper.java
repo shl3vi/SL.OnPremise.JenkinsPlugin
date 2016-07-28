@@ -49,13 +49,13 @@ public class MavenBuildStepHelper {
         this.currentMode = currentMode;
     }
 
-    public void installSealightsMavenPlugin(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String pom, String properties, MavenSealightsBuildStep mavenBuildStep) throws IOException, InterruptedException {
+    public void installSealightsMavenPlugin(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String pom, String properties, MavenSealightsBuildStep mavenBuildStep, String filesStorage) throws IOException, InterruptedException {
         if (!isSealightsEnabled)
             return;
 
         Logger logger = new Logger(listener.getLogger());
 
-        String slMavenPluginJar = JarsHelper.loadJarAndSaveAsTempFile(SealightsMavenPluginHelper.SL_MVN_JAR_NAME, beginAnalysis.getDescriptor().getFilesStorage());
+        String slMavenPluginJar = JarsHelper.loadJarAndSaveAsTempFile(SealightsMavenPluginHelper.SL_MVN_JAR_NAME, filesStorage);
         CustomFile customFile = new CustomFile(logger, cleanupManager, slMavenPluginJar);
         customFile.copyToSlave();
 
