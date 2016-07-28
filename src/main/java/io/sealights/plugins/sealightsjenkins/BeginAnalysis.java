@@ -735,8 +735,8 @@ public class BeginAnalysis extends Builder {
         }
 
         private synchronized boolean latestConfigurationExist() {
-            XmlFile updatedConfigXml = getConfigFile();
-            return updatedConfigXml.exists();
+            XmlFile latestConfigXml = getConfigFile();
+            return latestConfigXml.exists();
         }
 
         private synchronized void tryLoadOldConfiguration() {
@@ -817,6 +817,6 @@ public class BeginAnalysis extends Builder {
             return Jenkins.getInstance().getDescriptorList(BuildName.class);
         }
 
-        private static final java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger(JenkinsLocationConfiguration.class.getName());
+        private static final java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger(DescriptorImpl.class.getName());
     }
 }
