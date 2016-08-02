@@ -154,7 +154,9 @@ public class BuildStepMode implements Describable<BuildStepMode>, ExtensionPoint
 
     public static class PrepareSealightsView extends BuildStepMode {
 
-        private String additionalMavenArguments;
+        //TODO: remove this field once we update Totango. They have agent 1.1.120 so after we install a new agent, this code can be deleted.
+        @Deprecated
+        private transient String additionalMavenArguments;
 
         @DataBoundConstructor
         public PrepareSealightsView(String additionalMavenArguments) {
