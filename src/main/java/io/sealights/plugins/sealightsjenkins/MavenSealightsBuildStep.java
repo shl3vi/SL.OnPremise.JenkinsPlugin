@@ -116,6 +116,11 @@ public class MavenSealightsBuildStep extends Builder {
     private static final Pattern S_PATTERN = Pattern.compile("(^| )-s ");
     private static final Pattern GS_PATTERN = Pattern.compile("(^| )-gs ");
 
+    /**
+    * The goal of this method is to support migration of data between versions
+    * of this plugin.
+    *
+    * */
     private Object readResolve() {
 
         //Check if we are dealing with plugin version before the BuildStepMode feature.
@@ -237,14 +242,14 @@ public class MavenSealightsBuildStep extends Builder {
         MavenBuildStepHelper mavenBuildStepHelper = new MavenBuildStepHelper(currentMode, cleanupManager, this.beginAnalysis);
         try {
             if (isSealightsEnabled) {
-                String additionalMavenArguments = getAdditionalArgumentsForSealightsInitialize();
-
                 BeginAnalysis.DescriptorImpl descriptor = this.beginAnalysis.getDescriptor();
-                mavenBuildStepHelper.installSealightsMavenPlugin(build, launcher, listener, this.pom, this.properties, this, descriptor.getFilesStorage());
-                if (!mavenBuildStepHelper.beginAnalysisBuildStep(build, launcher, listener, logger, this.pom, additionalMavenArguments, this.properties, this)) {
-                    logger.error("Begin Analysis step returned false. This likely due to an Exit Code > 0 from Maven.");
-                    return false;
+                if (this.beginAnalysis.isInstallSealightsMavenPlugin()) {
+                    if (!mavenBuildStepHelper.installSealightsMavenPlugin(build, launcher, listener, this.pom, this.properties, this, descriptor.getFilesStorage(), beginAnalysis.getSealightsMavenPluginInstallationArguments())) {
+                        logger.error("Failed during installation of the Sealights Maven Plugin.");
+                        return false;
+                    }
                 }
+                mavenBuildStepHelper.beginAnalysisBuildStep(build, listener, logger, this.pom);
 
                 //The prepare step should not invoke maven.
                 if ((currentMode.equals(BuildStepModes.PrepareSealights))) {
@@ -263,31 +268,6 @@ public class MavenSealightsBuildStep extends Builder {
             mavenBuildStepHelper.tryRestore(build, launcher, listener);
         }
         return true;
-    }
-
-    private String getSystemPropertiesArgs(String cmdLine) {
-        List<String> argsAsList = CommandLineHelper.toArgsArray(cmdLine);
-        StringBuilder sysProps = new StringBuilder();
-        for (String arg : argsAsList) {
-            if (arg.startsWith("-D")) {
-                sysProps.append(arg);
-                sysProps.append(" ");
-            }
-        }
-        return sysProps.toString();
-
-    }
-
-    private String getAdditionalArgumentsForSealightsInitialize(){
-        if (buildStepMode instanceof BuildStepMode.InvokeMavenCommandView){
-            String normalizedTarget = targets.replaceAll("[\t\r\n]+", " ");
-            return getSystemPropertiesArgs(normalizedTarget);
-        }
-        if (buildStepMode instanceof BuildStepMode.PrepareSealightsView){
-            return ((BuildStepMode.PrepareSealightsView)buildStepMode).getAdditionalMavenArguments();
-        }
-
-        return "";
     }
 
     private boolean tryInvokeMaven(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, MavenBuildStepHelper mavenBuildStepHelper, Logger logger) throws IOException, InterruptedException {

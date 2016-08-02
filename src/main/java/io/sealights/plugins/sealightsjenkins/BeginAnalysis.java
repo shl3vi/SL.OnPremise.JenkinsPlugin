@@ -63,6 +63,8 @@ public class BeginAnalysis extends Builder {
     private transient String apiJar;
     private String testListenerConfigFile;
     private boolean autoRestoreBuildFile;
+    private boolean  installSealightsMavenPlugin;
+    private String sealightsMavenPluginInstallationArguments;
     private String buildFilesPatterns;
     private String buildFilesFolders;
     private boolean logEnabled;
@@ -86,6 +88,7 @@ public class BeginAnalysis extends Builder {
                          String filesExcluded, String classLoadersExcluded, boolean recursive,
                          String workspacepath, String buildScannerJar, String testListenerJar,
                          String testListenerConfigFile, boolean autoRestoreBuildFile,
+                         boolean installSealightsMavenPlugin, String sealightsMavenPluginInstallationArguments,
                          String buildFilesPatterns, String buildFilesFolders,
                          boolean logEnabled, LogDestination logDestination, String logFolder,
                          BuildStrategy buildStrategy,
@@ -109,6 +112,8 @@ public class BeginAnalysis extends Builder {
         this.buildStrategy = buildStrategy;
         this.buildName = buildName;
         this.autoRestoreBuildFile = autoRestoreBuildFile;
+        this.installSealightsMavenPlugin = installSealightsMavenPlugin;
+        this.sealightsMavenPluginInstallationArguments = sealightsMavenPluginInstallationArguments;
         this.environment = environment;
         this.executionType = executionType;
         this.multipleBuildFiles = multipleBuildFiles;
@@ -280,6 +285,26 @@ public class BeginAnalysis extends Builder {
     @Exported
     public void setAutoRestoreBuildFile(boolean autoRestoreBuildFile) {
         this.autoRestoreBuildFile = autoRestoreBuildFile;
+    }
+
+    @Exported
+    public boolean isInstallSealightsMavenPlugin() {
+        return installSealightsMavenPlugin;
+    }
+
+    @Exported
+    public void setInstallSealightsMavenPlugin(boolean installSealightsMavenPlugin) {
+        this.installSealightsMavenPlugin = installSealightsMavenPlugin;
+    }
+
+    @Exported
+    public String getSealightsMavenPluginInstallationArguments() {
+        return sealightsMavenPluginInstallationArguments;
+    }
+
+    @Exported
+    public void setSealightsMavenPluginInstallationArguments(String sealightsMavenPluginInstallationArguments) {
+        this.sealightsMavenPluginInstallationArguments = sealightsMavenPluginInstallationArguments;
     }
 
     @Exported
@@ -676,6 +701,9 @@ public class BeginAnalysis extends Builder {
         logger.debug("Pom Path:" + pomPath);
         logger.debug("Build Naming Strategy (from selection): " + buildName.getBuildNamingStrategy());
         logger.debug("Auto Restore Build File:" + autoRestoreBuildFile);
+        logger.debug("Auto Install the Sealights Maven Plugin:" + installSealightsMavenPlugin);
+        logger.debug("Arguments for the Sealights Maven Plugin Installation:" + sealightsMavenPluginInstallationArguments);
+
 
         logger.debug("--------------Sealights Jenkins Plugin Configuration--------------");
     }
@@ -702,6 +730,8 @@ public class BeginAnalysis extends Builder {
     public DescriptorImpl getDescriptor() {
         return (DescriptorImpl) super.getDescriptor();
     }
+
+
 
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {

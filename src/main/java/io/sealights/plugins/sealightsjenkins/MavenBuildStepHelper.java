@@ -49,9 +49,9 @@ public class MavenBuildStepHelper {
         this.currentMode = currentMode;
     }
 
-    public void installSealightsMavenPlugin(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String pom, String properties, MavenSealightsBuildStep mavenBuildStep, String filesStorage) throws IOException, InterruptedException {
+    public boolean installSealightsMavenPlugin(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String pom, String properties, MavenSealightsBuildStep mavenBuildStep, String filesStorage, String argumentsForPluginInstallation) throws IOException, InterruptedException {
         if (!isSealightsEnabled)
-            return;
+            return true;
 
         Logger logger = new Logger(listener.getLogger());
 
@@ -61,20 +61,22 @@ public class MavenBuildStepHelper {
 
         SealightsMavenPluginHelper pluginHelper = new SealightsMavenPluginHelper(logger);
         String normalizedTarget = pluginHelper.getPluginInstallationCommand(slMavenPluginJar);
+        if (StringUtils.isNotEmpty(argumentsForPluginInstallation)){
+            normalizedTarget += " " + argumentsForPluginInstallation;
+        }
         logger.info("Installing sealights-maven plugin");
         logger.info("Command: " + normalizedTarget);
 
-        invokeMavenCommand(build, launcher, listener, normalizedTarget, logger, pom, properties, mavenBuildStep);
+        return invokeMavenCommand(build, launcher, listener, normalizedTarget, logger, pom, properties, mavenBuildStep);
     }
 
-    public boolean beginAnalysisBuildStep(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Logger logger, String pom, String additionalMavenArguments, String properties, MavenSealightsBuildStep mavenBuildStep) throws IOException, InterruptedException {
+    public void beginAnalysisBuildStep(AbstractBuild<?, ?> build, BuildListener listener, Logger logger, String pom) throws IOException, InterruptedException {
         if (!isSealightsEnabled)
-            return true;
+            return;
 
         EnvVars envVars = build.getEnvironment(listener);
         Map<String, String> metadata = JenkinsUtils.createMetadataFromEnvVars(envVars);
         beginAnalysis.perform(build, cleanupManager, logger, pom, metadata);
-        return true;
     }
 
     public MavenSealightsBuildStep.MavenInstallation overrideMavenHomeIfNeed(MavenSealightsBuildStep.MavenInstallation mavenInstallation, Logger logger) {

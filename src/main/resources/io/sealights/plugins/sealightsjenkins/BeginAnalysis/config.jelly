@@ -83,6 +83,15 @@
             <f:checkbox default="true"/>
         </f:entry>
 
+        <f:entry title="Auto Install the Sealights Maven Plugin" field="installSealightsMavenPlugin"
+                 description="When checked, SeaLights will automatically try to install the Sealights Maven Plugin.">
+            <f:checkbox default="true"/>
+        </f:entry>
+
+        <f:entry title="Arguments for the Sealights Maven Plugin Installation" field="sealightsMavenPluginInstallationArguments">
+            <f:textbox default="$${project.name}" value="${moduleName}"/>
+        </f:entry>
+
         <f:advanced title="Multiple build files">
 
             <f:entry title="Enable" field="enableMultipleBuildFiles"
