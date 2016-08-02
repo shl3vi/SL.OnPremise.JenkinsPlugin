@@ -89,7 +89,7 @@
         </f:entry>
 
         <f:entry title="Arguments for the Sealights Maven Plugin Installation" field="sealightsMavenPluginInstallationArguments">
-            <f:textbox default="$${project.name}" value="${moduleName}"/>
+            <f:textbox value="${sealightsMavenPluginInstallationArguments}"/>
         </f:entry>
 
         <f:advanced title="Multiple build files">
