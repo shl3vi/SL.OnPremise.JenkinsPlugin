@@ -146,7 +146,6 @@ public class BeginAnalysis extends Builder {
                     field.set(this, "");
             } catch (Exception e) {
                 logger.error("Failed to set default value for field " + field.getName(), e);
-                e.printStackTrace();
             }
         }
     }
