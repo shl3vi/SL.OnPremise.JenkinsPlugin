@@ -129,6 +129,10 @@ public class BeginAnalysis extends Builder {
 
         this.buildScannerJar = buildScannerJar;
         this.testListenerJar = testListenerJar;
+
+        //Do not move this to another location since this is used before setDefaultValues() is called.
+        if (this.installSealightsMavenPlugin == null)
+            this.installSealightsMavenPlugin = true;
     }
 
     private void setDefaultValuesForStrings(Logger logger) {
@@ -163,9 +167,6 @@ public class BeginAnalysis extends Builder {
 
         if (this.executionType == null)
             this.executionType = ExecutionType.FULL;
-
-        if (this.installSealightsMavenPlugin == null)
-            this.installSealightsMavenPlugin = true;
 
         setDefaultValuesForStrings(logger);
     }
