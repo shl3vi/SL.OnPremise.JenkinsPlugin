@@ -161,7 +161,8 @@ public class BeginAnalysis extends Builder {
 
         if (this.executionType == null)
             this.executionType = ExecutionType.FULL;
-
+        String a = "45";
+        a+=a;
         if (this.installSealightsMavenPlugin == null)
             this.installSealightsMavenPlugin = true;
 
