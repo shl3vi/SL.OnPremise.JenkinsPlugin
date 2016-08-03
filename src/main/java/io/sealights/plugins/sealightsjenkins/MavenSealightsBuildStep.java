@@ -243,7 +243,8 @@ public class MavenSealightsBuildStep extends Builder {
         try {
             if (isSealightsEnabled) {
                 BeginAnalysis.DescriptorImpl descriptor = this.beginAnalysis.getDescriptor();
-                if (this.beginAnalysis.isInstallSealightsMavenPlugin()) {
+                Boolean installSealightsMavenPlugin = this.beginAnalysis.isInstallSealightsMavenPlugin();
+                if (installSealightsMavenPlugin != null && installSealightsMavenPlugin) {
                     if (!mavenBuildStepHelper.installSealightsMavenPlugin(build, launcher, listener, this.pom, this.properties, this, descriptor.getFilesStorage(), beginAnalysis.getSealightsMavenPluginInstallationArguments())) {
                         logger.error("Failed during installation of the Sealights Maven Plugin.");
                         return false;
