@@ -117,10 +117,9 @@ public class MavenSealightsBuildStep extends Builder {
     private static final Pattern GS_PATTERN = Pattern.compile("(^| )-gs ");
 
     /**
-    * The goal of this method is to support migration of data between versions
-    * of this plugin.
-    *
-    * */
+     * The goal of this method is to support migration of data between versions
+     * of this plugin.
+     */
     private Object readResolve() {
 
         //Check if we are dealing with plugin version before the BuildStepMode feature.
@@ -134,11 +133,11 @@ public class MavenSealightsBuildStep extends Builder {
             }
         }
 
-        if (this.beginAnalysis.getExecutionType().equals(ExecutionType.ONLY_LISTENER)){
+        if (this.beginAnalysis.getExecutionType().equals(ExecutionType.ONLY_LISTENER)) {
             this.beginAnalysis.setExecutionType(ExecutionType.TESTS_ONLY);
         }
 
-        if (StringUtils.isNotBlank(pomPath)){
+        if (StringUtils.isNotBlank(pomPath)) {
             this.pom = pomPath;
         }
         if (StringUtils.isNotBlank(relativePathToEffectivePom)) {
@@ -231,8 +230,7 @@ public class MavenSealightsBuildStep extends Builder {
         Logger logger = new Logger(listener.getLogger());
         CleanupManager cleanupManager = new CleanupManager(logger);
         BuildStepModes currentMode = this.buildStepMode.getCurrentMode();
-        if (currentMode.equals(BuildStepModes.Off))
-        {
+        if (currentMode.equals(BuildStepModes.Off)) {
             logger.info("Skipping build step '" + new DescriptorImpl().getDisplayName() + "' due to the selected value of its 'Action' field.");
             return true;
         }
@@ -245,10 +243,8 @@ public class MavenSealightsBuildStep extends Builder {
                 BeginAnalysis.DescriptorImpl descriptor = this.beginAnalysis.getDescriptor();
                 Boolean installSealightsMavenPlugin = this.beginAnalysis.isInstallSealightsMavenPlugin();
                 if (installSealightsMavenPlugin != null && installSealightsMavenPlugin) {
-                    if (!mavenBuildStepHelper.installSealightsMavenPlugin(build, launcher, listener, this.pom, this.properties, this, descriptor.getFilesStorage(), beginAnalysis.getSealightsMavenPluginInstallationArguments())) {
-                        logger.error("Failed during installation of the Sealights Maven Plugin.");
+                    if (tryInstallMavenPlugin(build, launcher, listener, logger, mavenBuildStepHelper, descriptor))
                         return false;
-                    }
                 }
                 mavenBuildStepHelper.beginAnalysisBuildStep(build, listener, logger, this.pom);
 
@@ -271,7 +267,26 @@ public class MavenSealightsBuildStep extends Builder {
         return true;
     }
 
-    private boolean tryInvokeMaven(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, MavenBuildStepHelper mavenBuildStepHelper, Logger logger) throws IOException, InterruptedException {
+    private boolean tryInstallMavenPlugin(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Logger logger, MavenBuildStepHelper mavenBuildStepHelper, BeginAnalysis.DescriptorImpl descriptor) throws IOException, InterruptedException {
+        String additionalArgsForMavenPluginInstallation = beginAnalysis.getSealightsMavenPluginInstallationArguments();
+        if (additionalArgsForMavenPluginInstallation == null)
+            additionalArgsForMavenPluginInstallation = "";
+        
+        String localSettingsPath = null;
+        String globalSettingsPath = null;
+        if (!S_PATTERN.matcher(additionalArgsForMavenPluginInstallation).find())  // check the given target/goals do not contain settings parameter already
+            localSettingsPath = SettingsProvider.getSettingsRemotePath(getSettings(), build, listener);
+        if (!GS_PATTERN.matcher(additionalArgsForMavenPluginInstallation).find())  // check the given target/goals do not contain settings parameter already
+            globalSettingsPath = SettingsProvider.getSettingsRemotePath(getSettings(), build, listener);
+        if (!mavenBuildStepHelper.installSealightsMavenPlugin(build, launcher, listener, this.pom, this.properties, this, descriptor.getFilesStorage(), additionalArgsForMavenPluginInstallation, globalSettingsPath, localSettingsPath)) {
+            logger.error("Failed during installation of the Sealights Maven Plugin.");
+            return true;
+        }
+        return false;
+    }
+
+    private boolean tryInvokeMaven(AbstractBuild<?, ?> build, Launcher launcher, BuildListener
+            listener, MavenBuildStepHelper mavenBuildStepHelper, Logger logger) throws IOException, InterruptedException {
         VariableResolver<String> vr = build.getBuildVariableResolver();
         EnvVars env = build.getEnvironment(listener);
         String targets = Util.replaceMacro(this.targets, vr);
@@ -394,10 +409,12 @@ public class MavenSealightsBuildStep extends Builder {
      * @throws InterruptedException a
      * @since 1.344
      */
-    protected void wrapUpArguments(ArgumentListBuilder args, String normalizedTarget, AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+    protected void wrapUpArguments(ArgumentListBuilder args, String normalizedTarget, AbstractBuild<?, ?>
+            build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
     }
 
-    public void sealightsWrapUpArguments(ArgumentListBuilder args, String normalizedTarget, AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+    public void sealightsWrapUpArguments(ArgumentListBuilder args, String normalizedTarget, AbstractBuild<?, ?>
+            build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         wrapUpArguments(args, normalizedTarget, build, launcher, listener);
     }
 

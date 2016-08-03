@@ -22,6 +22,8 @@ import io.sealights.plugins.sealightsjenkins.integration.SealightsMavenPluginHel
 import io.sealights.plugins.sealightsjenkins.utils.JenkinsUtils;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import jenkins.model.Jenkins;
+import jenkins.mvn.GlobalSettingsProvider;
+import jenkins.mvn.SettingsProvider;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
@@ -30,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 
 /**
@@ -49,7 +52,7 @@ public class MavenBuildStepHelper {
         this.currentMode = currentMode;
     }
 
-    public boolean installSealightsMavenPlugin(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String pom, String properties, MavenSealightsBuildStep mavenBuildStep, String filesStorage, String argumentsForPluginInstallation) throws IOException, InterruptedException {
+    public boolean installSealightsMavenPlugin(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String pom, String properties, MavenSealightsBuildStep mavenBuildStep, String filesStorage, String argumentsForPluginInstallation, String globalSettingsPath, String localSettingsPath) throws IOException, InterruptedException {
         if (!isSealightsEnabled)
             return true;
 
@@ -67,7 +70,7 @@ public class MavenBuildStepHelper {
         logger.info("Installing sealights-maven plugin");
         logger.info("Command: " + normalizedTarget);
 
-        return invokeMavenCommand(build, launcher, listener, normalizedTarget, logger, pom, properties, mavenBuildStep);
+        return invokeMavenCommand(build, launcher, listener, normalizedTarget, logger, pom, properties, mavenBuildStep,globalSettingsPath, localSettingsPath);
     }
 
     public void beginAnalysisBuildStep(AbstractBuild<?, ?> build, BuildListener listener, Logger logger, String pom) throws IOException, InterruptedException {
@@ -92,7 +95,7 @@ public class MavenBuildStepHelper {
         return mavenInstallation;
     }
 
-    private boolean invokeMavenCommand(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String normalizedTarget, Logger logger, String projectPom, String properties, MavenSealightsBuildStep mavenBuildStep) throws IOException, InterruptedException {
+    private boolean invokeMavenCommand(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String normalizedTarget, Logger logger, String projectPom, String properties, MavenSealightsBuildStep mavenBuildStep, String globalSettingsPath, String localSettingsPath) throws IOException, InterruptedException {
         VariableResolver<String> vr = build.getBuildVariableResolver();
         EnvVars env = build.getEnvironment(listener);
         String pom = env.expand(projectPom);
@@ -117,19 +120,14 @@ public class MavenBuildStepHelper {
         if (pom != null)
             args.add("-f", pom);
 
-//
-//        if(!S_PATTERN.matcher(targets).find()){ // check the given target/goals do not contain settings parameter already
-//            String settingsPath = SettingsProvider.getSettingsRemotePath(getSettings(), build, listener);
-//            if(StringUtils.isNotBlank(settingsPath)){
-//                args.add("-s", settingsPath);
-//            }
-//        }
-//        if(!GS_PATTERN.matcher(targets).find()){
-//            String settingsPath = GlobalSettingsProvider.getSettingsRemotePath(getGlobalSettings(), build, listener);
-//            if(StringUtils.isNotBlank(settingsPath)){
-//                args.add("-gs", settingsPath);
-//            }
-//        }
+        if (StringUtils.isNotEmpty(localSettingsPath)) {
+                copySettingsFileToSlave(localSettingsPath, beginAnalysis.getDescriptor().getFilesStorage(), logger);
+                args.add("-s", localSettingsPath);
+        }
+        if (StringUtils.isNotEmpty(globalSettingsPath)) {
+                copySettingsFileToSlave(globalSettingsPath, beginAnalysis.getDescriptor().getFilesStorage(), logger);
+                args.add("-gs", globalSettingsPath);
+        }
 
         Set<String> sensitiveVars = build.getSensitiveBuildVariables();
 
