@@ -16,7 +16,6 @@ import io.sealights.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
 import io.sealights.plugins.sealightsjenkins.utils.*;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import jenkins.model.Jenkins;
-import jenkins.model.JenkinsLocationConfiguration;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -63,7 +62,7 @@ public class BeginAnalysis extends Builder {
     private transient String apiJar;
     private String testListenerConfigFile;
     private boolean autoRestoreBuildFile;
-    private Boolean  installSealightsMavenPlugin;
+    private Boolean  installSealightsMavenPlugin = true;
     private String sealightsMavenPluginInstallationArguments;
     private String buildFilesPatterns;
     private String buildFilesFolders;
@@ -129,10 +128,6 @@ public class BeginAnalysis extends Builder {
 
         this.buildScannerJar = buildScannerJar;
         this.testListenerJar = testListenerJar;
-
-        //Do not move this to another location since this is used before setDefaultValues() is called.
-        if (this.installSealightsMavenPlugin == null)
-            this.installSealightsMavenPlugin = true;
     }
 
     private void setDefaultValuesForStrings(Logger logger) {
@@ -166,6 +161,9 @@ public class BeginAnalysis extends Builder {
 
         if (this.executionType == null)
             this.executionType = ExecutionType.FULL;
+
+        if (this.installSealightsMavenPlugin == null)
+            this.installSealightsMavenPlugin = true;
 
         setDefaultValuesForStrings(logger);
     }
