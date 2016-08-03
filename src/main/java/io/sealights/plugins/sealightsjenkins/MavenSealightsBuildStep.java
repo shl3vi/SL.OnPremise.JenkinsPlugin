@@ -243,7 +243,7 @@ public class MavenSealightsBuildStep extends Builder {
                 BeginAnalysis.DescriptorImpl descriptor = this.beginAnalysis.getDescriptor();
                 Boolean installSealightsMavenPlugin = this.beginAnalysis.isInstallSealightsMavenPlugin();
                 if (installSealightsMavenPlugin != null && installSealightsMavenPlugin) {
-                    if (tryInstallMavenPlugin(build, launcher, listener, logger, mavenBuildStepHelper, descriptor))
+                    if (!tryInstallMavenPlugin(build, launcher, listener, logger, mavenBuildStepHelper, descriptor))
                         return false;
                 }
                 mavenBuildStepHelper.beginAnalysisBuildStep(build, listener, logger, this.pom);
@@ -271,7 +271,7 @@ public class MavenSealightsBuildStep extends Builder {
         String additionalArgsForMavenPluginInstallation = beginAnalysis.getSealightsMavenPluginInstallationArguments();
         if (additionalArgsForMavenPluginInstallation == null)
             additionalArgsForMavenPluginInstallation = "";
-        
+
         String localSettingsPath = null;
         String globalSettingsPath = null;
         if (!S_PATTERN.matcher(additionalArgsForMavenPluginInstallation).find())  // check the given target/goals do not contain settings parameter already
@@ -280,9 +280,9 @@ public class MavenSealightsBuildStep extends Builder {
             globalSettingsPath = SettingsProvider.getSettingsRemotePath(getSettings(), build, listener);
         if (!mavenBuildStepHelper.installSealightsMavenPlugin(build, launcher, listener, this.pom, this.properties, this, descriptor.getFilesStorage(), additionalArgsForMavenPluginInstallation, globalSettingsPath, localSettingsPath)) {
             logger.error("Failed during installation of the Sealights Maven Plugin.");
-            return true;
+            return false;
         }
-        return false;
+        return tryInvokeMaven();
     }
 
     private boolean tryInvokeMaven(AbstractBuild<?, ?> build, Launcher launcher, BuildListener
