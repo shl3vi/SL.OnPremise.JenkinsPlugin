@@ -63,7 +63,7 @@ public class BeginAnalysis extends Builder {
     private transient String apiJar;
     private String testListenerConfigFile;
     private boolean autoRestoreBuildFile;
-    private boolean  installSealightsMavenPlugin;
+    private Boolean  installSealightsMavenPlugin;
     private String sealightsMavenPluginInstallationArguments;
     private String buildFilesPatterns;
     private String buildFilesFolders;
@@ -88,7 +88,7 @@ public class BeginAnalysis extends Builder {
                          String filesExcluded, String classLoadersExcluded, boolean recursive,
                          String workspacepath, String buildScannerJar, String testListenerJar,
                          String testListenerConfigFile, boolean autoRestoreBuildFile,
-                         boolean installSealightsMavenPlugin, String sealightsMavenPluginInstallationArguments,
+                         Boolean installSealightsMavenPlugin, String sealightsMavenPluginInstallationArguments,
                          String buildFilesPatterns, String buildFilesFolders,
                          boolean logEnabled, LogDestination logDestination, String logFolder,
                          BuildStrategy buildStrategy,
@@ -163,6 +163,9 @@ public class BeginAnalysis extends Builder {
 
         if (this.executionType == null)
             this.executionType = ExecutionType.FULL;
+
+        if (this.installSealightsMavenPlugin == null)
+            this.installSealightsMavenPlugin = true;
 
         setDefaultValuesForStrings(logger);
     }
@@ -288,12 +291,12 @@ public class BeginAnalysis extends Builder {
     }
 
     @Exported
-    public boolean isInstallSealightsMavenPlugin() {
+    public Boolean isInstallSealightsMavenPlugin() {
         return installSealightsMavenPlugin;
     }
 
     @Exported
-    public void setInstallSealightsMavenPlugin(boolean installSealightsMavenPlugin) {
+    public void setInstallSealightsMavenPlugin(Boolean installSealightsMavenPlugin) {
         this.installSealightsMavenPlugin = installSealightsMavenPlugin;
     }
 
