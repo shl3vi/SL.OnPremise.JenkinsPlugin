@@ -243,7 +243,8 @@ public class MavenSealightsBuildStep extends Builder {
                 BeginAnalysis.DescriptorImpl descriptor = this.beginAnalysis.getDescriptor();
                 Boolean installSealightsMavenPlugin = this.beginAnalysis.isInstallSealightsMavenPlugin();
                 if (installSealightsMavenPlugin != null && installSealightsMavenPlugin) {
-                    if (!tryInstallMavenPlugin(build, launcher, listener, logger, mavenBuildStepHelper, descriptor))
+                    boolean isSuccess = tryInstallMavenPlugin(build, launcher, listener, logger, mavenBuildStepHelper, descriptor);
+                    if (!isSuccess)
                         return false;
                 }
                 mavenBuildStepHelper.beginAnalysisBuildStep(build, listener, logger, this.pom);
@@ -282,7 +283,7 @@ public class MavenSealightsBuildStep extends Builder {
             logger.error("Failed during installation of the Sealights Maven Plugin.");
             return false;
         }
-        return tryInvokeMaven();
+        return true;
     }
 
     private boolean tryInvokeMaven(AbstractBuild<?, ?> build, Launcher launcher, BuildListener
