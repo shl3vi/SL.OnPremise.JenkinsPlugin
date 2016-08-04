@@ -228,15 +228,15 @@ public class MavenSealightsBuildStep extends Builder {
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 
         Logger logger = new Logger(listener.getLogger());
-        CleanupManager cleanupManager = new CleanupManager(logger);
         BuildStepModes currentMode = this.buildStepMode.getCurrentMode();
-        if (currentMode.equals(BuildStepModes.Off)) {
+        if (currentMode == null || currentMode.equals(BuildStepModes.Off)) {
             logger.info("Skipping build step '" + new DescriptorImpl().getDisplayName() + "' due to the selected value of its 'Action' field.");
             return true;
         }
 
         this.targets = getTargets(this.buildStepMode);
         boolean isSealightsEnabled = (currentMode.equals(BuildStepModes.InvokeMavenCommandWithSealights) || currentMode.equals(BuildStepModes.PrepareSealights));
+        CleanupManager cleanupManager = new CleanupManager(logger);
         MavenBuildStepHelper mavenBuildStepHelper = new MavenBuildStepHelper(currentMode, cleanupManager, this.beginAnalysis);
         try {
             if (isSealightsEnabled) {
@@ -278,7 +278,7 @@ public class MavenSealightsBuildStep extends Builder {
         if (!S_PATTERN.matcher(additionalArgsForMavenPluginInstallation).find())  // check the given target/goals do not contain settings parameter already
             localSettingsPath = SettingsProvider.getSettingsRemotePath(getSettings(), build, listener);
         if (!GS_PATTERN.matcher(additionalArgsForMavenPluginInstallation).find())  // check the given target/goals do not contain settings parameter already
-            globalSettingsPath = SettingsProvider.getSettingsRemotePath(getSettings(), build, listener);
+            globalSettingsPath = GlobalSettingsProvider.getSettingsRemotePath(getGlobalSettings(), build, listener);
         if (!mavenBuildStepHelper.installSealightsMavenPlugin(build, launcher, listener, this.pom, this.properties, this, descriptor.getFilesStorage(), additionalArgsForMavenPluginInstallation, globalSettingsPath, localSettingsPath)) {
             logger.error("Failed during installation of the Sealights Maven Plugin.");
             return false;
