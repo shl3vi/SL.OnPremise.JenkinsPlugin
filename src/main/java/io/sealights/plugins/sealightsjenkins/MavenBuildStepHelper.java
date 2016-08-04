@@ -60,7 +60,8 @@ public class MavenBuildStepHelper {
 
         String slMavenPluginJar = JarsHelper.loadJarAndSaveAsTempFile(SealightsMavenPluginHelper.SL_MVN_JAR_NAME, filesStorage);
         CustomFile customFile = new CustomFile(logger, cleanupManager, slMavenPluginJar);
-        customFile.copyToSlave();
+        //Copy and delete from the temp folder of the master and slave machines.
+        customFile.copyToSlave(true, true);
 
         SealightsMavenPluginHelper pluginHelper = new SealightsMavenPluginHelper(logger);
         String normalizedTarget = pluginHelper.getPluginInstallationCommand(slMavenPluginJar);

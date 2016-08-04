@@ -20,20 +20,22 @@ public class CustomFile {
     }
 
     public void copyToSlave() throws IOException, InterruptedException {
-        copyToSlave(name, true);
+        copyToSlave(name, false, true);
     }
 
-    public void copyToSlave(boolean deleteOnExit) throws IOException, InterruptedException {
-        copyToSlave(name, deleteOnExit);
+    public void copyToSlave(boolean deleteSourceFile, boolean deleteTargetFile) throws IOException, InterruptedException {
+        copyToSlave(name, deleteSourceFile, deleteTargetFile);
     }
 
     public void copyToSlave(String targetFile) throws IOException, InterruptedException {
-        copyToSlave(targetFile, true);
+        copyToSlave(targetFile, false, true);
     }
 
-    public void copyToSlave(String targetFile, boolean deleteOnExit) throws IOException, InterruptedException {
+    public void copyToSlave(String targetFile, boolean deleteSourceFile, boolean deleteTargetFile) throws IOException, InterruptedException {
         FileUtils.tryCopyFileFromLocalToSlave(logger, name, targetFile);
-        if (deleteOnExit)
+        if (deleteSourceFile)
             cleanupManager.addFile(name);
+        if (deleteTargetFile)
+            cleanupManager.addFile(targetFile);
     }
 }

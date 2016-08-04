@@ -82,64 +82,20 @@ public class FileUtils {
     public static void tryDeleteFile(Logger logger, String filename) throws IOException, InterruptedException {
         logger.info("Try deleting temp file: " + filename );
         FilePath fpOnMaster = new FilePath(new File(filename));
-        fpOnMaster.delete();
+        if (fpOnMaster.exists()) {
+            fpOnMaster.delete();
+        }
 
         if (Computer.currentComputer() instanceof SlaveComputer) {
             VirtualChannel channel = Computer.currentComputer().getChannel();
             logger.debug("Current computer is: " + Computer.currentComputer().getName());
             logger.debug("Jenkins current computer is: " + Jenkins.MasterComputer.currentComputer().getName());
-            FilePath fpOnRemote = new FilePath(channel, filename);
-            fpOnRemote.delete();
-        }
-
-    }
-
-    public static boolean renameFileOrFolder(String oldName, String newName, Logger logger) {
-        // File (or directory) with old name
-        File backupFile = new File(oldName);
-
-
-
-        // File (or directory) with new name
-       // File newFile = new File(newName);
-
-        Path src = Paths.get(oldName);
-        Path target = Paths.get(newName);
-        try {
-            Files.move(src, target, REPLACE_EXISTING);
-        } catch (IOException e) {
-            logger.error("Failed moving the files.", e);
-            return false;
-        }
-
-        if (backupFile.exists())  {
-            boolean delete = backupFile.delete();
-            if (!delete)
-            {
-                logger.warning("Failed to delete the file.");
-                return false;
-            }
-            else
-            {
-                logger.info("Deleted " + backupFile.getAbsolutePath());
+            FilePath filePathOnSlave = new FilePath(channel, filename);
+            if (filePathOnSlave.exists()){
+                filePathOnSlave.delete();
             }
         }
 
-        return true;
-//        if (newFile.exists()) {
-//            logger.info("File exists.");
-//            boolean delete = newFile.delete();
-//            if (!delete) {
-//                logger.warning("Failed to delete.");
-//                return false;
-//            }
-//        }
-//
-//        // Rename file (or directory)
-//        logger.info("About to rename.");
-//        boolean success = currentFile.c
-//        logger.info("Renamed?:" + success);
-//        return success;
     }
 
     public static String getFileExtension(String file) {

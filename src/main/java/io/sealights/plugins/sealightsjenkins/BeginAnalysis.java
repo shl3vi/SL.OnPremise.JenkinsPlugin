@@ -381,12 +381,12 @@ public class BeginAnalysis extends Builder {
     private void copyAgentsToSlaveIfNeeded(Logger logger, CleanupManager cleanupManager) throws IOException, InterruptedException {
         if (!StringUtils.isNullOrEmpty(buildScannerJar)) {
             CustomFile customFile = new CustomFile(logger, cleanupManager, buildScannerJar);
-            customFile.copyToSlave(false);
+            customFile.copyToSlave();
         }
 
         if (!StringUtils.isNullOrEmpty(testListenerJar)) {
             CustomFile customFile = new CustomFile(logger, cleanupManager, testListenerJar);
-            customFile.copyToSlave(false);
+            customFile.copyToSlave();
         }
     }
 
