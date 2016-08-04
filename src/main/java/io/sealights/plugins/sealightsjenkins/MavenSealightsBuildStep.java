@@ -144,6 +144,10 @@ public class MavenSealightsBuildStep extends Builder {
             this.pom = relativePathToEffectivePom;
         }
 
+        if (this.beginAnalysis.isInstallSealightsMavenPlugin() == null){
+            this.beginAnalysis.setInstallSealightsMavenPlugin(true);
+        }
+
         return this;
     }
 
