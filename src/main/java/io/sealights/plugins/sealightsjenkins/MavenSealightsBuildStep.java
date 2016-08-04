@@ -228,15 +228,15 @@ public class MavenSealightsBuildStep extends Builder {
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 
         Logger logger = new Logger(listener.getLogger());
-        CleanupManager cleanupManager = new CleanupManager(logger);
         BuildStepModes currentMode = this.buildStepMode.getCurrentMode();
-        if (currentMode.equals(BuildStepModes.Off)) {
+        if (currentMode == null || currentMode.equals(BuildStepModes.Off)) {
             logger.info("Skipping build step '" + new DescriptorImpl().getDisplayName() + "' due to the selected value of its 'Action' field.");
             return true;
         }
 
         this.targets = getTargets(this.buildStepMode);
         boolean isSealightsEnabled = (currentMode.equals(BuildStepModes.InvokeMavenCommandWithSealights) || currentMode.equals(BuildStepModes.PrepareSealights));
+        CleanupManager cleanupManager = new CleanupManager(logger);
         MavenBuildStepHelper mavenBuildStepHelper = new MavenBuildStepHelper(currentMode, cleanupManager, this.beginAnalysis);
         try {
             if (isSealightsEnabled) {
