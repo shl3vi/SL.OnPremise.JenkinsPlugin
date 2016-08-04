@@ -334,7 +334,7 @@ public class MavenSealightsBuildStep extends Builder {
                 String settingsPath = SettingsProvider.getSettingsRemotePath(getSettings(), build, listener);
 
                 if (StringUtils.isNotBlank(settingsPath)) {
-                    mavenBuildStepHelper.copySettingsFileToSlave(settingsPath, beginAnalysis.getDescriptor().getFilesStorage(), logger);
+                    settingsPath = mavenBuildStepHelper.copySettingsFileToSlave(settingsPath, beginAnalysis.getDescriptor().getFilesStorage(), logger);
                     args.add("-s", settingsPath);
                 }
             }
@@ -342,7 +342,7 @@ public class MavenSealightsBuildStep extends Builder {
                 String settingsPath = GlobalSettingsProvider.getSettingsRemotePath(getGlobalSettings(), build, listener);
 
                 if (StringUtils.isNotBlank(settingsPath)) {
-                    mavenBuildStepHelper.copySettingsFileToSlave(settingsPath, beginAnalysis.getDescriptor().getFilesStorage(), logger);
+                    settingsPath= mavenBuildStepHelper.copySettingsFileToSlave(settingsPath, beginAnalysis.getDescriptor().getFilesStorage(), logger);
                     args.add("-gs", settingsPath);
                 }
             }

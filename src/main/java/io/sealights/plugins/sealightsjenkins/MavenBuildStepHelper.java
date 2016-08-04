@@ -65,13 +65,13 @@ public class MavenBuildStepHelper {
 
         SealightsMavenPluginHelper pluginHelper = new SealightsMavenPluginHelper(logger);
         String normalizedTarget = pluginHelper.getPluginInstallationCommand(slMavenPluginJar);
-        if (StringUtils.isNotEmpty(argumentsForPluginInstallation)){
+        if (StringUtils.isNotEmpty(argumentsForPluginInstallation)) {
             normalizedTarget += " " + argumentsForPluginInstallation;
         }
         logger.info("Installing sealights-maven plugin");
         logger.info("Command: " + normalizedTarget);
 
-        return invokeMavenCommand(build, launcher, listener, normalizedTarget, logger, pom, properties, mavenBuildStep,globalSettingsPath, localSettingsPath);
+        return invokeMavenCommand(build, launcher, listener, normalizedTarget, logger, pom, properties, mavenBuildStep, globalSettingsPath, localSettingsPath);
     }
 
     public void beginAnalysisBuildStep(AbstractBuild<?, ?> build, BuildListener listener, Logger logger, String pom) throws IOException, InterruptedException {
@@ -122,12 +122,12 @@ public class MavenBuildStepHelper {
             args.add("-f", pom);
 
         if (StringUtils.isNotEmpty(localSettingsPath)) {
-                copySettingsFileToSlave(localSettingsPath, beginAnalysis.getDescriptor().getFilesStorage(), logger);
-                args.add("-s", localSettingsPath);
+            localSettingsPath = copySettingsFileToSlave(localSettingsPath, beginAnalysis.getDescriptor().getFilesStorage(), logger);
+            args.add("-s", localSettingsPath);
         }
         if (StringUtils.isNotEmpty(globalSettingsPath)) {
-                copySettingsFileToSlave(globalSettingsPath, beginAnalysis.getDescriptor().getFilesStorage(), logger);
-                args.add("-gs", globalSettingsPath);
+            globalSettingsPath = copySettingsFileToSlave(globalSettingsPath, beginAnalysis.getDescriptor().getFilesStorage(), logger);
+            args.add("-gs", globalSettingsPath);
         }
 
         Set<String> sensitiveVars = build.getSensitiveBuildVariables();
@@ -161,22 +161,23 @@ public class MavenBuildStepHelper {
         return true;
     }
 
-    public void copySettingsFileToSlave(String settingsPath, String filesStorage, Logger logger) throws IOException, InterruptedException {
+    public String copySettingsFileToSlave(String settingsPath, String filesStorage, Logger logger) throws IOException, InterruptedException {
         if (!this.isSealightsEnabled)
-            return;
+            return settingsPath;
 
         if (Computer.currentComputer() instanceof SlaveComputer) {
             String originalSettings = settingsPath;
             settingsPath = toTempSettingsFile(settingsPath, filesStorage);
-            CustomFile customFile = new CustomFile(logger, cleanupManager ,originalSettings);
+            CustomFile customFile = new CustomFile(logger, cleanupManager, originalSettings);
             customFile.copyToSlave(settingsPath);
         }
+        return settingsPath;
     }
 
 
     public void tryRestore(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         //Only the maven step has to restore as a single transaction.
-        if(!this.currentMode.equals(BuildStepModes.InvokeMavenCommandWithSealights))
+        if (!this.currentMode.equals(BuildStepModes.InvokeMavenCommandWithSealights))
             return;
 
         if (beginAnalysis.isAutoRestoreBuildFile()) {
@@ -191,7 +192,7 @@ public class MavenBuildStepHelper {
     }
 
     private String toTempSettingsFile(String settingsPath, String filesStorage) {
-        settingsPath =  UUID.randomUUID().toString() + "-" + Paths.get(settingsPath).getFileName().toString();
+        settingsPath = UUID.randomUUID().toString() + "-" + Paths.get(settingsPath).getFileName().toString();
         String osTempFolder = System.getProperty("java.io.tmpdir");
         if (StringUtils.isNotEmpty(filesStorage))
             osTempFolder = filesStorage;
