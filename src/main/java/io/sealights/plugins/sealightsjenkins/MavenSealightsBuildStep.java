@@ -144,6 +144,7 @@ public class MavenSealightsBuildStep extends Builder {
             this.pom = relativePathToEffectivePom;
         }
 
+        //If we load configuration before the checkbox to enable the 'Auto Install Maven Plugin', enable it by default.
         if (this.beginAnalysis.isInstallSealightsMavenPlugin() == null){
             this.beginAnalysis.setInstallSealightsMavenPlugin(true);
         }
