@@ -17,7 +17,6 @@ import hudson.util.NullStream;
 import hudson.util.StreamTaskListener;
 import hudson.util.VariableResolver;
 import io.sealights.plugins.sealightsjenkins.enums.BuildStepModes;
-import io.sealights.plugins.sealightsjenkins.utils.CommandLineHelper;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import jenkins.model.Jenkins;
 import jenkins.mvn.GlobalMavenConfig;
@@ -125,11 +124,18 @@ public class MavenSealightsBuildStep extends Builder {
         //Check if we are dealing with plugin version before the BuildStepMode feature.
         if (this.buildStepMode == null) {
             if (StringUtils.isNotBlank(targets)) {
-                this.buildStepMode = new BuildStepMode.InvokeMavenCommandView(targets);
+                if (enableSeaLights)
+                    this.buildStepMode = new BuildStepMode.InvokeMavenCommandView(targets);
+                else
+                    this.buildStepMode = new BuildStepMode.DisableSealightsView(targets);
             } else {
                 //Assuming that users of 'MavenSealightsBuildStep' didn't left 'targets' blank.
                 //If no 'targets' is mentioned, its probably the deprecated 'beginAnalysisBuildStep'.
-                this.buildStepMode = new BuildStepMode.PrepareSealightsView("");
+
+                if(enableSeaLights)
+                    this.buildStepMode = new BuildStepMode.PrepareSealightsView("");
+                else
+                    this.buildStepMode = new BuildStepMode.OffView();
             }
         }
 
