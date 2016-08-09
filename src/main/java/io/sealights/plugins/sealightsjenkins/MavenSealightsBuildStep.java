@@ -17,6 +17,7 @@ import hudson.util.NullStream;
 import hudson.util.StreamTaskListener;
 import hudson.util.VariableResolver;
 import io.sealights.plugins.sealightsjenkins.enums.BuildStepModes;
+import io.sealights.plugins.sealightsjenkins.utils.CommandLineHelper;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import jenkins.model.Jenkins;
 import jenkins.mvn.GlobalMavenConfig;
@@ -28,8 +29,7 @@ import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -150,11 +150,6 @@ public class MavenSealightsBuildStep extends Builder {
             this.pom = relativePathToEffectivePom;
         }
 
-        //If we load configuration before the checkbox to enable the 'Auto Install Maven Plugin', enable it by default.
-        if (this.beginAnalysis.isInstallSealightsMavenPlugin() == null){
-            this.beginAnalysis.setInstallSealightsMavenPlugin(true);
-        }
-
         return this;
     }
 
@@ -251,13 +246,6 @@ public class MavenSealightsBuildStep extends Builder {
         MavenBuildStepHelper mavenBuildStepHelper = new MavenBuildStepHelper(currentMode, cleanupManager, this.beginAnalysis);
         try {
             if (isSealightsEnabled) {
-                BeginAnalysis.DescriptorImpl descriptor = this.beginAnalysis.getDescriptor();
-                Boolean installSealightsMavenPlugin = this.beginAnalysis.isInstallSealightsMavenPlugin();
-                if (installSealightsMavenPlugin != null && installSealightsMavenPlugin) {
-                    boolean isSuccess = tryInstallMavenPlugin(build, launcher, listener, logger, mavenBuildStepHelper, descriptor);
-                    if (!isSuccess)
-                        return false;
-                }
                 mavenBuildStepHelper.beginAnalysisBuildStep(build, listener, logger, this.pom);
 
                 //The prepare step should not invoke maven.
@@ -275,24 +263,6 @@ public class MavenSealightsBuildStep extends Builder {
 
         } finally {
             mavenBuildStepHelper.tryRestore(build, launcher, listener);
-        }
-        return true;
-    }
-
-    private boolean tryInstallMavenPlugin(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Logger logger, MavenBuildStepHelper mavenBuildStepHelper, BeginAnalysis.DescriptorImpl descriptor) throws IOException, InterruptedException {
-        String additionalArgsForMavenPluginInstallation = beginAnalysis.getSealightsMavenPluginInstallationArguments();
-        if (additionalArgsForMavenPluginInstallation == null)
-            additionalArgsForMavenPluginInstallation = "";
-
-        String localSettingsPath = null;
-        String globalSettingsPath = null;
-        if (!S_PATTERN.matcher(additionalArgsForMavenPluginInstallation).find())  // check the given target/goals do not contain settings parameter already
-            localSettingsPath = SettingsProvider.getSettingsRemotePath(getSettings(), build, listener);
-        if (!GS_PATTERN.matcher(additionalArgsForMavenPluginInstallation).find())  // check the given target/goals do not contain settings parameter already
-            globalSettingsPath = GlobalSettingsProvider.getSettingsRemotePath(getGlobalSettings(), build, listener);
-        if (!mavenBuildStepHelper.installSealightsMavenPlugin(build, launcher, listener, this.pom, this.properties, this, descriptor.getFilesStorage(), additionalArgsForMavenPluginInstallation, globalSettingsPath, localSettingsPath)) {
-            logger.error("Failed during installation of the Sealights Maven Plugin.");
-            return false;
         }
         return true;
     }

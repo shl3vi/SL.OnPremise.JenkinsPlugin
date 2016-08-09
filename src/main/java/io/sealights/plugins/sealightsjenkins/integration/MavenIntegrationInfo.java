@@ -10,11 +10,13 @@ import java.util.List;
 public class MavenIntegrationInfo {
     private List<FileBackupInfo> pomFiles;
     private SeaLightsPluginInfo seaLightsPluginInfo;
+    private String overridePluginVersion;
 
-
-    public MavenIntegrationInfo(List<FileBackupInfo> pomFiles, SeaLightsPluginInfo seaLightsPluginInfo) {
+    public MavenIntegrationInfo(List<FileBackupInfo> pomFiles, SeaLightsPluginInfo seaLightsPluginInfo
+            , String overridePluginVersion) {
         this.pomFiles = pomFiles;
         this.seaLightsPluginInfo = seaLightsPluginInfo;
+        this.overridePluginVersion = overridePluginVersion;
     }
 
     public SeaLightsPluginInfo getSeaLightsPluginInfo() {
@@ -27,5 +29,9 @@ public class MavenIntegrationInfo {
 
     public List<FileBackupInfo> getPomFiles() {
         return pomFiles;
+    }
+
+    public String getOverridePluginVersion() {
+        return overridePluginVersion;
     }
 }
