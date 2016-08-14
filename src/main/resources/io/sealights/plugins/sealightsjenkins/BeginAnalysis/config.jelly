@@ -83,13 +83,9 @@
             <f:checkbox default="true"/>
         </f:entry>
 
-        <f:entry title="Auto Install the Sealights Maven Plugin" field="installSealightsMavenPlugin"
-                 description="When checked, SeaLights will automatically try to install the Sealights Maven Plugin.">
-            <f:checkbox default="true"/>
-        </f:entry>
-
-        <f:entry title="Arguments for the Sealights Maven Plugin Installation" field="sealightsMavenPluginInstallationArguments">
-            <f:textbox value="${sealightsMavenPluginInstallationArguments}"/>
+        <f:entry title="Choose specific version for Sealights-maven plugin" field="slMvnPluginVersion"
+                 description="e.g. '1.0.3'. If left empty, default will be latest version">
+            <f:textbox value="${slMvnPluginVersion}"/>
         </f:entry>
 
         <f:advanced title="Multiple build files">

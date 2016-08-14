@@ -52,28 +52,6 @@ public class MavenBuildStepHelper {
         this.currentMode = currentMode;
     }
 
-    public boolean installSealightsMavenPlugin(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String pom, String properties, MavenSealightsBuildStep mavenBuildStep, String filesStorage, String argumentsForPluginInstallation, String globalSettingsPath, String localSettingsPath) throws IOException, InterruptedException {
-        if (!isSealightsEnabled)
-            return true;
-
-        Logger logger = new Logger(listener.getLogger());
-
-        String slMavenPluginJar = JarsHelper.loadJarAndSaveAsTempFile(SealightsMavenPluginHelper.SL_MVN_JAR_NAME, filesStorage);
-        CustomFile customFile = new CustomFile(logger, cleanupManager, slMavenPluginJar);
-        //Copy and delete from the temp folder of the master and slave machines.
-        customFile.copyToSlave(true, true);
-
-        SealightsMavenPluginHelper pluginHelper = new SealightsMavenPluginHelper(logger);
-        String normalizedTarget = pluginHelper.getPluginInstallationCommand(slMavenPluginJar);
-        if (StringUtils.isNotEmpty(argumentsForPluginInstallation)) {
-            normalizedTarget += " " + argumentsForPluginInstallation;
-        }
-        logger.info("Installing sealights-maven plugin");
-        logger.info("Command: " + normalizedTarget);
-
-        return invokeMavenCommand(build, launcher, listener, normalizedTarget, logger, pom, properties, mavenBuildStep, globalSettingsPath, localSettingsPath);
-    }
-
     public void beginAnalysisBuildStep(AbstractBuild<?, ?> build, BuildListener listener, Logger logger, String pom) throws IOException, InterruptedException {
         if (!isSealightsEnabled)
             return;
@@ -94,71 +72,6 @@ public class MavenBuildStepHelper {
 
         }
         return mavenInstallation;
-    }
-
-    private boolean invokeMavenCommand(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String normalizedTarget, Logger logger, String projectPom, String properties, MavenSealightsBuildStep mavenBuildStep, String globalSettingsPath, String localSettingsPath) throws IOException, InterruptedException {
-        VariableResolver<String> vr = build.getBuildVariableResolver();
-        EnvVars env = build.getEnvironment(listener);
-        String pom = env.expand(projectPom);
-        ArgumentListBuilder args = new ArgumentListBuilder();
-        MavenSealightsBuildStep.MavenInstallation mi = mavenBuildStep.getMaven();
-
-        if (mi == null) {
-            String execName = build.getWorkspace().act(new DecideDefaultMavenCommand(normalizedTarget));
-            args.add(execName);
-
-        } else {
-            mi = mi.forNode(Computer.currentComputer().getNode(), listener);
-            mi = overrideMavenHomeIfNeed(mi, logger);
-            mi = mi.forEnvironment(env);
-            String exec = mi.getExecutable(launcher);
-            if (exec == null) {
-                listener.fatalError("Couldn't find any executable in " + mi.getHome()/*Messages.Maven_NoExecutable(mi.getHome())*/);
-                return false;
-            }
-            args.add(exec);
-        }
-        if (pom != null)
-            args.add("-f", pom);
-
-        if (StringUtils.isNotEmpty(localSettingsPath)) {
-            localSettingsPath = copySettingsFileToSlave(localSettingsPath, beginAnalysis.getDescriptor().getFilesStorage(), logger);
-            args.add("-s", localSettingsPath);
-        }
-        if (StringUtils.isNotEmpty(globalSettingsPath)) {
-            globalSettingsPath = copySettingsFileToSlave(globalSettingsPath, beginAnalysis.getDescriptor().getFilesStorage(), logger);
-            args.add("-gs", globalSettingsPath);
-        }
-
-        Set<String> sensitiveVars = build.getSensitiveBuildVariables();
-
-        args.addKeyValuePairs("-D", build.getBuildVariables(), sensitiveVars);
-        final VariableResolver<String> resolver = new VariableResolver.Union<String>(new VariableResolver.ByMap<String>(env), vr);
-        args.addKeyValuePairsFromPropertyString("-D", properties, resolver, sensitiveVars);
-        if (mavenBuildStep.usesPrivateRepository()) {
-            args.add("-Dmaven.repo.local=" + build.getWorkspace().child(".repository"));
-
-        }
-        args.addTokenized(normalizedTarget);
-
-        mavenBuildStep.sealightsWrapUpArguments(args, normalizedTarget, build, launcher, listener);
-        mavenBuildStep.sealightsBuildEnvVars(env, mi);
-
-        if (!launcher.isUnix()) {
-            args = args.toWindowsCommand();
-        }
-        try {
-            MavenConsoleAnnotator mca = new MavenConsoleAnnotator(listener.getLogger(), build.getCharset());
-            int r = launcher.launch().cmds(args).envs(env).stdout(mca).pwd(build.getModuleRoot()).join();
-            if (0 != r) {
-                return false;
-            }
-        } catch (IOException e) {
-            Util.displayIOException(e, listener);
-            e.printStackTrace(listener.fatalError("command execution failed"/*Messages.Maven_ExecFailed()*/));
-            return false;
-        }
-        return true;
     }
 
     public String copySettingsFileToSlave(String settingsPath, String filesStorage, Logger logger) throws IOException, InterruptedException {

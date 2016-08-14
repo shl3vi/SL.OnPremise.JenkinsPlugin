@@ -30,7 +30,6 @@
                     <plugin>
                         <groupId>io.sealights.on-premise.agents.plugin</groupId>
                         <artifactId>sealights-maven-plugin</artifactId>
-                        <version>1.0.0</version>
                         <configuration>
                             <customerid>fake-customer-id-123</customerid>
                             <server>http://fake-server-url.com</server>
@@ -81,7 +80,6 @@
             <plugin>
                 <groupId>io.sealights.on-premise.agents.plugin</groupId>
                 <artifactId>sealights-maven-plugin</artifactId>
-                <version>1.0.0</version>
                 <configuration>
                     <customerid>fake-customer-id-123</customerid>
                     <server>http://fake-server-url.com</server>

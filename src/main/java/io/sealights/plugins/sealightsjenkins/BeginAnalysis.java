@@ -62,7 +62,6 @@ public class BeginAnalysis extends Builder {
     private transient String apiJar;
     private String testListenerConfigFile;
     private boolean autoRestoreBuildFile;
-    private Boolean  installSealightsMavenPlugin = true;
     private String sealightsMavenPluginInstallationArguments;
     private String buildFilesPatterns;
     private String buildFilesFolders;
@@ -74,7 +73,7 @@ public class BeginAnalysis extends Builder {
     private BuildStrategy buildStrategy = BuildStrategy.ONE_BUILD;
     private BuildName buildName;
     private ExecutionType executionType = ExecutionType.FULL;
-
+    private String slMvnPluginVersion;
     private String override_customerId;
     private String override_url;
     private String override_proxy;
@@ -87,10 +86,10 @@ public class BeginAnalysis extends Builder {
                          String filesExcluded, String classLoadersExcluded, boolean recursive,
                          String workspacepath, String buildScannerJar, String testListenerJar,
                          String testListenerConfigFile, boolean autoRestoreBuildFile,
-                         Boolean installSealightsMavenPlugin, String sealightsMavenPluginInstallationArguments,
+                         String sealightsMavenPluginInstallationArguments,
                          String buildFilesPatterns, String buildFilesFolders,
                          boolean logEnabled, LogDestination logDestination, String logFolder,
-                         BuildStrategy buildStrategy,
+                         BuildStrategy buildStrategy, String slMvnPluginVersion,
                          BuildName buildName, ExecutionType executionType,
                          String override_customerId, String override_url, String override_proxy) throws IOException {
 
@@ -111,7 +110,6 @@ public class BeginAnalysis extends Builder {
         this.buildStrategy = buildStrategy;
         this.buildName = buildName;
         this.autoRestoreBuildFile = autoRestoreBuildFile;
-        this.installSealightsMavenPlugin = installSealightsMavenPlugin;
         this.sealightsMavenPluginInstallationArguments = sealightsMavenPluginInstallationArguments;
         this.environment = environment;
         this.executionType = executionType;
@@ -128,6 +126,7 @@ public class BeginAnalysis extends Builder {
 
         this.buildScannerJar = buildScannerJar;
         this.testListenerJar = testListenerJar;
+        this.slMvnPluginVersion = slMvnPluginVersion;
     }
 
     private void setDefaultValuesForStrings(Logger logger) {
@@ -162,9 +161,6 @@ public class BeginAnalysis extends Builder {
         if (this.executionType == null)
             this.executionType = ExecutionType.FULL;
         
-        if (this.installSealightsMavenPlugin == null)
-            this.installSealightsMavenPlugin = true;
-
         setDefaultValuesForStrings(logger);
     }
 
@@ -289,16 +285,6 @@ public class BeginAnalysis extends Builder {
     }
 
     @Exported
-    public Boolean isInstallSealightsMavenPlugin() {
-        return installSealightsMavenPlugin;
-    }
-
-    @Exported
-    public void setInstallSealightsMavenPlugin(Boolean installSealightsMavenPlugin) {
-        this.installSealightsMavenPlugin = installSealightsMavenPlugin;
-    }
-
-    @Exported
     public String getSealightsMavenPluginInstallationArguments() {
         return sealightsMavenPluginInstallationArguments;
     }
@@ -376,6 +362,16 @@ public class BeginAnalysis extends Builder {
     @Exported
     public String getOverride_proxy() {
         return override_proxy;
+    }
+
+    @Exported
+    public String getSlMvnPluginVersion() {
+        return slMvnPluginVersion;
+    }
+
+    @Exported
+    public void setSlMvnPluginVersion(String slMvnPluginVersion) {
+        this.slMvnPluginVersion = slMvnPluginVersion;
     }
 
     private void copyAgentsToSlaveIfNeeded(Logger logger, CleanupManager cleanupManager) throws IOException, InterruptedException {
@@ -494,7 +490,8 @@ public class BeginAnalysis extends Builder {
 
         MavenIntegrationInfo info = new MavenIntegrationInfo(
                 pomFiles,
-                slInfo
+                slInfo,
+                slMvnPluginVersion
         );
         MavenIntegration mavenIntegration = new MavenIntegration(logger, info);
         mavenIntegration.integrate();
@@ -508,7 +505,6 @@ public class BeginAnalysis extends Builder {
         }
         return Paths.get(path1, path2).toAbsolutePath().toString();
     }
-
 
     private String getManualBuildName() {
         BuildName.ManualBuildName manual = (BuildName.ManualBuildName) buildName;
@@ -702,7 +698,6 @@ public class BeginAnalysis extends Builder {
         logger.debug("Pom Path:" + pomPath);
         logger.debug("Build Naming Strategy (from selection): " + buildName.getBuildNamingStrategy());
         logger.debug("Auto Restore Build File:" + autoRestoreBuildFile);
-        logger.debug("Auto Install the Sealights Maven Plugin:" + installSealightsMavenPlugin);
         logger.debug("Arguments for the Sealights Maven Plugin Installation:" + sealightsMavenPluginInstallationArguments);
 
 
@@ -842,6 +837,16 @@ public class BeginAnalysis extends Builder {
             if (StringUtils.isNullOrEmpty(branch))
                 return FormValidation.error("Branch Name is mandatory.");
             return FormValidation.ok();
+        }
+
+        public FormValidation doCheckSlMvnPluginVersion(@QueryParameter String slMvnPluginVersion) {
+            if (!StringUtils.isNullOrEmpty(slMvnPluginVersion) && !isValidVersion(slMvnPluginVersion))
+                return FormValidation.error("Version should be in the format of 'X.X.X'. e.g. '1.2.124'");
+            return FormValidation.ok();
+        }
+
+        private static boolean isValidVersion(String v){
+            return v !=null && v.matches("[0-9]+(\\.[0-9]+)*");
         }
 
         public DescriptorExtensionList<BuildName, BuildName.BuildNameDescriptor> getBuildNameDescriptorList() {

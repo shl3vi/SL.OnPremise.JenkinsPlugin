@@ -89,7 +89,8 @@ public class MavenIntegration {
 
     private void integrateToAllProfiles(FileBackupInfo fileBackupInfo, PomFile pomFile) {
         SeaLightsPluginInfo seaLightsPluginInfo = this.mavenIntegrationInfo.getSeaLightsPluginInfo();
-        SealightsMavenPluginHelper slHelper = new SealightsMavenPluginHelper(log);
+        String slMvnPluginVersion = this.mavenIntegrationInfo.getOverridePluginVersion();
+        SealightsMavenPluginHelper slHelper = new SealightsMavenPluginHelper(log, slMvnPluginVersion);
         String xml = slHelper.toPluginText(seaLightsPluginInfo);
 
         pomFile.addPlugin(xml);

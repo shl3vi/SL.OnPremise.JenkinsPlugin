@@ -20,7 +20,7 @@ import java.util.Map;
 
 public class MavenIntegrationTest {
 
-    private String PATH = PathUtils.join(System.getProperty("user.dir"),"src","test","cases","MavenIntegration");
+    private String PATH = PathUtils.join(System.getProperty("user.dir"), "src", "test", "cases", "MavenIntegration");
 
     @Test
     public void injectSeaLightsPluginToAPomWithoutThePlugin() throws Exception {
@@ -107,22 +107,31 @@ public class MavenIntegrationTest {
         performTest("18_Inject_SeaLights_plugin_to_pom_with_surefire_that_has_argLine_element_that_chain_old_values");
     }
 
+    @Test
+    public void injectSeaLightsPluginWithSpecificVersionToAPomWithoutThePlugin() throws Exception {
+        performTest("19_Inject_SeaLights_plugin_with_specific_version_to_a_pom_without_the_plugin");
+    }
+
     private void performTest(String testCase) throws Exception {
-        performTest(testCase, true);
+        performTest(testCase, true, "1.1.1");
     }
 
     private void performTest(String testCase, boolean shouldFindActual) throws Exception {
+        performTest(testCase, shouldFindActual, null);
+    }
+
+    private void performTest(String testCase, boolean shouldFindActual, String specificVersion) throws Exception {
         //Arrange
         final boolean SAVE_POM_USING_JENKINS_API = false;
         String testFolder = getTestFolder(testCase);
 
-        MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder);
-        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.err)),mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
+        MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder, specificVersion);
+        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.err)), mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
 
         //Act
         mavenIntegration.integrate(false);
 
-        String expectedFileName = PathUtils.join(testFolder ,"expected.xml");
+        String expectedFileName = PathUtils.join(testFolder, "expected.xml");
         String actualFileName = PathUtils.join(testFolder, "actual.xml");
 
         if (shouldFindActual) {
@@ -133,20 +142,20 @@ public class MavenIntegrationTest {
             assertXMLEquals(expected, actual);
             deleteActualPom(actualFileName);
 
-        }else{
+        } else {
             File actual = new File(actualFileName);
             Assert.assertFalse("'actual.xml' should not have been created as we should not modify the pom.", actual.exists());
         }
     }
 
-    private void deleteActualPom(String filePath){
-        try{
+    private void deleteActualPom(String filePath) {
+        try {
             File fileToDelete = new File(filePath);
             boolean deleted = fileToDelete.delete();
-            if (!deleted){
+            if (!deleted) {
                 System.out.println("Failed while trying to delete '" + filePath + "' file. Please delete manually");
             }
-        }catch(Exception e){
+        } catch (Exception e) {
             System.out.println("Failed while trying to delete '" + filePath + "' file. Please delete manually");
         }
     }
@@ -158,7 +167,7 @@ public class MavenIntegrationTest {
         DetailedDiff diff = new DetailedDiff(XMLUnit.compareXML(expectedXML, actualXML));
 
         List<?> allDifferences = diff.getAllDifferences();
-        Assert.assertEquals("Differences found: "+ diff.toString(), 0, allDifferences.size());
+        Assert.assertEquals("Differences found: " + diff.toString(), 0, allDifferences.size());
     }
 
 
@@ -168,8 +177,7 @@ public class MavenIntegrationTest {
     }
 
 
-
-    private MavenIntegrationInfo createDefaultMavenIntegrationInfo(String path){
+    private MavenIntegrationInfo createDefaultMavenIntegrationInfo(String path, String specificVersion) {
 
 
         SeaLightsPluginInfo slInfo = new SeaLightsPluginInfo();
@@ -208,14 +216,13 @@ public class MavenIntegrationTest {
         String target = path + "/actual.xml";
         List<FileBackupInfo> files = new ArrayList<>();
         files.add(new FileBackupInfo(source, target));
-        MavenIntegrationInfo info = new MavenIntegrationInfo(files, slInfo);
+        MavenIntegrationInfo info = new MavenIntegrationInfo(files, slInfo, specificVersion);
         info.setSeaLightsPluginInfo(slInfo);
 
         return info;
     }
 
-    private String getTestFolder(String testCaseName)
-    {
+    private String getTestFolder(String testCaseName) {
         return PathUtils.join(PATH, testCaseName);
     }
 }
