@@ -109,11 +109,11 @@ public class MavenIntegrationTest {
 
     @Test
     public void injectSeaLightsPluginWithSpecificVersionToAPomWithoutThePlugin() throws Exception {
-        performTest("19_Inject_SeaLights_plugin_with_specific_version_to_a_pom_without_the_plugin");
+        performTest("19_Inject_SeaLights_plugin_with_specific_version_to_a_pom_without_the_plugin", true, "1.1.1");
     }
 
     private void performTest(String testCase) throws Exception {
-        performTest(testCase, true, "1.1.1");
+        performTest(testCase, true, null);
     }
 
     private void performTest(String testCase, boolean shouldFindActual) throws Exception {
