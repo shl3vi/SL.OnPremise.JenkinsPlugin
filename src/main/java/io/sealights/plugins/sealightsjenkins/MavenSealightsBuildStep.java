@@ -262,7 +262,11 @@ public class MavenSealightsBuildStep extends Builder {
                 return false;
 
         } finally {
-            mavenBuildStepHelper.tryRestore(build, launcher, listener);
+            try {
+                mavenBuildStepHelper.tryRestore(build, launcher, listener);
+            }catch (Exception e){
+                logger.error("Failed to restore.", e);
+            }
         }
         return true;
     }
