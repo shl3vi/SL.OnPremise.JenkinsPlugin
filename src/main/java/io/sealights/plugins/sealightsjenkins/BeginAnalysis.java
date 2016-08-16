@@ -13,6 +13,7 @@ import io.sealights.plugins.sealightsjenkins.exceptions.SeaLightsIllegalStateExc
 import io.sealights.plugins.sealightsjenkins.integration.MavenIntegration;
 import io.sealights.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
 import io.sealights.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
+import io.sealights.plugins.sealightsjenkins.integration.upgrade.UpgradeManager;
 import io.sealights.plugins.sealightsjenkins.utils.*;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import jenkins.model.Jenkins;
@@ -386,11 +387,27 @@ public class BeginAnalysis extends Builder {
         }
     }
 
+    private boolean tryFillSlMvnPluginVersion(SeaLightsPluginInfo slInfo, Logger logger){
+        try{
+            if (isValidVersion(slMvnPluginVersion))
+                return true;
+
+            slMvnPluginVersion = UpgradeManager.queryServerForMavenPluginVersion(slInfo, logger);
+            if (isValidVersion(slMvnPluginVersion))
+                return true;
+
+        }catch (Exception e){
+            logger.error("Error while trying to resolve Sealights maven plugin version. Skipping Sealights integration. Error:", e);
+        }
+        return false;
+    }
+
     public boolean perform(
             AbstractBuild<?, ?> build, CleanupManager cleanupManager, Logger logger, String pomPath, Map<String, String> metadata)
             throws IOException, InterruptedException, SeaLightsIllegalStateException {
 
         try {
+
             setDefaultValues(logger);
 
             FilePath ws = build.getWorkspace();
@@ -413,6 +430,12 @@ public class BeginAnalysis extends Builder {
             printFields(slInfo, logger);
 
             configureBuildFilePublisher(build, slInfo.getBuildFilesFolders());
+
+            if (!tryFillSlMvnPluginVersion(slInfo, logger)){
+                //Don't integrate with maven if we can decide our maven plugin version.
+                //Return true so we do it quietly.
+                return true;
+            }
 
             doMavenIntegration(logger, slInfo);
 
@@ -718,6 +741,10 @@ public class BeginAnalysis extends Builder {
         }
     }
 
+    private static boolean isValidVersion(String v){
+        return v !=null && v.matches("[0-9]+(\\.[0-9]+)*");
+    }
+
     private String getPluginVersion() {
         return BeginAnalysis.class.getPackage().getImplementationVersion();
     }
@@ -843,10 +870,6 @@ public class BeginAnalysis extends Builder {
             if (!StringUtils.isNullOrEmpty(slMvnPluginVersion) && !isValidVersion(slMvnPluginVersion))
                 return FormValidation.error("Version should be in the format of 'X.X.X'. e.g. '1.2.124'");
             return FormValidation.ok();
-        }
-
-        private static boolean isValidVersion(String v){
-            return v !=null && v.matches("[0-9]+(\\.[0-9]+)*");
         }
 
         public DescriptorExtensionList<BuildName, BuildName.BuildNameDescriptor> getBuildNameDescriptorList() {
