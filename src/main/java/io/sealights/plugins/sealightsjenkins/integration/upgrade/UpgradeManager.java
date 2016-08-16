@@ -21,7 +21,7 @@ public class UpgradeManager {
         ObjectMapper mapper = new ObjectMapper();
         logger.debug("Sending request to get recommended version: '"+url+"'");
         UpgradeResponse upgradeResponse = mapper.readValue(url, UpgradeResponse.class);
-        return upgradeResponse.getAgent().getUrl();
+        return upgradeResponse.getAgent().getVersion();
     }
 
     private static URL createUrlToGetRecommendedVersion(SeaLightsPluginInfo slInfo) throws MalformedURLException, UnsupportedEncodingException {
