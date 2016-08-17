@@ -25,20 +25,24 @@ public class UpgradeManager {
     }
 
     private static URL createUrlToGetRecommendedVersion(SeaLightsPluginInfo slInfo) throws MalformedURLException, UnsupportedEncodingException {
-        String urlStr = slInfo.getServerUrl()+"/sl-maven-plugin/"+getQueryString(slInfo);
+        String urlStr = slInfo.getServerUrl()+"/"+getBaseUrl()+"/"+getQueryString(slInfo);
         return new URL(urlStr);
+    }
+
+    private static String getBaseUrl() {
+        return "v1/agents/sl-maven-plugin/recommended";
     }
 
     private static String getQueryString(SeaLightsPluginInfo slInfo) throws UnsupportedEncodingException {
         String customerId = encodeValue(slInfo.getCustomerId());
-        String appName = encodeValue(slInfo.getAppName());
-        String branch = encodeValue(slInfo.getBranchName());
+//        String appName = encodeValue(slInfo.getAppName());
+//        String branch = encodeValue(slInfo.getBranchName());
         String envName = encodeValue(slInfo.getEnvironment());
 
         StringBuilder queryString = new StringBuilder();
         addQueryStringValue(queryString, "customerId", customerId);
-        addQueryStringValue(queryString, "appName", appName);
-        addQueryStringValue(queryString, "branch", branch);
+//        addQueryStringValue(queryString, "appName", appName);
+//        addQueryStringValue(queryString, "branch", branch);
         addQueryStringValue(queryString, "envName", envName);
 
         String qs = queryString.toString();
