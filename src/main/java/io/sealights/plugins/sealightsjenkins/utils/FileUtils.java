@@ -52,15 +52,15 @@ public class FileUtils {
 
         return returnedFiles;
     }
-    public static void tryCopyFileFromLocalToSlave(Logger logger, String fileOnMaster, String fileOnSlave) throws IOException, InterruptedException {
+    public static boolean tryCopyFileFromLocalToSlave(Logger logger, String fileOnMaster, String fileOnSlave) throws IOException, InterruptedException {
         if (StringUtils.isNullOrEmpty(fileOnSlave)) {
             logger.warning("fileOnSlave is null. Skipping the copy.");
-            return;
+            return false;
         }
 
         if (StringUtils.isNullOrEmpty(fileOnMaster)) {
             logger.warning("fileOnMaster is null. Skipping the copy.");
-            return;
+            return false;
         }
 
         if (Computer.currentComputer() instanceof SlaveComputer) {
@@ -73,9 +73,11 @@ public class FileUtils {
             logger.debug("fpOnMaster.getChannel(): " + fpOnMaster.getChannel());
             logger.debug("fpOnRemote: " + fpOnRemote.absolutize() + ", fpOnMaster:" + fpOnMaster.absolutize());
             fpOnMaster.copyTo(fpOnRemote);
+            return true;
         }
         else{
             logger.debug("There is no need to copy '" + fileOnSlave+ "' since the current machine is a master Jenkins machine.");
+            return false;
         }
     }
 
