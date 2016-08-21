@@ -13,8 +13,8 @@ import io.sealights.plugins.sealightsjenkins.exceptions.SeaLightsIllegalStateExc
 import io.sealights.plugins.sealightsjenkins.integration.MavenIntegration;
 import io.sealights.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
 import io.sealights.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
+import io.sealights.plugins.sealightsjenkins.integration.upgrade.UpgradeManager;
 import io.sealights.plugins.sealightsjenkins.utils.*;
-import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -24,6 +24,7 @@ import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -34,7 +35,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.*;
+import java.util.logging.Level;
 
 /**
  * Created by shahar on 5/9/2016.
@@ -160,7 +161,7 @@ public class BeginAnalysis extends Builder {
 
         if (this.executionType == null)
             this.executionType = ExecutionType.FULL;
-        
+
         setDefaultValuesForStrings(logger);
     }
 
@@ -386,11 +387,34 @@ public class BeginAnalysis extends Builder {
         }
     }
 
+    private String tryGetSlMvnPluginVersion(SeaLightsPluginInfo slInfo, Logger logger) {
+
+        String retVersion = this.slMvnPluginVersion;
+
+        try {
+            if (!isValidVersion(retVersion))
+                retVersion = UpgradeManager.queryServerForMavenPluginVersion(slInfo, logger);
+        }
+        catch (FileNotFoundException e) {
+            logger.error("Error while trying to resolve Sealights maven plugin version. " +
+                    "Probably the server did not found latest maven plugin version." +
+                    "Skipping Sealights integration.");
+        }
+        catch (Exception e) {
+            logger.error("Error while trying to resolve Sealights maven plugin version. " +
+                    "'"+e.getMessage()+"'."+
+                    " Skipping Sealights integration.");
+        }
+
+        return retVersion;
+    }
+
     public boolean perform(
             AbstractBuild<?, ?> build, CleanupManager cleanupManager, Logger logger, String pomPath, Map<String, String> metadata)
             throws IOException, InterruptedException, SeaLightsIllegalStateException {
 
         try {
+
             setDefaultValues(logger);
 
             FilePath ws = build.getWorkspace();
@@ -414,7 +438,14 @@ public class BeginAnalysis extends Builder {
 
             configureBuildFilePublisher(build, slInfo.getBuildFilesFolders());
 
-            doMavenIntegration(logger, slInfo);
+            String mvnPluginVersionToUse = tryGetSlMvnPluginVersion(slInfo, logger);
+            if (!isValidVersion(mvnPluginVersionToUse)) {
+                //Don't integrate with maven if we can't decide our maven plugin version.
+                //Return true so we do it quietly.
+                return true;
+            }
+
+            doMavenIntegration(logger, slInfo, mvnPluginVersionToUse);
 
         } catch (Exception e) {
             // for cases when trying 'Latest-Build' when not on 'Tests Only' mode.
@@ -483,7 +514,7 @@ public class BeginAnalysis extends Builder {
         return getBuildNumberFromUpstreamBuild(cause.getUpstreamCauses(), trigger);
     }
 
-    private void doMavenIntegration(Logger logger, SeaLightsPluginInfo slInfo) throws IOException, InterruptedException {
+    private void doMavenIntegration(Logger logger, SeaLightsPluginInfo slInfo, String mvnPluginVersionToUse) throws IOException, InterruptedException {
 
         List<String> folders = Arrays.asList(slInfo.getBuildFilesFolders().split("\\s*,\\s*"));
         List<FileBackupInfo> pomFiles = getPomFiles(folders, slInfo.getBuildFilesPatterns(), logger, pomPath);
@@ -491,7 +522,7 @@ public class BeginAnalysis extends Builder {
         MavenIntegrationInfo info = new MavenIntegrationInfo(
                 pomFiles,
                 slInfo,
-                slMvnPluginVersion
+                mvnPluginVersionToUse
         );
         MavenIntegration mavenIntegration = new MavenIntegration(logger, info);
         mavenIntegration.integrate();
@@ -718,6 +749,10 @@ public class BeginAnalysis extends Builder {
         }
     }
 
+    private static boolean isValidVersion(String v) {
+        return v != null && v.matches("[0-9]+(\\.[0-9]+)*");
+    }
+
     private String getPluginVersion() {
         return BeginAnalysis.class.getPackage().getImplementationVersion();
     }
@@ -726,7 +761,6 @@ public class BeginAnalysis extends Builder {
     public DescriptorImpl getDescriptor() {
         return (DescriptorImpl) super.getDescriptor();
     }
-
 
 
     @Extension
@@ -774,7 +808,7 @@ public class BeginAnalysis extends Builder {
                     // Load old configuration xml into this object ('DescriptorImpl').
                     oldConfigXml.unmarshal(this);
                 } catch (IOException e) {
-                    LOGGER.log(Level.WARNING, "Failed to load "+oldConfigXml, e);
+                    LOGGER.log(Level.WARNING, "Failed to load " + oldConfigXml, e);
                 }
             }
         }
@@ -843,10 +877,6 @@ public class BeginAnalysis extends Builder {
             if (!StringUtils.isNullOrEmpty(slMvnPluginVersion) && !isValidVersion(slMvnPluginVersion))
                 return FormValidation.error("Version should be in the format of 'X.X.X'. e.g. '1.2.124'");
             return FormValidation.ok();
-        }
-
-        private static boolean isValidVersion(String v){
-            return v !=null && v.matches("[0-9]+(\\.[0-9]+)*");
         }
 
         public DescriptorExtensionList<BuildName, BuildName.BuildNameDescriptor> getBuildNameDescriptorList() {
