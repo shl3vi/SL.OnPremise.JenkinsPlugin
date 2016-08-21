@@ -161,7 +161,7 @@ public class BeginAnalysis extends Builder {
 
         if (this.executionType == null)
             this.executionType = ExecutionType.FULL;
-        
+
         setDefaultValuesForStrings(logger);
     }
 
@@ -387,19 +387,19 @@ public class BeginAnalysis extends Builder {
         }
     }
 
-    private boolean tryFillSlMvnPluginVersion(SeaLightsPluginInfo slInfo, Logger logger){
-        try{
-            if (isValidVersion(slMvnPluginVersion))
-                return true;
+    private String tryGetSlMvnPluginVersion(SeaLightsPluginInfo slInfo, Logger logger) {
 
-            slMvnPluginVersion = UpgradeManager.queryServerForMavenPluginVersion(slInfo, logger);
-            if (isValidVersion(slMvnPluginVersion))
-                return true;
+        String retVersion = this.slMvnPluginVersion;
 
-        }catch (Exception e){
+        try {
+            if (!isValidVersion(retVersion))
+                retVersion = UpgradeManager.queryServerForMavenPluginVersion(slInfo, logger);
+
+        } catch (Exception e) {
             logger.error("Error while trying to resolve Sealights maven plugin version. Skipping Sealights integration. Error:", e);
         }
-        return false;
+
+        return retVersion;
     }
 
     public boolean perform(
@@ -431,13 +431,14 @@ public class BeginAnalysis extends Builder {
 
             configureBuildFilePublisher(build, slInfo.getBuildFilesFolders());
 
-            if (!tryFillSlMvnPluginVersion(slInfo, logger)){
-                //Don't integrate with maven if we can decide our maven plugin version.
+            String mvnPluginVersionToUse = tryGetSlMvnPluginVersion(slInfo, logger);
+            if (!isValidVersion(mvnPluginVersionToUse)) {
+                //Don't integrate with maven if we can't decide our maven plugin version.
                 //Return true so we do it quietly.
                 return true;
             }
 
-            doMavenIntegration(logger, slInfo);
+            doMavenIntegration(logger, slInfo, mvnPluginVersionToUse);
 
         } catch (Exception e) {
             // for cases when trying 'Latest-Build' when not on 'Tests Only' mode.
@@ -506,7 +507,7 @@ public class BeginAnalysis extends Builder {
         return getBuildNumberFromUpstreamBuild(cause.getUpstreamCauses(), trigger);
     }
 
-    private void doMavenIntegration(Logger logger, SeaLightsPluginInfo slInfo) throws IOException, InterruptedException {
+    private void doMavenIntegration(Logger logger, SeaLightsPluginInfo slInfo, String mvnPluginVersionToUse) throws IOException, InterruptedException {
 
         List<String> folders = Arrays.asList(slInfo.getBuildFilesFolders().split("\\s*,\\s*"));
         List<FileBackupInfo> pomFiles = getPomFiles(folders, slInfo.getBuildFilesPatterns(), logger, pomPath);
@@ -514,7 +515,7 @@ public class BeginAnalysis extends Builder {
         MavenIntegrationInfo info = new MavenIntegrationInfo(
                 pomFiles,
                 slInfo,
-                slMvnPluginVersion
+                mvnPluginVersionToUse
         );
         MavenIntegration mavenIntegration = new MavenIntegration(logger, info);
         mavenIntegration.integrate();
@@ -741,8 +742,8 @@ public class BeginAnalysis extends Builder {
         }
     }
 
-    private static boolean isValidVersion(String v){
-        return v !=null && v.matches("[0-9]+(\\.[0-9]+)*");
+    private static boolean isValidVersion(String v) {
+        return v != null && v.matches("[0-9]+(\\.[0-9]+)*");
     }
 
     private String getPluginVersion() {
@@ -753,7 +754,6 @@ public class BeginAnalysis extends Builder {
     public DescriptorImpl getDescriptor() {
         return (DescriptorImpl) super.getDescriptor();
     }
-
 
 
     @Extension
@@ -801,7 +801,7 @@ public class BeginAnalysis extends Builder {
                     // Load old configuration xml into this object ('DescriptorImpl').
                     oldConfigXml.unmarshal(this);
                 } catch (IOException e) {
-                    LOGGER.log(Level.WARNING, "Failed to load "+oldConfigXml, e);
+                    LOGGER.log(Level.WARNING, "Failed to load " + oldConfigXml, e);
                 }
             }
         }
