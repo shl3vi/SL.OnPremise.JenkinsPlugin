@@ -1,5 +1,7 @@
 package io.sealights.plugins.sealightsjenkins;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import hudson.*;
 import hudson.model.*;
 import hudson.remoting.VirtualChannel;
@@ -25,6 +27,7 @@ import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -394,9 +397,16 @@ public class BeginAnalysis extends Builder {
         try {
             if (!isValidVersion(retVersion))
                 retVersion = UpgradeManager.queryServerForMavenPluginVersion(slInfo, logger);
-
-        } catch (Exception e) {
-            logger.error("Error while trying to resolve Sealights maven plugin version. Skipping Sealights integration. Error:", e);
+        }
+        catch (FileNotFoundException e) {
+            logger.error("Error while trying to resolve Sealights maven plugin version. " +
+                    "Probably the server did not found latest maven plugin version." +
+                    "Skipping Sealights integration.");
+        }
+        catch (Exception e) {
+            logger.error("Error while trying to resolve Sealights maven plugin version. " +
+                    "'"+e.getMessage()+"'."+
+                    " Skipping Sealights integration.");
         }
 
         return retVersion;
