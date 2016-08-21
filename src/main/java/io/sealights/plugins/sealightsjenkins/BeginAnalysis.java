@@ -1,7 +1,5 @@
 package io.sealights.plugins.sealightsjenkins;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import hudson.*;
 import hudson.model.*;
 import hudson.remoting.VirtualChannel;
@@ -17,7 +15,6 @@ import io.sealights.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
 import io.sealights.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
 import io.sealights.plugins.sealightsjenkins.integration.upgrade.UpgradeManager;
 import io.sealights.plugins.sealightsjenkins.utils.*;
-import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -38,7 +35,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.*;
+import java.util.logging.Level;
 
 /**
  * Created by shahar on 5/9/2016.
