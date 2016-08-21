@@ -35,14 +35,14 @@ public class UpgradeManager {
 
     private static String getQueryString(SeaLightsPluginInfo slInfo) throws UnsupportedEncodingException {
         String customerId = encodeValue(slInfo.getCustomerId());
-//        String appName = encodeValue(slInfo.getAppName());
-//        String branch = encodeValue(slInfo.getBranchName());
+        String appName = encodeValue(slInfo.getAppName());
+        String branch = encodeValue(slInfo.getBranchName());
         String envName = encodeValue(slInfo.getEnvironment());
 
         StringBuilder queryString = new StringBuilder();
         addQueryStringValue(queryString, "customerId", customerId);
-//        addQueryStringValue(queryString, "appName", appName);
-//        addQueryStringValue(queryString, "branch", branch);
+        addQueryStringValue(queryString, "appName", appName);
+        addQueryStringValue(queryString, "branch", branch);
         addQueryStringValue(queryString, "envName", envName);
 
         String qs = queryString.toString();
