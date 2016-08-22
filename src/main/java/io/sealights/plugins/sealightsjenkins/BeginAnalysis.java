@@ -1,5 +1,7 @@
 package io.sealights.plugins.sealightsjenkins;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import hudson.*;
 import hudson.model.*;
 import hudson.remoting.VirtualChannel;
@@ -15,6 +17,7 @@ import io.sealights.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
 import io.sealights.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
 import io.sealights.plugins.sealightsjenkins.integration.upgrade.UpgradeManager;
 import io.sealights.plugins.sealightsjenkins.utils.*;
+import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -35,7 +38,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
+import java.util.logging.*;
 
 /**
  * Created by shahar on 5/9/2016.
@@ -387,13 +390,13 @@ public class BeginAnalysis extends Builder {
         }
     }
 
-    private String tryGetSlMvnPluginVersion(SeaLightsPluginInfo slInfo, Logger logger) {
+    private String tryGetSlMvnPluginVersion(SeaLightsPluginInfo slInfo, EnvVars envVars, Logger logger) {
 
         String retVersion = this.slMvnPluginVersion;
 
         try {
             if (!isValidVersion(retVersion))
-                retVersion = UpgradeManager.queryServerForMavenPluginVersion(slInfo, logger);
+                retVersion = UpgradeManager.queryServerForMavenPluginVersion(slInfo, envVars, logger);
         }
         catch (FileNotFoundException e) {
             logger.error("Error while trying to resolve Sealights maven plugin version. " +
@@ -410,11 +413,12 @@ public class BeginAnalysis extends Builder {
     }
 
     public boolean perform(
-            AbstractBuild<?, ?> build, CleanupManager cleanupManager, Logger logger, String pomPath, Map<String, String> metadata)
+            AbstractBuild<?, ?> build, CleanupManager cleanupManager, Logger logger,
+            String pomPath, EnvVars envVars)
             throws IOException, InterruptedException, SeaLightsIllegalStateException {
 
         try {
-
+            Map<String, String> metadata = JenkinsUtils.createMetadataFromEnvVars(envVars);
             setDefaultValues(logger);
 
             FilePath ws = build.getWorkspace();
@@ -438,7 +442,7 @@ public class BeginAnalysis extends Builder {
 
             configureBuildFilePublisher(build, slInfo.getBuildFilesFolders());
 
-            String mvnPluginVersionToUse = tryGetSlMvnPluginVersion(slInfo, logger);
+            String mvnPluginVersionToUse = tryGetSlMvnPluginVersion(slInfo, envVars, logger);
             if (!isValidVersion(mvnPluginVersionToUse)) {
                 //Don't integrate with maven if we can't decide our maven plugin version.
                 //Return true so we do it quietly.
@@ -466,8 +470,7 @@ public class BeginAnalysis extends Builder {
         CleanupManager cleanupManager = new CleanupManager(logger);
         try {
             EnvVars envVars = build.getEnvironment(listener);
-            Map<String, String> metadata = JenkinsUtils.createMetadataFromEnvVars(envVars);
-            return perform(build, cleanupManager, logger, DEFAULT_POM_PATH, metadata);
+            return perform(build, cleanupManager, logger, DEFAULT_POM_PATH, envVars);
         } catch (SeaLightsIllegalStateException e) {
             logger.error(e.getMessage());
             return false;

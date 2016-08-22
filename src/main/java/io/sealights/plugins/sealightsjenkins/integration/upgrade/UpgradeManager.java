@@ -1,8 +1,10 @@
 package io.sealights.plugins.sealightsjenkins.integration.upgrade;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import hudson.EnvVars;
 import io.sealights.plugins.sealightsjenkins.integration.upgrade.entities.UpgradeResponse;
 import io.sealights.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
+import io.sealights.plugins.sealightsjenkins.utils.JenkinsUtils;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 
 import java.io.IOException;
@@ -16,16 +18,16 @@ import java.net.URLEncoder;
  */
 public class UpgradeManager {
 
-    public static String queryServerForMavenPluginVersion(SeaLightsPluginInfo slInfo, Logger logger) throws IOException {
-        URL url = createUrlToGetRecommendedVersion(slInfo);
+    public static String queryServerForMavenPluginVersion(SeaLightsPluginInfo slInfo, EnvVars envVars, Logger logger) throws IOException {
+        URL url = createUrlToGetRecommendedVersion(slInfo, envVars, logger);
         ObjectMapper mapper = new ObjectMapper();
         logger.debug("Sending request to get recommended version: '"+url+"'");
         UpgradeResponse upgradeResponse = mapper.readValue(url, UpgradeResponse.class);
         return upgradeResponse.getAgent().getVersion();
     }
 
-    private static URL createUrlToGetRecommendedVersion(SeaLightsPluginInfo slInfo) throws MalformedURLException, UnsupportedEncodingException {
-        String urlStr = slInfo.getServerUrl()+"/"+getBaseUrl()+"/"+getQueryString(slInfo);
+    private static URL createUrlToGetRecommendedVersion(SeaLightsPluginInfo slInfo, EnvVars envVars, Logger logger) throws MalformedURLException, UnsupportedEncodingException {
+        String urlStr = slInfo.getServerUrl()+"/"+getBaseUrl()+"/"+getQueryString(slInfo, envVars, logger);
         return new URL(urlStr);
     }
 
@@ -33,13 +35,23 @@ public class UpgradeManager {
         return "v1/agents/sl-maven-plugin/recommended";
     }
 
-    private static String getQueryString(SeaLightsPluginInfo slInfo) throws UnsupportedEncodingException {
-        String customerId = encodeValue(slInfo.getCustomerId());
-        String appName = encodeValue(slInfo.getAppName());
-        String branch = encodeValue(slInfo.getBranchName());
-        String envName = encodeValue(slInfo.getEnvironment());
+    private static String getQueryString(SeaLightsPluginInfo slInfo, EnvVars envVars, Logger logger) throws UnsupportedEncodingException {
+        String customerId = JenkinsUtils.tryGetEnvVariable(envVars, slInfo.getCustomerId());
+        String appName = JenkinsUtils.tryGetEnvVariable(envVars, slInfo.getAppName());
+        String branch = JenkinsUtils.tryGetEnvVariable(envVars, slInfo.getBranchName());
+        String envName = JenkinsUtils.tryGetEnvVariable(envVars, slInfo.getEnvironment());
+
+        customerId = encodeValue(customerId);
+        appName = encodeValue(appName);
+        branch = encodeValue(branch);
+        envName = encodeValue(envName);
 
         StringBuilder queryString = new StringBuilder();
+        logger.debug(slInfo.getAppName());
+        logger.debug(slInfo.getAppName());
+        logger.debug(slInfo.getAppName());
+        logger.debug(slInfo.getAppName());
+        logger.debug(slInfo.getAppName());
         addQueryStringValue(queryString, "customerId", customerId);
         addQueryStringValue(queryString, "appName", appName);
         addQueryStringValue(queryString, "branch", branch);
