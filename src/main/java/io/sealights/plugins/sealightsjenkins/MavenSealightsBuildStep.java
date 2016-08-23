@@ -19,6 +19,7 @@ import hudson.util.StreamTaskListener;
 import hudson.util.VariableResolver;
 import io.sealights.plugins.sealightsjenkins.enums.BuildStepModes;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
+import io.sealights.plugins.sealightsjenkins.utils.PathUtils;
 import jenkins.model.Jenkins;
 import jenkins.mvn.GlobalMavenConfig;
 import jenkins.mvn.GlobalSettingsProvider;
@@ -377,19 +378,25 @@ public class MavenSealightsBuildStep extends Builder {
 
             String hudsonMavenHome = mi.getHome().replace("io.sealights.plugins.sealightsjenkins.MavenSealightsBuildStep_MavenInstallation", "hudson.tasks.Maven_MavenInstallation");
             VirtualChannel channel = Computer.currentComputer().getChannel();
-            String hudsonSettingsXmlFile = hudsonMavenHome + File.separator + "conf" + File.separator + "settings.xml";
-            String sealightsSettingsXmlFile = mi.getHome() + File.separator + "conf" + File.separator + "settings.xml";
+            //TODO: Change to PathUtils.
+            String pathToSealightsConfFolder = mi.getHome() + File.separator + "conf";
+            String pathToSealightsSettings = pathToSealightsConfFolder + File.separator + "settings.xml";
+            String pathToHudsonSettings = hudsonMavenHome + File.separator + "conf" + File.separator + "settings.xml";
 
-            FilePath hudsonFile = new FilePath(channel, hudsonSettingsXmlFile);
-            FilePath sealightsFile = new FilePath(channel, sealightsSettingsXmlFile);
+            FilePath settingsFileUnderHudson = new FilePath(channel, pathToHudsonSettings);
+            FilePath settingsFileUnderSealights = new FilePath(channel, pathToSealightsSettings);
+            FilePath sealightsFolder = new FilePath(channel, pathToSealightsConfFolder);
 
-            if (hudsonFile.exists()){
-                logger.info("About to copy settings.xml from '" + hudsonSettingsXmlFile+ "'");
-                if (sealightsFile.exists())
-                    sealightsFile.delete();
-                hudsonFile.copyTo(sealightsFile);
-                logger.info("Settings.xml was copied to '" + sealightsSettingsXmlFile+ "'");
-                args.add("-gs", sealightsSettingsXmlFile);
+            if (settingsFileUnderHudson.exists() && sealightsFolder.exists()){
+                logger.info("About to copy settings.xml from '" + pathToHudsonSettings+ "'");
+                if (settingsFileUnderSealights.exists())
+                    settingsFileUnderSealights.delete();
+                settingsFileUnderHudson.copyTo(settingsFileUnderSealights);
+                logger.info("Settings.xml was copied to '" + pathToSealightsSettings+ "'");
+                args.add("-gs", pathToSealightsSettings);
+            }
+            else{
+                logger.info("Can't use settings.xml file from Hudson. settingsFileUnderHudson.exists():" + settingsFileUnderHudson.exists() + ", sealightsFolder.exists():" + sealightsFolder.exists());
             }
         } catch (Exception e)
         {
