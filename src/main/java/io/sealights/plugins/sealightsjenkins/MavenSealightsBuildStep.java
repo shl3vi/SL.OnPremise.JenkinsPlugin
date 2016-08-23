@@ -4,6 +4,7 @@ import hudson.*;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
 import hudson.model.*;
+import hudson.remoting.VirtualChannel;
 import hudson.slaves.NodeSpecific;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
@@ -17,7 +18,6 @@ import hudson.util.NullStream;
 import hudson.util.StreamTaskListener;
 import hudson.util.VariableResolver;
 import io.sealights.plugins.sealightsjenkins.enums.BuildStepModes;
-import io.sealights.plugins.sealightsjenkins.utils.CommandLineHelper;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import jenkins.model.Jenkins;
 import jenkins.mvn.GlobalMavenConfig;
@@ -330,6 +330,9 @@ public class MavenSealightsBuildStep extends Builder {
                     settingsPath= mavenBuildStepHelper.copySettingsFileToSlave(settingsPath, beginAnalysis.getDescriptor().getFilesStorage(), logger);
                     args.add("-gs", settingsPath);
                 }
+                else {
+                    tryUseMavenSettingsFromHudsonTask(logger, args, mi);
+                }
             }
 
             Set<String> sensitiveVars = build.getSensitiveBuildVariables();
@@ -365,6 +368,34 @@ public class MavenSealightsBuildStep extends Builder {
         } while (startIndex < targets.length());
 
         return true;
+    }
+
+    private void tryUseMavenSettingsFromHudsonTask(Logger logger, ArgumentListBuilder args, MavenInstallation mi) throws IOException, InterruptedException {
+        try{
+            if (mi == null || mi.getHome() == null || Computer.currentComputer() == null)
+                return;
+
+            String hudsonMavenHome = mi.getHome().replace("io.sealights.plugins.sealightsjenkins.MavenSealightsBuildStep_MavenInstallation", "hudson.tasks.Maven_MavenInstallation");
+            VirtualChannel channel = Computer.currentComputer().getChannel();
+            String hudsonSettingsXmlFile = hudsonMavenHome + File.separator + "conf" + File.separator + "settings.xml";
+            String sealightsSettingsXmlFile = mi.getHome() + File.separator + "conf" + File.separator + "settings.xml";
+
+            FilePath hudsonFile = new FilePath(channel, hudsonSettingsXmlFile);
+            FilePath sealightsFile = new FilePath(channel, sealightsSettingsXmlFile);
+
+            if (hudsonFile.exists()){
+                logger.info("About to copy settings.xml from '" + hudsonSettingsXmlFile+ "'");
+                if (sealightsFile.exists())
+                    sealightsFile.delete();
+                hudsonFile.copyTo(sealightsFile);
+                logger.info("Settings.xml was copied to '" + sealightsSettingsXmlFile+ "'");
+                args.add("-gs", sealightsSettingsXmlFile);
+            }
+        } catch (Exception e)
+        {
+            logger.error("Failed to copy the settings.xml from the original Maven plugin (hudson.task). Error:", e);
+        }
+
     }
 
     private String getTargets(BuildStepMode buildStepMode) {
