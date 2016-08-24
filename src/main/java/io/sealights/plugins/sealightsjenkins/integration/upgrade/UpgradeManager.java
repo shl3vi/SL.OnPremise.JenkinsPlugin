@@ -47,11 +47,6 @@ public class UpgradeManager {
         envName = encodeValue(envName);
 
         StringBuilder queryString = new StringBuilder();
-        logger.debug(slInfo.getAppName());
-        logger.debug(slInfo.getAppName());
-        logger.debug(slInfo.getAppName());
-        logger.debug(slInfo.getAppName());
-        logger.debug(slInfo.getAppName());
         addQueryStringValue(queryString, "customerId", customerId);
         addQueryStringValue(queryString, "appName", appName);
         addQueryStringValue(queryString, "branch", branch);

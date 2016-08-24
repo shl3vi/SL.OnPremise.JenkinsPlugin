@@ -47,9 +47,19 @@ public class JenkinsUtils {
         return metadata;
     }
 
+    /**
+     * @param envVarKey a potential environment variable
+     * @return true if its jenkins environment variable in the format of '${<some_key>}'
+     */
+    private static boolean isEnvVariable(String envVarKey){
+        return envVarKey != null && envVarKey.startsWith("${") && envVarKey.endsWith("}");
+    }
+
     public static String tryGetEnvVariable(EnvVars envVars, String envVarKey){
-        // check if its jenkins environment variable in the format of '${<some_key>}'
-        if (envVarKey != null && envVarKey.startsWith("${") && envVarKey.endsWith("}")){
+        if (envVarKey == null)
+            return "";
+
+        if (isEnvVariable(envVarKey)){
             // get '<some_key>' from '${<some_key>}'
             String resolvedEnvKey = envVarKey.substring(2, envVarKey.length()-1);
 
