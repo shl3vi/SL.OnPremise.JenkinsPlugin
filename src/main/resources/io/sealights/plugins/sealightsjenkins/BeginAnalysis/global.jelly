@@ -1,6 +1,5 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
-         xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
     <f:section title="SeaLights Continuous Testing">
         <f:entry title="Customer Id" field="customerId">
             <f:textbox value="${descriptor.customerId}"/>
@@ -14,6 +13,10 @@
         <f:entry title="Files Storage Folder" field="filesStorage"
                  description="Overrides the default location which Sealights stores files. By default this is the temp folder.">
             <f:textbox value="${descriptor.filesStorage}"/>
+        </f:entry>
+        <f:entry title="'Tools' folder path on Master Jenkins" field="toolsPathOnMaster"
+                 description="Absolute path to the jenkins 'tools' folder on the master Jenkins node. Leave empty to use '/var/lib/jenkins/tools'.">
+            <f:textbox value="${descriptor.toolsPathOnMaster}"/>
         </f:entry>
     </f:section>
 </j:jelly>
