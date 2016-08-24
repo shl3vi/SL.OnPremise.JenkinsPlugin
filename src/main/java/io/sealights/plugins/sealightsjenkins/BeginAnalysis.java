@@ -774,6 +774,8 @@ public class BeginAnalysis extends Builder {
         private String url;
         private String proxy;
         private String filesStorage;
+        private String toolsPathOnMaster;
+        private final String DEFAULT_TOOLS_PATH = "/var/lib/jenkins/tools";
 
         public DescriptorImpl() {
             super(BeginAnalysis.class);
@@ -819,6 +821,7 @@ public class BeginAnalysis extends Builder {
             url = json.getString("url");
             proxy = json.getString("proxy");
             filesStorage = json.getString("filesStorage");
+            toolsPathOnMaster = json.getString("toolsPathOnMaster");
             save();
             return super.configure(req, json);
         }
@@ -884,5 +887,15 @@ public class BeginAnalysis extends Builder {
         }
 
         private static final java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger(DescriptorImpl.class.getName());
+
+        public String getToolsPathOnMaster() {
+            if (StringUtils.isNullOrEmpty(toolsPathOnMaster))
+                return DEFAULT_TOOLS_PATH;
+            return toolsPathOnMaster;
+        }
+
+        public void setToolsPathOnMaster(String toolsPathOnMaster) {
+            this.toolsPathOnMaster = toolsPathOnMaster;
+        }
     }
 }
