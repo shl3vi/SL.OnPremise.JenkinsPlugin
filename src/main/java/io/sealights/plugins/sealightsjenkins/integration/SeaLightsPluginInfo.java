@@ -34,6 +34,20 @@ public class SeaLightsPluginInfo {
     private Map<String, String> metadata;
     private String filesStorage;
 
+    private boolean logEnabled;
+    private LogDestination logDestination;
+    private LogLevel logLevel;
+    private String logFolder;
+
+    private String scannerJar;
+    private String listenerJar;
+    private String listenerConfigFile;
+
+    private BuildStrategy buildStrategy;
+
+    private String fixedTestListenerPath;
+    private String fixedMetaJsonPath;
+
     public boolean isRecursiveOnBuildFilesFolders() {
         return recursiveOnBuildFilesFolders;
     }
@@ -182,10 +196,6 @@ public class SeaLightsPluginInfo {
         this.executionType = executionType;
     }
 
-    private String scannerJar;
-    private String listenerJar;
-    private String listenerConfigFile;
-
     public String getScannerJar() {
         return scannerJar;
     }
@@ -218,11 +228,6 @@ public class SeaLightsPluginInfo {
         this.metadata = metadata;
     }
 
-    private boolean logEnabled;
-    private LogDestination logDestination;
-    private LogLevel logLevel;
-    private String logFolder;
-
     public boolean isLogEnabled() {
         return logEnabled;
     }
@@ -250,8 +255,6 @@ public class SeaLightsPluginInfo {
     public void setLogFolder(String logFolder) {
         this.logFolder = logFolder;
     }
-
-    private BuildStrategy buildStrategy;
 
     public void setBuildStrategy(BuildStrategy buildStrategy) {
         this.buildStrategy = buildStrategy;
@@ -283,6 +286,22 @@ public class SeaLightsPluginInfo {
 
     public void setFilesStorage(String filesStorage) {
         this.filesStorage = filesStorage;
+    }
+
+    public String getFixedTestListenerPath() {
+        return fixedTestListenerPath;
+    }
+
+    public void setFixedTestListenerPath(String fixedTestListenerPath) {
+        this.fixedTestListenerPath = fixedTestListenerPath;
+    }
+
+    public String getFixedMetaJsonPath() {
+        return fixedMetaJsonPath;
+    }
+
+    public void setFixedMetaJsonPath(String fixedMetaJsonPath) {
+        this.fixedMetaJsonPath = fixedMetaJsonPath;
     }
 }
 

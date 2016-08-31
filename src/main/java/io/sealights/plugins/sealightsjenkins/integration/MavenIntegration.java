@@ -76,24 +76,19 @@ public class MavenIntegration {
         return new PomFile(sourceFilename, log);
     }
 
-    protected void backupPom(String sourceFileName) throws IOException, InterruptedException {
+    private void backupPom(String sourceFileName) throws IOException, InterruptedException {
         String backupFile = sourceFileName + ".slbak";
         log.info("MavenIntegration.integrate - creating a back up file: " + backupFile);
 
         VirtualChannel channel = Computer.currentComputer().getChannel();
         FilePath sourceFile = new FilePath(channel, sourceFileName);
-        FilePath targeFile = new FilePath(channel, backupFile);
+        FilePath targetFile = new FilePath(channel, backupFile);
 
-        sourceFile.copyTo(targeFile);
+        sourceFile.copyTo(targetFile);
     }
 
     private void integrateToAllProfiles(FileBackupInfo fileBackupInfo, PomFile pomFile) {
-        SeaLightsPluginInfo seaLightsPluginInfo = this.mavenIntegrationInfo.getSeaLightsPluginInfo();
-        String slMvnPluginVersion = this.mavenIntegrationInfo.getOverridePluginVersion();
-        SealightsMavenPluginHelper slHelper = new SealightsMavenPluginHelper(log, slMvnPluginVersion);
-        String xml = slHelper.toPluginText(seaLightsPluginInfo);
-
-        pomFile.addPlugin(xml);
+        pomFile.integrate(this.mavenIntegrationInfo);
         savePom(fileBackupInfo, pomFile);
     }
 

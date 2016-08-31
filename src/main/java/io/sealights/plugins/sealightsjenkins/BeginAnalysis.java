@@ -1,7 +1,5 @@
 package io.sealights.plugins.sealightsjenkins;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import hudson.*;
 import hudson.model.*;
 import hudson.remoting.VirtualChannel;
@@ -17,7 +15,6 @@ import io.sealights.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
 import io.sealights.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
 import io.sealights.plugins.sealightsjenkins.integration.upgrade.UpgradeManager;
 import io.sealights.plugins.sealightsjenkins.utils.*;
-import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -34,11 +31,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.*;
+import java.util.*;
+import java.util.logging.Level;
 
 /**
  * Created by shahar on 5/9/2016.
@@ -625,6 +619,9 @@ public class BeginAnalysis extends Builder {
         slInfo.setLogFolder(logFolder);
         slInfo.setExecutionType(executionType);
 
+        slInfo.setFixedTestListenerPath(createFixedTestListenerPath());
+        slInfo.setFixedMetaJsonPath(createFixedMetaJsonPath());
+
         String foldersToSearch;
         String patternsToSearch;
         if (enableMultipleBuildFiles) {
@@ -640,6 +637,25 @@ public class BeginAnalysis extends Builder {
         slInfo.setBuildFilesPatterns(patternsToSearch);
 
         return slInfo;
+    }
+
+    private String createFixedTestListenerPath(){
+        String fileName = "java-test-listener_" + UUID.randomUUID() + ".jar";
+        return createFixedPath(fileName);
+    }
+
+    private String createFixedMetaJsonPath(){
+        String fileName = "metadata_" + UUID.randomUUID() + ".json";
+        return createFixedPath(fileName);
+    }
+
+    private String createFixedPath(String fileName){
+        String filesStorage = getDescriptor().getFilesStorage();
+        if (!StringUtils.isNullOrEmpty(filesStorage)){
+            return PathUtils.join(filesStorage, fileName);
+        }else{
+            return PathUtils.join(System.getProperty("java.io.tmpdir"), "sealights", fileName);
+        }
     }
 
     private void setGlobalConfiguration(SeaLightsPluginInfo slInfo) {
