@@ -60,8 +60,7 @@ public class BeginAnalysisBuildStep extends Builder {
 
         try {
             EnvVars envVars = build.getEnvironment(listener);
-            Map<String, String> metadata = JenkinsUtils.createMetadataFromEnvVars(envVars);
-            return beginAnalysis.perform(build, cleanupManager, logger, pomPath, metadata);
+            return beginAnalysis.perform(build, cleanupManager, logger, pomPath, envVars);
         } catch (SeaLightsIllegalStateException e) {
             logger.error(e.getMessage());
             return false;

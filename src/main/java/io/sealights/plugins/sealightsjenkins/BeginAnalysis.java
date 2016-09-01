@@ -389,11 +389,13 @@ public class BeginAnalysis extends Builder {
 
     private String tryGetSlMvnPluginVersion(SeaLightsPluginInfo slInfo, Logger logger) {
 
-        String retVersion = this.slMvnPluginVersion;
+        String recommendedVersion = this.slMvnPluginVersion;
 
         try {
-            if (!isValidVersion(retVersion))
-                retVersion = UpgradeManager.queryServerForMavenPluginVersion(slInfo, logger);
+            if (!isValidVersion(recommendedVersion)) {
+                UpgradeManager upgradeManager = new UpgradeManager(slInfo, logger);
+                recommendedVersion = upgradeManager.queryServerForMavenPluginVersion();
+            }
         }
         catch (FileNotFoundException e) {
             logger.error("Error while trying to resolve Sealights maven plugin version. " +
@@ -406,16 +408,18 @@ public class BeginAnalysis extends Builder {
                     " Skipping Sealights integration.");
         }
 
-        return retVersion;
+        return recommendedVersion;
     }
 
     public boolean perform(
-            AbstractBuild<?, ?> build, CleanupManager cleanupManager, Logger logger, String pomPath, Map<String, String> metadata)
+            AbstractBuild<?, ?> build, CleanupManager cleanupManager, Logger logger,
+            String pomPath, EnvVars envVars)
             throws IOException, InterruptedException, SeaLightsIllegalStateException {
 
         try {
-
             setDefaultValues(logger);
+
+            Map<String, String> metadata = JenkinsUtils.createMetadataFromEnvVars(envVars);
 
             FilePath ws = build.getWorkspace();
             if (ws == null) {
@@ -432,7 +436,7 @@ public class BeginAnalysis extends Builder {
                 tryAddRestoreBuildFilePublisher(build, logger);
             }
 
-            SeaLightsPluginInfo slInfo = createSeaLightsPluginInfo(build, metadata, ws, logger);
+            SeaLightsPluginInfo slInfo = createSeaLightsPluginInfo(build, envVars, metadata, ws, logger);
 
             printFields(slInfo, logger);
 
@@ -466,8 +470,7 @@ public class BeginAnalysis extends Builder {
         CleanupManager cleanupManager = new CleanupManager(logger);
         try {
             EnvVars envVars = build.getEnvironment(listener);
-            Map<String, String> metadata = JenkinsUtils.createMetadataFromEnvVars(envVars);
-            return perform(build, cleanupManager, logger, DEFAULT_POM_PATH, metadata);
+            return perform(build, cleanupManager, logger, DEFAULT_POM_PATH, envVars);
         } catch (SeaLightsIllegalStateException e) {
             logger.error(e.getMessage());
             return false;
@@ -585,10 +588,10 @@ public class BeginAnalysis extends Builder {
     }
 
     private SeaLightsPluginInfo createSeaLightsPluginInfo(
-            AbstractBuild<?, ?> build, Map<String, String> metadata, FilePath ws, Logger logger) throws SeaLightsIllegalStateException {
+            AbstractBuild<?, ?> build, EnvVars envVars, Map<String, String> metadata, FilePath ws, Logger logger) throws SeaLightsIllegalStateException {
 
         SeaLightsPluginInfo slInfo = new SeaLightsPluginInfo();
-        setGlobalConfiguration(slInfo);
+        setGlobalConfiguration(slInfo, envVars);
 
         slInfo.setMetadata(metadata);
 
@@ -602,9 +605,9 @@ public class BeginAnalysis extends Builder {
         else
             slInfo.setWorkspacepath(workingDir);
 
-        slInfo.setAppName(appName);
+        slInfo.setAppName(JenkinsUtils.tryGetEnvVariable(envVars, appName));
         slInfo.setModuleName(moduleName);
-        slInfo.setBranchName(branch);
+        slInfo.setBranchName(JenkinsUtils.tryGetEnvVariable(envVars, branch));
         slInfo.setFilesIncluded(filesIncluded);
         slInfo.setFilesExcluded(filesExcluded);
         slInfo.setRecursive(recursive);
@@ -615,7 +618,7 @@ public class BeginAnalysis extends Builder {
         slInfo.setListenerConfigFile(testListenerConfigFile);
         slInfo.setScannerJar(buildScannerJar);
         slInfo.setBuildStrategy(buildStrategy);
-        slInfo.setEnvironment(environment);
+        slInfo.setEnvironment(JenkinsUtils.tryGetEnvVariable(envVars, environment));
         slInfo.setLogEnabled(!(LogLevel.OFF.equals(logLevel)));
         slInfo.setLogLevel(logLevel);
         slInfo.setLogDestination(logDestination);
@@ -639,13 +642,13 @@ public class BeginAnalysis extends Builder {
         return slInfo;
     }
 
-    private void setGlobalConfiguration(SeaLightsPluginInfo slInfo) {
+    private void setGlobalConfiguration(SeaLightsPluginInfo slInfo, EnvVars envVars) {
 
-        if (StringUtils.isNullOrEmpty(override_customerId)) {
-            slInfo.setCustomerId(getDescriptor().getCustomerId());
-        } else {
-            slInfo.setCustomerId(override_customerId);
+        String customer = override_customerId;
+        if (StringUtils.isNullOrEmpty(customer)) {
+            customer = getDescriptor().getCustomerId();
         }
+        slInfo.setCustomerId(JenkinsUtils.tryGetEnvVariable(envVars, customer));
 
         if (StringUtils.isNullOrEmpty(override_url)) {
             slInfo.setServerUrl(getDescriptor().getUrl());

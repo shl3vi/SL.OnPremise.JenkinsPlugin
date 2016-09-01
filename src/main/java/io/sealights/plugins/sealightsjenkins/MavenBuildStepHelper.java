@@ -57,8 +57,7 @@ public class MavenBuildStepHelper {
             return;
 
         EnvVars envVars = build.getEnvironment(listener);
-        Map<String, String> metadata = JenkinsUtils.createMetadataFromEnvVars(envVars);
-        beginAnalysis.perform(build, cleanupManager, logger, pom, metadata);
+        beginAnalysis.perform(build, cleanupManager, logger, pom, envVars);
     }
 
     public MavenSealightsBuildStep.MavenInstallation overrideMavenHomeIfNeed(MavenSealightsBuildStep.MavenInstallation mavenInstallation, Logger logger) {
