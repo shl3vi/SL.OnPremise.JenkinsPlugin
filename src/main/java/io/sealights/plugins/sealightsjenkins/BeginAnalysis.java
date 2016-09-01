@@ -389,12 +389,12 @@ public class BeginAnalysis extends Builder {
 
     private String tryGetSlMvnPluginVersion(SeaLightsPluginInfo slInfo, Logger logger) {
 
-        String retVersion = this.slMvnPluginVersion;
+        String recommendedVersion = this.slMvnPluginVersion;
 
         try {
-            if (!isValidVersion(retVersion)) {
+            if (!isValidVersion(recommendedVersion)) {
                 UpgradeManager upgradeManager = new UpgradeManager(slInfo, logger);
-                retVersion = upgradeManager.queryServerForMavenPluginVersion();
+                recommendedVersion = upgradeManager.queryServerForMavenPluginVersion();
             }
         }
         catch (FileNotFoundException e) {
@@ -408,7 +408,7 @@ public class BeginAnalysis extends Builder {
                     " Skipping Sealights integration.");
         }
 
-        return retVersion;
+        return recommendedVersion;
     }
 
     public boolean perform(
@@ -417,8 +417,9 @@ public class BeginAnalysis extends Builder {
             throws IOException, InterruptedException, SeaLightsIllegalStateException {
 
         try {
-            Map<String, String> metadata = JenkinsUtils.createMetadataFromEnvVars(envVars);
             setDefaultValues(logger);
+
+            Map<String, String> metadata = JenkinsUtils.createMetadataFromEnvVars(envVars);
 
             FilePath ws = build.getWorkspace();
             if (ws == null) {
