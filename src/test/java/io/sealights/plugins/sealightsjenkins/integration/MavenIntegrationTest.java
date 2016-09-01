@@ -112,6 +112,31 @@ public class MavenIntegrationTest {
         performTest("19_Inject_SeaLights_plugin_with_specific_version_to_a_pom_without_the_plugin", true, "1.1.1");
     }
 
+    @Test
+    public void injectSeaLightsArgumentsToJMeterPluginWhenArgumentsElementExists() throws Exception {
+        performTest("20_Inject_SeaLights_arguments_to_jMeter_plugin_when_arguments_element_exists", true, "1.1.1");
+    }
+
+    @Test
+    public void dontInjectSeaLightsArgumentsToJMeterPluginWhenOurArgumentsAlreadyPresent() throws Exception {
+        performTest("21_dont_Inject_SeaLights_arguments_to_jMeter_plugin_when_our_arguments_already_present", true, "1.1.1");
+    }
+
+    @Test
+    public void injectSeaLightsArgumentsToJMeterPluginWhenNonSealightsArgumentsExists() throws Exception {
+        performTest("22_Inject_SeaLights_arguments_to_jMeter_plugin_when_non-Sealights_arguments_exists", true, "1.1.1");
+    }
+
+    @Test
+    public void injectSeaLightsArgumentsToJMeterPluginWhenArgumentsElementNotExists() throws Exception {
+        performTest("23_Inject_SeaLights_arguments_to_jMeter_plugin_when_arguments_element_not_exists", true, "1.1.1");
+    }
+
+    @Test
+    public void InjectSeaLightsArgumentsToJMeterPluginInsideProfile() throws Exception {
+        performTest("24_Inject_SeaLights_arguments_to_jMeter_plugin_inside_profile", true, "1.1.1");
+    }
+
     private void performTest(String testCase) throws Exception {
         performTest(testCase, true, null);
     }
