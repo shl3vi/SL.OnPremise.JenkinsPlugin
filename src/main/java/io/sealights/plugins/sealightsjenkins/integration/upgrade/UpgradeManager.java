@@ -1,10 +1,8 @@
 package io.sealights.plugins.sealightsjenkins.integration.upgrade;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import hudson.EnvVars;
-import io.sealights.plugins.sealightsjenkins.integration.upgrade.entities.UpgradeResponse;
 import io.sealights.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
-import io.sealights.plugins.sealightsjenkins.utils.JenkinsUtils;
+import io.sealights.plugins.sealightsjenkins.integration.upgrade.entities.UpgradeResponse;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 
 import java.io.IOException;
@@ -18,33 +16,36 @@ import java.net.URLEncoder;
  */
 public class UpgradeManager {
 
-    public static String queryServerForMavenPluginVersion(SeaLightsPluginInfo slInfo, EnvVars envVars, Logger logger) throws IOException {
-        URL url = createUrlToGetRecommendedVersion(slInfo, envVars, logger);
+    private SeaLightsPluginInfo slInfo;
+    private Logger logger;
+
+    public UpgradeManager(SeaLightsPluginInfo slInfo, Logger logger) {
+        this.slInfo = slInfo;
+        this.logger = logger;
+    }
+
+    public String queryServerForMavenPluginVersion() throws IOException {
+        URL url = createUrlToGetRecommendedVersion();
         ObjectMapper mapper = new ObjectMapper();
         logger.debug("Sending request to get recommended version: '"+url+"'");
         UpgradeResponse upgradeResponse = mapper.readValue(url, UpgradeResponse.class);
         return upgradeResponse.getAgent().getVersion();
     }
 
-    private static URL createUrlToGetRecommendedVersion(SeaLightsPluginInfo slInfo, EnvVars envVars, Logger logger) throws MalformedURLException, UnsupportedEncodingException {
-        String urlStr = slInfo.getServerUrl()+"/"+getBaseUrl()+"/"+getQueryString(slInfo, envVars, logger);
+    private URL createUrlToGetRecommendedVersion() throws MalformedURLException, UnsupportedEncodingException {
+        String urlStr = slInfo.getServerUrl()+"/"+getBaseUrl()+"/"+getQueryString();
         return new URL(urlStr);
     }
 
-    private static String getBaseUrl() {
+    private String getBaseUrl() {
         return "v1/agents/sl-maven-plugin/recommended";
     }
 
-    private static String getQueryString(SeaLightsPluginInfo slInfo, EnvVars envVars, Logger logger) throws UnsupportedEncodingException {
-        String customerId = JenkinsUtils.tryGetEnvVariable(envVars, slInfo.getCustomerId());
-        String appName = JenkinsUtils.tryGetEnvVariable(envVars, slInfo.getAppName());
-        String branch = JenkinsUtils.tryGetEnvVariable(envVars, slInfo.getBranchName());
-        String envName = JenkinsUtils.tryGetEnvVariable(envVars, slInfo.getEnvironment());
-
-        customerId = encodeValue(customerId);
-        appName = encodeValue(appName);
-        branch = encodeValue(branch);
-        envName = encodeValue(envName);
+    private String getQueryString() throws UnsupportedEncodingException {
+        String customerId = encodeValue(slInfo.getCustomerId());
+        String appName = encodeValue(slInfo.getAppName());
+        String branch = encodeValue(slInfo.getBranchName());
+        String envName = encodeValue(slInfo.getEnvironment());
 
         StringBuilder queryString = new StringBuilder();
         addQueryStringValue(queryString, "customerId", customerId);
@@ -61,7 +62,7 @@ public class UpgradeManager {
         return qs;
     }
 
-    private static void addQueryStringValue(StringBuilder queryString, String key, String value) {
+    private void addQueryStringValue(StringBuilder queryString, String key, String value) {
         if (isNotNullOrEmpty(value) && isNotNullOrEmpty(key)) {
             queryString.append(key);
             queryString.append("=");
@@ -70,15 +71,15 @@ public class UpgradeManager {
         }
     }
 
-    private static boolean isNullOrEmpty(String s) {
+    private boolean isNullOrEmpty(String s) {
         return s == null || s.length() == 0;
     }
 
-    private static boolean isNotNullOrEmpty(String s) {
+    private boolean isNotNullOrEmpty(String s) {
         return !isNullOrEmpty(s);
     }
 
-    private static String encodeValue(String value) throws UnsupportedEncodingException {
+    private String encodeValue(String value) throws UnsupportedEncodingException {
         if (isNotNullOrEmpty(value)) {
             return URLEncoder.encode(value, "UTF-8");
         }
