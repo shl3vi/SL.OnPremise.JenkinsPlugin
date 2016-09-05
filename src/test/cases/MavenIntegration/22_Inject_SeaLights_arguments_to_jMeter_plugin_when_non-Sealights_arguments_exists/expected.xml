@@ -18,9 +18,6 @@
             <plugin>
                 <groupId>com.lazerycode.jmeter</groupId>
                 <artifactId>jmeter-maven-plugin</artifactId>
-                <configuration>
-                    <suppressJMeterOutput>false</suppressJMeterOutput>
-                </configuration>
                 <executions>
                     <execution>
                         <id>jmeter-tests</id>
@@ -42,7 +39,7 @@
                                     <argument>-Dsl.includes=com.fake.*</argument>
                                     <argument>-Dsl.excludes=*FastClassByGuice*, *ByCGLIB*, *EnhancerByMockitoWithCGLIB*, *EnhancerBySpringCGLIB*, com.fake.excluded.*</argument>
                                     <argument>-Dsl.classLoadersExcluded=org.powermock.core.classloader.MockClassLoader</argument>
-                                    <argument>-javaagent:null</argument>
+                                    <argument>-javaagent:fixed-test-listener-path</argument>
                                 </arguments>
                             </jMeterProcessJVMSettings>
                         </configuration>
@@ -72,6 +69,7 @@
                     <filesincluded>*.class</filesincluded>
                     <buildScannerJar>c:\fake-build-scanner.jar</buildScannerJar>
                     <testListenerJar>c:\fake-test-listener.jar</testListenerJar>
+                    <fixedTestListenerPath>fixed-test-listener-path</fixedTestListenerPath>
                     <logLevel>INFO</logLevel>
                     <logFolder>c:\fake-log-folder</logFolder>
                     <metadata>

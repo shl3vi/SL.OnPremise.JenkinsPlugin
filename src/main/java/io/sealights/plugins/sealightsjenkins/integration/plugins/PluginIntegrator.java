@@ -1,14 +1,20 @@
 package io.sealights.plugins.sealightsjenkins.integration.plugins;
 
 /**
- * Created by shahar on 8/29/2016.
+ * An abstract class for classes that integrates to plugins.
  */
-public abstract class PluginIntegrationHelper {
+public abstract class PluginIntegrator {
 
     protected abstract String artifactId();
+
     protected abstract String groupId();
+
     protected final String pluginDescriptor(){
         return groupId()+":"+artifactId();
     }
+
+    protected final String skipPropertyName() { return "sealights."+artifactId()+".skip";}
+
     protected abstract void integrate();
+
 }

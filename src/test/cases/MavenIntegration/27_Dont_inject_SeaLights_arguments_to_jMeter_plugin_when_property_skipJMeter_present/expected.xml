@@ -4,6 +4,10 @@
     <artifactId>io.demo.junit-integration</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
+    <properties>
+        <sealights.jmeter-maven-plugin.skip>true</sealights.jmeter-maven-plugin.skip>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>io.sealights.on-premise.agents</groupId>
@@ -80,19 +84,6 @@
                                 </goals>
                                 <configuration>
                                     <jMeterProcessJVMSettings>
-                                        <arguments>
-                                            <argument>-Dsl.enableUpgrade=false</argument>
-                                            <argument>-Dsl.customerId=fake-customer-id-123</argument>
-                                            <argument>-Dsl.server=http://fake-server-url.com</argument>
-                                            <argument>-Dsl.appName=fake-app-name</argument>
-                                            <argument>-Dsl.moduleName=fake-module-name</argument>
-                                            <argument>-Dsl.buildName=1</argument>
-                                            <argument>-Dsl.branchName=fake-branch</argument>
-                                            <argument>-Dsl.includes=com.fake.*</argument>
-                                            <argument>-Dsl.excludes=*FastClassByGuice*, *ByCGLIB*, *EnhancerByMockitoWithCGLIB*, *EnhancerBySpringCGLIB*, com.fake.excluded.*</argument>
-                                            <argument>-Dsl.classLoadersExcluded=org.powermock.core.classloader.MockClassLoader</argument>
-                                            <argument>-javaagent:fixed-test-listener-path</argument>
-                                        </arguments>
                                     </jMeterProcessJVMSettings>
                                 </configuration>
                             </execution>

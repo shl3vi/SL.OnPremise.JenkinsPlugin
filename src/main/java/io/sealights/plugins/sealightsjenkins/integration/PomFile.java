@@ -1,10 +1,10 @@
 package io.sealights.plugins.sealightsjenkins.integration;
 
-import io.sealights.plugins.sealightsjenkins.integration.plugins.SealightsMavenPluginHelper;
-import io.sealights.plugins.sealightsjenkins.integration.plugins.external.JMeterPluginHelper;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -16,9 +16,12 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.*;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -33,54 +36,42 @@ public class PomFile {
     public PomFile(String filename, Logger log) {
         this.filename = filename;
         this.log = log;
+        this.document = getDocument();
     }
 
 
     public boolean isPluginExistInEntirePom(String artifactId) {
         try {
-            return PomXmlUtils.isPluginExistInElement(artifactId, getDocumentElement(), true);
+            return isPluginExistInElement(artifactId, getDocumentElement(), true);
         } catch (XPathExpressionException e) {
             e.printStackTrace();
             return false;
         }
     }
 
-    public void integrate(MavenIntegrationInfo mavenIntegrationInfo) {
+    public void integrate() {
         try {
-            integrateToAllPlugins(mavenIntegrationInfo);
             verifySurefireArgLineModification(getDocumentElement());
-        } catch (XPathExpressionException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void integrateToAllPlugins(MavenIntegrationInfo mavenIntegrationInfo)
-            throws XPathExpressionException{
-        Document pomDoc = getDocument();
-
-        SealightsMavenPluginHelper sealightsMavenPluginHelper = new SealightsMavenPluginHelper(log, mavenIntegrationInfo, pomDoc);
-        sealightsMavenPluginHelper.integrate();
-
-        JMeterPluginHelper jmeterPluginHelper = new JMeterPluginHelper(log, mavenIntegrationInfo, pomDoc);
-        jmeterPluginHelper.integrate();
-
-    }
-
-    private void verifySurefireArgLineModification(Element docElement){
+    private void verifySurefireArgLineModification(Element docElement) {
         if (docElement == null) {
             log.warning("Couldn't read pom file (documentElement is null) while trying to verify surefire 'argLine' modification.");
             return;
         }
 
         try {
-            List<Element> pluginElements = PomXmlUtils.getElements("//plugin", docElement);
+            List<Element> pluginElements = getElements("//plugin", docElement);
             for (Element plugin : pluginElements) {
-                if (!PomXmlUtils.isNodeExist("./artifactId[.='maven-surefire-plugin']", plugin)) {
+                if (!isNodeExist("./artifactId[.='maven-surefire-plugin']", plugin)) {
                     //Not a surefire plugin
                     continue;
                 }
-                List<Element> argLineElements = PomXmlUtils.getElements("./configuration/argLine", plugin);
-                if (argLineElements.size() > 0){
+                List<Element> argLineElements = getElements("./configuration/argLine", plugin);
+                if (argLineElements.size() > 0) {
                     modifySurefireArgLine(argLineElements.get(0));
                 }
             }
@@ -98,7 +89,6 @@ public class PomFile {
     }
 
 
-
     public boolean isValidPom() {
 
         Element documentElement = getDocumentElement();
@@ -108,9 +98,9 @@ public class PomFile {
         }
 
         try {
-            List<Element> pluginElements = PomXmlUtils.getElements("//plugin", documentElement);
+            List<Element> pluginElements = getElements("//plugin", documentElement);
             for (Element element : pluginElements) {
-                if (!PomXmlUtils.isNodeExist("./artifactId[.='maven-surefire-plugin']", element)) {
+                if (!isNodeExist("./artifactId[.='maven-surefire-plugin']", element)) {
                     //Not a surefire plugin
                     continue;
                 }
@@ -137,20 +127,21 @@ public class PomFile {
             return false;
         }
 
-        if (isParallelExist(surefirePlugin)){
+        if (isParallelExist(surefirePlugin)) {
             log.warning("Found an unsupported 'parallel' value of SureFire.");
             System.err.println("[SeaLights Jenkins Plugin] - WARNING - Found an unsupported 'parallel' tag of SureFire.");
+            return false;
         }
         return true;
     }
 
     private boolean isParallelExist(Element surefirePlugin) throws XPathExpressionException {
-        List<Element> forkModeElements = PomXmlUtils.getElements("./configuration/parallel", surefirePlugin);
+        List<Element> forkModeElements = getElements("./configuration/parallel", surefirePlugin);
         return !forkModeElements.isEmpty();
     }
 
     private boolean isValidForkMode(Element surefirePlugin) throws XPathExpressionException {
-        List<Element> forkModeElements = PomXmlUtils.getElements("./configuration/forkMode", surefirePlugin);
+        List<Element> forkModeElements = getElements("./configuration/forkMode", surefirePlugin);
         if (forkModeElements.isEmpty())
             return true;
 
@@ -159,11 +150,11 @@ public class PomFile {
 
         return !(
                 ("perthread".equalsIgnoreCase(currentValue) && !isValidPerThreadForkMode(surefirePlugin))
-                || "never".equalsIgnoreCase(currentValue));
+                        || "never".equalsIgnoreCase(currentValue));
     }
 
     private boolean isValidPerThreadForkMode(Element surefirePlugin) throws XPathExpressionException {
-        List<Element> threadCountElements = PomXmlUtils.getElements("./configuration/threadCount", surefirePlugin);
+        List<Element> threadCountElements = getElements("./configuration/threadCount", surefirePlugin);
         if (threadCountElements.isEmpty())
             //threadCount is '0' by default and its unsupported.
             return false;
@@ -174,7 +165,7 @@ public class PomFile {
     }
 
     private boolean isValidForkCount(Element surefirePlugin) throws XPathExpressionException {
-        List<Element> forkCountElements = PomXmlUtils.getElements("./configuration/forkCount", surefirePlugin);
+        List<Element> forkCountElements = getElements("./configuration/forkCount", surefirePlugin);
         if (forkCountElements.isEmpty())
             return true;
 
@@ -198,7 +189,7 @@ public class PomFile {
         transformer.transform(domSource, streamResult);
     }
 
-    private Document getDocument() {
+    public Document getDocument() {
         if (document != null)
             return document;
         try {
@@ -213,7 +204,7 @@ public class PomFile {
         return document;
     }
 
-    private Element getDocumentElement(){
+    private Element getDocumentElement() {
         return getDocument().getDocumentElement();
     }
 
@@ -224,4 +215,116 @@ public class PomFile {
         return doc;
     }
 
+    public boolean isPluginExistInElement(String artifactId, Element parent, boolean includeAllDescendants) throws XPathExpressionException {
+        String xpath = "plugin[artifactId='#ARTIFACT_ID#']";
+        if (includeAllDescendants)
+            xpath = "//" + xpath;
+
+        xpath = xpath.replace("#ARTIFACT_ID#", artifactId);
+        return isNodeExist(xpath, parent);
+    }
+
+    public List<Element> getPluginsOccurrencesInParent(String artifactId, Element parent, boolean includeAllDescendants) throws XPathExpressionException {
+        String xpath = "plugin[artifactId='#ARTIFACT_ID#']";
+        if (includeAllDescendants)
+            xpath = "//" + xpath;
+
+        xpath = xpath.replace("#ARTIFACT_ID#", artifactId);
+        List<Element> plugins = getElements(xpath, parent);
+        return plugins;
+    }
+
+    public boolean isNodeExist(String xpath, Element parent) throws XPathExpressionException {
+        NodeList nodes = getNodeList(xpath, parent);
+        return nodes.getLength() > 0;
+    }
+
+    private NodeList getNodeList(String xpath, Element parent) throws XPathExpressionException {
+        XPath xPath = XPathFactory.newInstance().newXPath();
+        XPathExpression expression = xPath.compile(xpath);
+        return (NodeList) expression.evaluate(parent, XPathConstants.NODESET);
+    }
+
+    public List<Element> getElements(String xpath, Element parent) throws XPathExpressionException {
+        NodeList nodes = getNodeList(xpath, parent);
+        List<Element> childElements = new ArrayList<Element>();
+
+        childElements.addAll(toElementList(nodes));
+        return childElements;
+    }
+
+    private List<Element> toElementList(NodeList nodes){
+        List<Element> childElements = new ArrayList<Element>();
+
+        for (int i = 0; i < nodes.getLength(); i++) {
+            Node node = nodes.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE)
+                childElements.add((Element) node);
+        }
+
+        return childElements;
+    }
+
+    private List<Element> getOrCreateElements(String name, String xpath, Element parent) throws XPathExpressionException {
+
+        List<Element> childElements = getElements(xpath, parent);
+
+        if (childElements.isEmpty()) {
+            Element child = document.createElement(name);
+            parent.appendChild(child);
+            childElements.add(child);
+        }
+
+        return childElements;
+    }
+
+    public List<Element> getOrCreateElements(String nameAndXpath, Element parent) throws XPathExpressionException {
+        return getOrCreateElements(nameAndXpath, nameAndXpath, parent);
+    }
+
+    public void verifyPluginsElement(String pluginBodyAsXml, Element parentElement) throws XPathExpressionException {
+        List<Element> pluginsElements = getOrCreateElements("plugins", parentElement);
+        try {
+
+            for (Element pluginsElement : pluginsElements) {
+                addPluginToPluginsElement(pluginBodyAsXml, pluginsElement);
+            }
+
+        } catch (SAXException | IOException | ParserConfigurationException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void addPluginToPluginsElement(String pluginBodyAsXml, Element pluginsElement) throws SAXException, IOException, ParserConfigurationException {
+        String xml = "<plugin>" + pluginBodyAsXml + "</plugin>";
+        Element pluginElement = createElement(xml);
+        pluginsElement.appendChild(pluginElement);
+    }
+
+    public Element createElement(String XmlAsString) throws ParserConfigurationException, IOException, SAXException {
+        Element element = DocumentBuilderFactory
+                .newInstance()
+                .newDocumentBuilder()
+                .parse(new ByteArrayInputStream(XmlAsString.getBytes(Charset.forName("UTF-8"))))
+                .getDocumentElement();
+        element = (Element) document.importNode(element, true);
+        return element;
+    }
+
+    public List<Element> getProperties() throws XPathExpressionException {
+        List<Element> propertiesElementList = getElements("properties", document.getDocumentElement());
+        if (propertiesElementList.isEmpty()) {
+            return new ArrayList<>();
+        }
+        Element propertiesElement = propertiesElementList.get(0);
+        return getChildrenElements(propertiesElement);
+    }
+
+    private List<Element> getChildrenElements(Element parent) {
+        List<Element> children = new ArrayList<>();
+        NodeList childrenNodeList = parent.getChildNodes();
+
+        children.addAll(toElementList(childrenNodeList));
+        return children;
+    }
 }

@@ -80,6 +80,7 @@
                                 </goals>
                                 <configuration>
                                     <jMeterProcessJVMSettings>
+                                        <otherElement/>
                                         <arguments>
                                             <argument>-Dsl.enableUpgrade=false</argument>
                                             <argument>-Dsl.customerId=fake-customer-id-123</argument>

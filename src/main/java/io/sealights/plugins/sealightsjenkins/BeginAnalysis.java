@@ -40,6 +40,8 @@ import java.util.logging.Level;
 @ExportedBean
 public class BeginAnalysis extends Builder {
 
+    static final String MACHINE_TEMP_FOLDER = System.getProperty("java.io.tmpdir");
+
     private String appName;
     private String moduleName;
     private String branch;
@@ -657,7 +659,7 @@ public class BeginAnalysis extends Builder {
         if (!StringUtils.isNullOrEmpty(filesStorage)){
             return PathUtils.join(filesStorage, fileName);
         }else{
-            return PathUtils.join(System.getProperty("java.io.tmpdir"), "sealights", fileName);
+            return PathUtils.join(MACHINE_TEMP_FOLDER , "sealights", fileName);
         }
     }
 

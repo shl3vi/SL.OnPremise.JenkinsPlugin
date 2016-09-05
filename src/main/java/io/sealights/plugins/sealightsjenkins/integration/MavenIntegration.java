@@ -4,6 +4,8 @@ import hudson.FilePath;
 import hudson.model.Computer;
 import hudson.remoting.VirtualChannel;
 import io.sealights.plugins.sealightsjenkins.entities.FileBackupInfo;
+import io.sealights.plugins.sealightsjenkins.integration.plugins.SealightsMavenPluginIntegrator;
+import io.sealights.plugins.sealightsjenkins.integration.plugins.external.LazerycodeJMeterPluginIntegrator;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 
 import java.io.IOException;
@@ -88,7 +90,15 @@ public class MavenIntegration {
     }
 
     private void integrateToAllProfiles(FileBackupInfo fileBackupInfo, PomFile pomFile) {
-        pomFile.integrate(this.mavenIntegrationInfo);
+        SealightsMavenPluginIntegrator sealightsMavenPluginIntegrator
+                = new SealightsMavenPluginIntegrator(log, mavenIntegrationInfo, pomFile);
+        sealightsMavenPluginIntegrator.integrate();
+
+        LazerycodeJMeterPluginIntegrator jmeterPluginIntegratorLazerycode
+                = new LazerycodeJMeterPluginIntegrator(log, mavenIntegrationInfo, pomFile);
+        jmeterPluginIntegratorLazerycode.integrate();
+
+        pomFile.integrate();
         savePom(fileBackupInfo, pomFile);
     }
 
@@ -107,10 +117,5 @@ public class MavenIntegration {
             log.error("Failed saving POM file. Error:", e);
         }
     }
-
-
-
-
-
 
 }

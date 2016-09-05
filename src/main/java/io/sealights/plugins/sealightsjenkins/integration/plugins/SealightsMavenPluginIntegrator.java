@@ -2,7 +2,7 @@ package io.sealights.plugins.sealightsjenkins.integration.plugins;
 
 import io.sealights.plugins.sealightsjenkins.ExecutionType;
 import io.sealights.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
-import io.sealights.plugins.sealightsjenkins.integration.PomXmlUtils;
+import io.sealights.plugins.sealightsjenkins.integration.PomFile;
 import io.sealights.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import org.w3c.dom.Document;
@@ -17,19 +17,21 @@ import java.util.TreeMap;
 import static io.sealights.plugins.sealightsjenkins.utils.StringUtils.isNullOrEmpty;
 
 /**
- * Created by Nadav on 6/2/2016.
+ * This class helps add the sealights-maven plugin to a pom file.
  */
-public class SealightsMavenPluginHelper extends PluginIntegrationHelper {
+public class SealightsMavenPluginIntegrator extends PluginIntegrator {
     private String overridePluginVersion;
     private SeaLightsPluginInfo pluginInfo;
+    private PomFile pomFile;
     private Document pomDoc;
     private Logger logger;
 
-    public SealightsMavenPluginHelper(Logger logger, MavenIntegrationInfo mavenIntegrationInfo, Document pomDoc) {
+    public SealightsMavenPluginIntegrator(Logger logger, MavenIntegrationInfo mavenIntegrationInfo, PomFile pomFile) {
+        this.logger = logger;
         this.pluginInfo = mavenIntegrationInfo.getSeaLightsPluginInfo();
         this.overridePluginVersion = mavenIntegrationInfo.getOverridePluginVersion();
-        this.pomDoc = pomDoc;
-        this.logger = logger;
+        this.pomFile =  pomFile;
+        this.pomDoc = pomFile.getDocument();
     }
 
     private String toPluginText() {
@@ -181,9 +183,9 @@ public class SealightsMavenPluginHelper extends PluginIntegrationHelper {
     }
 
     private void integrateToAllProfiles(String pluginBodyAsXml, Element parent) throws XPathExpressionException {
-        List<Element> profilesList = PomXmlUtils.getElements("profiles", parent);
+        List<Element> profilesList = pomFile.getElements("profiles", parent);
         for (Element profiles : profilesList) {
-            List<Element> profileList = PomXmlUtils.getElements("profile", profiles);
+            List<Element> profileList = pomFile.getElements("profile", profiles);
             for (Element profile : profileList) {
                 integrate(pluginBodyAsXml, profile);
             }
@@ -191,14 +193,14 @@ public class SealightsMavenPluginHelper extends PluginIntegrationHelper {
     }
 
     private void integrate(String pluginBodyAsXml, Element parent) throws XPathExpressionException {
-        List<Element> buildElements = PomXmlUtils.getOrCreateElements("build", parent, pomDoc);
+        List<Element> buildElements = pomFile.getOrCreateElements("build", parent);
 
         for (Element buildElement : buildElements) {
-            PomXmlUtils.verifyPluginsElement(pluginBodyAsXml, buildElement, pomDoc);
+            pomFile.verifyPluginsElement(pluginBodyAsXml, buildElement);
 
-            if (PomXmlUtils.isNodeExist("pluginManagement", buildElement)) {
-                List<Element> pluginManagementElements = PomXmlUtils.getOrCreateElements("pluginManagement", buildElement, pomDoc);
-                PomXmlUtils.verifyPluginsElement(pluginBodyAsXml, pluginManagementElements.get(0), pomDoc);
+            if (pomFile.isNodeExist("pluginManagement", buildElement)) {
+                List<Element> pluginManagementElements = pomFile.getOrCreateElements("pluginManagement", buildElement);
+                pomFile.verifyPluginsElement(pluginBodyAsXml, pluginManagementElements.get(0));
             }
         }
     }

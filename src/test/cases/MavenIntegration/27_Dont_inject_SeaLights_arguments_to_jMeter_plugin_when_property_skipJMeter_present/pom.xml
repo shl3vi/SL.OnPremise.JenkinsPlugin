@@ -5,6 +5,10 @@
     <artifactId>io.demo.junit-integration</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
+    <properties>
+        <sealights.jmeter-maven-plugin.skip>true</sealights.jmeter-maven-plugin.skip>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>io.sealights.on-premise.agents</groupId>
@@ -41,8 +45,6 @@
                                 </goals>
                                 <configuration>
                                     <jMeterProcessJVMSettings>
-                                        <arguments>
-                                        </arguments>
                                     </jMeterProcessJVMSettings>
                                 </configuration>
                             </execution>

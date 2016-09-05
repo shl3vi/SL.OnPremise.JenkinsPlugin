@@ -41,8 +41,6 @@
                                 </goals>
                                 <configuration>
                                     <jMeterProcessJVMSettings>
-                                        <arguments>
-                                        </arguments>
                                     </jMeterProcessJVMSettings>
                                 </configuration>
                             </execution>

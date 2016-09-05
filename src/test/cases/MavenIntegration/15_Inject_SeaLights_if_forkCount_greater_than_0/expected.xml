@@ -42,6 +42,7 @@
                             <filesincluded>*.class</filesincluded>
                             <buildScannerJar>c:\fake-build-scanner.jar</buildScannerJar>
                             <testListenerJar>c:\fake-test-listener.jar</testListenerJar>
+                            <fixedTestListenerPath>fixed-test-listener-path</fixedTestListenerPath>
                             <logLevel>INFO</logLevel>
                             <logFolder>c:\fake-log-folder</logFolder>
                             <metadata>
@@ -92,6 +93,7 @@
                     <filesincluded>*.class</filesincluded>
                     <buildScannerJar>c:\fake-build-scanner.jar</buildScannerJar>
                     <testListenerJar>c:\fake-test-listener.jar</testListenerJar>
+                    <fixedTestListenerPath>fixed-test-listener-path</fixedTestListenerPath>
                     <logLevel>INFO</logLevel>
                     <logFolder>c:\fake-log-folder</logFolder>
                     <metadata>

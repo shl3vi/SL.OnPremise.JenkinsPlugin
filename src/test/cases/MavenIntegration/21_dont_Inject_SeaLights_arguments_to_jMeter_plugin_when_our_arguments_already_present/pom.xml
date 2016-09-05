@@ -19,9 +19,6 @@
             <plugin>
                 <groupId>com.lazerycode.jmeter</groupId>
                 <artifactId>jmeter-maven-plugin</artifactId>
-                <configuration>
-                    <suppressJMeterOutput>false</suppressJMeterOutput>
-                </configuration>
                 <executions>
                     <execution>
                         <id>jmeter-tests</id>
@@ -33,16 +30,16 @@
                             <jMeterProcessJVMSettings>
                                 <arguments>
                                     <argument>-Dsl.enableUpgrade=false</argument>
-                                    <argument>-Dsl.customerId=fake-customer-id-123</argument>
-                                    <argument>-Dsl.server=http://fake-server-url.com</argument>
-                                    <argument>-Dsl.appName=fake-app-name</argument>
-                                    <argument>-Dsl.moduleName=fake-module-name</argument>
-                                    <argument>-Dsl.buildName=1</argument>
-                                    <argument>-Dsl.branchName=fake-branch</argument>
-                                    <argument>-Dsl.includes=com.fake.*</argument>
-                                    <argument>-Dsl.excludes=*FastClassByGuice*, *ByCGLIB*, *EnhancerByMockitoWithCGLIB*, *EnhancerBySpringCGLIB*, com.fake.excluded.*</argument>
-                                    <argument>-Dsl.classLoadersExcluded=org.powermock.core.classloader.MockClassLoader</argument>
-                                    <argument>-javaagent:null</argument>
+                                    <argument>-Dsl.customerId=fake-customer-id-123-OLD</argument>
+                                    <argument>-Dsl.server=http://fake-server-url.com-OLD</argument>
+                                    <argument>-Dsl.appName=fake-app-name-OLD</argument>
+                                    <argument>-Dsl.moduleName=fake-module-name-OLD</argument>
+                                    <argument>-Dsl.buildName=1-OLD</argument>
+                                    <argument>-Dsl.branchName=fake-branch-OLD</argument>
+                                    <argument>-Dsl.includes=com.fake.*-OLD</argument>
+                                    <argument>-Dsl.excludes=*FastClassByGuice*, *ByCGLIB*, *EnhancerByMockitoWithCGLIB*, *EnhancerBySpringCGLIB*, com.fake.excluded.*-OLD</argument>
+                                    <argument>-Dsl.classLoadersExcluded=org.powermock.core.classloader.MockClassLoader-OLD</argument>
+                                    <argument>-javaagent:fixed-test-listener-path-OLD</argument>
                                 </arguments>
                             </jMeterProcessJVMSettings>
                         </configuration>
