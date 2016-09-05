@@ -49,7 +49,7 @@ public class PomFile {
         }
     }
 
-    public void integrate() {
+    public void verifySurefireArgLineModificationSafe() {
         try {
             verifySurefireArgLineModification(getDocumentElement());
         } catch (Exception e) {
@@ -253,7 +253,7 @@ public class PomFile {
         return childElements;
     }
 
-    private List<Element> toElementList(NodeList nodes){
+    private List<Element> toElementList(NodeList nodes) {
         List<Element> childElements = new ArrayList<Element>();
 
         for (int i = 0; i < nodes.getLength(); i++) {
@@ -291,7 +291,7 @@ public class PomFile {
             }
 
         } catch (SAXException | IOException | ParserConfigurationException e) {
-            e.printStackTrace();
+            log.error("Unable to verify that 'plugins' element exists in '" + parentElement.getBaseURI() + "'. Error: ", e);
         }
     }
 
@@ -301,13 +301,20 @@ public class PomFile {
         pluginsElement.appendChild(pluginElement);
     }
 
-    public Element createElement(String XmlAsString) throws ParserConfigurationException, IOException, SAXException {
-        Element element = DocumentBuilderFactory
-                .newInstance()
-                .newDocumentBuilder()
-                .parse(new ByteArrayInputStream(XmlAsString.getBytes(Charset.forName("UTF-8"))))
-                .getDocumentElement();
-        element = (Element) document.importNode(element, true);
+    public Element createElement(String xmlAsString) {
+        Element element = null;
+        try {
+            element = DocumentBuilderFactory
+                    .newInstance()
+                    .newDocumentBuilder()
+                    .parse(new ByteArrayInputStream(xmlAsString.getBytes(Charset.forName("UTF-8"))))
+                    .getDocumentElement();
+
+
+            element = (Element) document.importNode(element, true);
+        } catch (Exception e) {
+            log.error("Unable to parse string '"+xmlAsString+"' to xml element. Error: ", e);
+        }
         return element;
     }
 

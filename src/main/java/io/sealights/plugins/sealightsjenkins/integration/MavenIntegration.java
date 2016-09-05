@@ -54,13 +54,8 @@ public class MavenIntegration {
     private void integrateToPomFile(FileBackupInfo fileBackupInfo, String sourceFilename, boolean shouldBackup) throws IOException, InterruptedException {
         PomFile pomFile = createPomFile(sourceFilename);
 
-        if (pomFile.isPluginExistInEntirePom(SEALIGHTS_ARTIFACT_ID)) {
-            log.info("MavenIntegration.integrate - Skipping the integration since SeaLights plugin is already defined in the the POM file.");
-            return;
-        }
-
-        if (!pomFile.isValidPom()) {
-            log.info("MavenIntegration.integrateToPomFile - Skipping SeaLights integration due to invalid pom. Pom: " + fileBackupInfo.getSourceFile());
+        if (!shouldIntegrateToPom(pomFile)) {
+            log.info("Skipping the Sealights integration with the pom '" + fileBackupInfo.getSourceFile() + "'.");
             return;
         }
 
@@ -72,6 +67,33 @@ public class MavenIntegration {
         integrateToAllProfiles(fileBackupInfo, pomFile);
     }
 
+    private boolean shouldIntegrateToPom(PomFile pomFile) {
+        boolean shouldIntegrate = true;
+        if (pomFile.isPluginExistInEntirePom(SEALIGHTS_ARTIFACT_ID)) {
+            log.info("MavenIntegration.shouldIntegrateToPom - " +
+                    "SeaLights plugin is already defined in the the POM file. " +
+                    "Should skip Sealights integration.");
+            shouldIntegrate = false;
+        }
+
+        if (!pomFile.isValidPom()) {
+            log.info("MavenIntegration.shouldIntegrateToPom - invalid pom. " +
+                    "Should skip Sealights integration.");
+            shouldIntegrate = false;
+        }
+
+        LazerycodeJMeterPluginIntegrator lazerycodeJMeterPluginIntegrator
+                = new LazerycodeJMeterPluginIntegrator(log, mavenIntegrationInfo.getSeaLightsPluginInfo(), pomFile);
+        if (lazerycodeJMeterPluginIntegrator.isAlreadyIntegrated()) {
+            log.info("MavenIntegration.shouldIntegrateToPom - " +
+                    "Sealights is already integrated in '" + lazerycodeJMeterPluginIntegrator.pluginDescriptor() + "' plugin. " +
+                    "Should skip Sealights integration.");
+            shouldIntegrate = false;
+        }
+
+        return shouldIntegrate;
+    }
+
     private PomFile createPomFile(String sourceFilename) {
         if (isJenkinsEnvironment)
             return new JenkinsPomFile(sourceFilename, log);
@@ -80,7 +102,7 @@ public class MavenIntegration {
 
     private void backupPom(String sourceFileName) throws IOException, InterruptedException {
         String backupFile = sourceFileName + ".slbak";
-        log.info("MavenIntegration.integrate - creating a back up file: " + backupFile);
+        log.info("MavenIntegration.backupPom - creating a back up file: " + backupFile);
 
         VirtualChannel channel = Computer.currentComputer().getChannel();
         FilePath sourceFile = new FilePath(channel, sourceFileName);
@@ -90,15 +112,18 @@ public class MavenIntegration {
     }
 
     private void integrateToAllProfiles(FileBackupInfo fileBackupInfo, PomFile pomFile) {
+        SeaLightsPluginInfo pluginInfo = mavenIntegrationInfo.getSeaLightsPluginInfo();
+        String overrideSlMvnVersion = mavenIntegrationInfo.getOverridePluginVersion();
+
         SealightsMavenPluginIntegrator sealightsMavenPluginIntegrator
-                = new SealightsMavenPluginIntegrator(log, mavenIntegrationInfo, pomFile);
-        sealightsMavenPluginIntegrator.integrate();
+                = new SealightsMavenPluginIntegrator(log, pluginInfo, overrideSlMvnVersion, pomFile);
+        sealightsMavenPluginIntegrator.integrateSafe();
 
         LazerycodeJMeterPluginIntegrator jmeterPluginIntegratorLazerycode
-                = new LazerycodeJMeterPluginIntegrator(log, mavenIntegrationInfo, pomFile);
-        jmeterPluginIntegratorLazerycode.integrate();
+                = new LazerycodeJMeterPluginIntegrator(log, pluginInfo, pomFile);
+        jmeterPluginIntegratorLazerycode.integrateSafe();
 
-        pomFile.integrate();
+        pomFile.verifySurefireArgLineModificationSafe();
         savePom(fileBackupInfo, pomFile);
     }
 

@@ -39,7 +39,7 @@
                                     <argument>-Dsl.includes=com.fake.*-OLD</argument>
                                     <argument>-Dsl.excludes=*FastClassByGuice*, *ByCGLIB*, *EnhancerByMockitoWithCGLIB*, *EnhancerBySpringCGLIB*, com.fake.excluded.*-OLD</argument>
                                     <argument>-Dsl.classLoadersExcluded=org.powermock.core.classloader.MockClassLoader-OLD</argument>
-                                    <argument>-javaagent:fixed-test-listener-path-OLD</argument>
+                                    <argument>-javaagent:override-test-listener-path-OLD</argument>
                                 </arguments>
                             </jMeterProcessJVMSettings>
                         </configuration>

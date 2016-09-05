@@ -40,8 +40,6 @@ import java.util.logging.Level;
 @ExportedBean
 public class BeginAnalysis extends Builder {
 
-    static final String MACHINE_TEMP_FOLDER = System.getProperty("java.io.tmpdir");
-
     private String appName;
     private String moduleName;
     private String branch;
@@ -646,20 +644,22 @@ public class BeginAnalysis extends Builder {
 
     private String createFixedTestListenerPath(){
         String fileName = "java-test-listener_" + UUID.randomUUID() + ".jar";
-        return createFixedPath(fileName);
+        return createAbsolutePathInFilesStorage(fileName);
     }
 
     private String createFixedMetaJsonPath(){
         String fileName = "metadata_" + UUID.randomUUID() + ".json";
-        return createFixedPath(fileName);
+        return createAbsolutePathInFilesStorage(fileName);
     }
 
-    private String createFixedPath(String fileName){
+    private String createAbsolutePathInFilesStorage(String fileName){
+        String machineTmpFolder = System.getProperty("java.io.tmpdir");
+
         String filesStorage = getDescriptor().getFilesStorage();
         if (!StringUtils.isNullOrEmpty(filesStorage)){
             return PathUtils.join(filesStorage, fileName);
         }else{
-            return PathUtils.join(MACHINE_TEMP_FOLDER , "sealights", fileName);
+            return PathUtils.join(machineTmpFolder , "sealights", fileName);
         }
     }
 

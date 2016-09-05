@@ -1,7 +1,6 @@
 package io.sealights.plugins.sealightsjenkins.integration.plugins;
 
 import io.sealights.plugins.sealightsjenkins.ExecutionType;
-import io.sealights.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
 import io.sealights.plugins.sealightsjenkins.integration.PomFile;
 import io.sealights.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
@@ -22,23 +21,22 @@ import static io.sealights.plugins.sealightsjenkins.utils.StringUtils.isNullOrEm
 public class SealightsMavenPluginIntegrator extends PluginIntegrator {
     private String overridePluginVersion;
     private SeaLightsPluginInfo pluginInfo;
-    private PomFile pomFile;
     private Document pomDoc;
-    private Logger logger;
 
-    public SealightsMavenPluginIntegrator(Logger logger, MavenIntegrationInfo mavenIntegrationInfo, PomFile pomFile) {
-        this.logger = logger;
-        this.pluginInfo = mavenIntegrationInfo.getSeaLightsPluginInfo();
-        this.overridePluginVersion = mavenIntegrationInfo.getOverridePluginVersion();
-        this.pomFile =  pomFile;
+
+    public SealightsMavenPluginIntegrator
+            (Logger logger, SeaLightsPluginInfo pluginInfo, String overridePluginVersion, PomFile pomFile) {
+        super(logger, pomFile);
+        this.pluginInfo = pluginInfo;
+        this.overridePluginVersion = overridePluginVersion;
         this.pomDoc = pomFile.getDocument();
     }
 
     private String toPluginText() {
 
         StringBuilder plugin = new StringBuilder();
-        plugin.append("<groupId>"+groupId()+"</groupId>");
-        plugin.append("<artifactId>"+artifactId()+"</artifactId>");
+        plugin.append("<groupId>" + groupId() + "</groupId>");
+        plugin.append("<artifactId>" + artifactId() + "</artifactId>");
         if (!isNullOrEmpty(overridePluginVersion)) {
             plugin.append("<version>" + overridePluginVersion + "</version>");
         }
@@ -49,7 +47,7 @@ public class SealightsMavenPluginIntegrator extends PluginIntegrator {
         return plugin.toString();
     }
 
-    private StringBuilder addConfigurationToPluginText(StringBuilder plugin){
+    private StringBuilder addConfigurationToPluginText(StringBuilder plugin) {
         plugin.append("<configuration>");
 
         if (!pluginInfo.isEnabled()) {
@@ -115,13 +113,13 @@ public class SealightsMavenPluginIntegrator extends PluginIntegrator {
         return plugin;
     }
 
-    private StringBuilder addMetadataToConfigurationInPluginText(StringBuilder plugin){
+    private StringBuilder addMetadataToConfigurationInPluginText(StringBuilder plugin) {
         Map<String, String> metadata = new TreeMap<String, String>(pluginInfo.getMetadata());
-        if (!(metadata == null || metadata.isEmpty())){
+        if (!(metadata == null || metadata.isEmpty())) {
             plugin.append("<metadata>");
             Iterator it = metadata.entrySet().iterator();
             while (it.hasNext()) {
-                Map.Entry<String, String> pair = (Map.Entry)it.next();
+                Map.Entry<String, String> pair = (Map.Entry) it.next();
                 tryAppendValue(plugin, pair.getValue(), pair.getKey());
             }
             plugin.append("</metadata>");
@@ -130,7 +128,7 @@ public class SealightsMavenPluginIntegrator extends PluginIntegrator {
         return plugin;
     }
 
-    private StringBuilder addExecutionsToPluginText(StringBuilder plugin){
+    private StringBuilder addExecutionsToPluginText(StringBuilder plugin) {
         plugin.append("<executions>");
 
         boolean shouldExecuteScanner = ExecutionType.FULL.equals(pluginInfo.getExecutionType());
@@ -170,16 +168,12 @@ public class SealightsMavenPluginIntegrator extends PluginIntegrator {
     }
 
     @Override
-    public void integrate() {
-        try {
-            String pluginBodyAsXml = toPluginText();
+    protected void integrate() throws Exception {
+        String pluginBodyAsXml = toPluginText();
 
-            integrate(pluginBodyAsXml, pomDoc.getDocumentElement());
-            integrateToAllProfiles(pluginBodyAsXml, pomDoc.getDocumentElement());
-            logger.debug("Integrated to plugin '"+pluginDescriptor()+"'.");
-        }catch (Exception e){
-            logger.error("Unable to integrate to plugin '"+pluginDescriptor()+"'. Error:", e);
-        }
+        integrate(pluginBodyAsXml, pomDoc.getDocumentElement());
+        integrateToAllProfiles(pluginBodyAsXml, pomDoc.getDocumentElement());
+        logger.debug("Integrated to plugin '" + pluginDescriptor() + "'.");
     }
 
     private void integrateToAllProfiles(String pluginBodyAsXml, Element parent) throws XPathExpressionException {

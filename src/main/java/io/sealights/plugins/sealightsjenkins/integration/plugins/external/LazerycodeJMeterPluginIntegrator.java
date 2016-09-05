@@ -1,16 +1,14 @@
 package io.sealights.plugins.sealightsjenkins.integration.plugins.external;
 
 import io.sealights.plugins.sealightsjenkins.LogLevel;
-import io.sealights.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
+import io.sealights.plugins.sealightsjenkins.integration.Commons;
 import io.sealights.plugins.sealightsjenkins.integration.PomFile;
 import io.sealights.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
 import io.sealights.plugins.sealightsjenkins.integration.plugins.PluginIntegrator;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
-import io.sealights.plugins.sealightsjenkins.utils.PathUtils;
 import io.sealights.plugins.sealightsjenkins.utils.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.xml.sax.SAXParseException;
 
 import javax.xml.xpath.XPathExpressionException;
 import java.util.ArrayList;
@@ -24,32 +22,44 @@ import static io.sealights.plugins.sealightsjenkins.utils.StringUtils.isNullOrEm
 public class LazerycodeJMeterPluginIntegrator extends PluginIntegrator {
 
     private SeaLightsPluginInfo pluginInfo;
-    private PomFile pomFile;
     private Document pomDoc;
-    private Logger logger;
 
-    public LazerycodeJMeterPluginIntegrator(Logger logger, MavenIntegrationInfo mavenIntegrationInfo, PomFile pomFile) {
-        this.pluginInfo = mavenIntegrationInfo.getSeaLightsPluginInfo();
-        this.pomFile = pomFile;
+    public LazerycodeJMeterPluginIntegrator(Logger logger, SeaLightsPluginInfo pluginInfo, PomFile pomFile) {
+        super(logger, pomFile);
+        this.pluginInfo = pluginInfo;
         this.pomDoc = pomFile.getDocument();
-        this.logger = logger;
     }
 
+    /**
+     * @return 'argument' elements list.
+     * <p>
+     * sample:
+     * <argument>-Dsl.enableUpgrade=false</argument>
+     * <argument>-Dsl.customerId=fake-customer-id-123</argument>
+     * <argument>-Dsl.server=http://fake-server-url.com</argument>
+     * <argument>-Dsl.appName=fake-app-name</argument>
+     * <argument>-Dsl.moduleName=fake-module-name</argument>
+     * <argument>-Dsl.buildName=1</argument>
+     * <argument>-Dsl.branchName=fake-branch</argument>
+     * <argument>-Dsl.includes=com.fake.*</argument>
+     * <argument>-Dsl.excludes=*FastClassByGuice*, *ByCGLIB*, *EnhancerByMockitoWithCGLIB*, *EnhancerBySpringCGLIB*, com.fake.excluded.*</argument>
+     * <argument>-Dsl.classLoadersExcluded=org.powermock.core.classloader.MockClassLoader</argument>
+     * <argument>-javaagent:override-test-listener-path</argument>
+     * @throws Exception
+     */
     private List<Element> createArgumentElementList() throws Exception {
 
         List<Element> argumentElementList = new ArrayList<>();
 
         List<String> slArgumentList = createSLArgumentList(pluginInfo, "jMeter");
-        for (String arg : slArgumentList){
-            try {
-                String xmlArg = "<argument>" + arg + "</argument>";
-                Element e = pomFile.createElement(xmlArg);
-                argumentElementList.add(e);
-            }catch (SAXParseException e){
-                logger.error("Unable to parse string '<argument>"+arg+"</argument>' to xml element. Reason: "+e.getMessage());
-            }catch (Exception e){
-                logger.error("Can't add argument '"+arg+"' to the jMeter plugin. Error:", e);
+        for (String arg : slArgumentList) {
+            String xmlArg = "<argument>" + arg + "</argument>";
+            Element argElement = pomFile.createElement(xmlArg);
+            if (argElement == null) {
+                logger.warning("Unable to add argument element '" + xmlArg + "' to '" + pluginDescriptor() + "' plugin.");
+                continue;
             }
+            argumentElementList.add(argElement);
         }
 
         return argumentElementList;
@@ -68,47 +78,29 @@ public class LazerycodeJMeterPluginIntegrator extends PluginIntegrator {
     private final boolean INCLUDE_ALL_DESCENDANTS = true;
 
     @Override
-    public void integrate() {
-        try {
-            if (shouldSkipIntegration()){
-                logger.info("'"+skipPropertyName()+"' property is set to true. skipping this plugin integration.");
-                return;
-            }
-
-            List<Element> jMeterPlugins = pomFile.getPluginsOccurrencesInParent(artifactId(), pomDoc.getDocumentElement(), INCLUDE_ALL_DESCENDANTS);
-            for (Element jMeterPlugin : jMeterPlugins){
-                Element arguments = getArgumentsElement(jMeterPlugin);
-                if (arguments == null)
-                    continue;
-                boolean isSealightsConfigured = isSealightsAlreadyConfigured(arguments);
-                if (isSealightsConfigured)
-                    continue;
-                List<Element> slArgumentList = createArgumentElementList();
-                for (Element slArgument : slArgumentList){
-                    arguments.appendChild(slArgument);
-                }
-                logger.debug("Integrated to plugin '"+pluginDescriptor()+"'.");
-            }
-        }catch (Exception e){
-            logger.error("Unable to integrate to plugin '"+pluginDescriptor()+"'. Error:", e);
+    protected void integrate() throws Exception {
+        if (shouldSkipIntegration()) {
+            logger.info("'" + skipPropertyName() + "' property is set to 'true'. " +
+                    "Skipping '" + pluginDescriptor() + "' plugin integration.");
+            return;
         }
-    }
 
-    private boolean shouldSkipIntegration() throws XPathExpressionException {
-        String skipPropertyName = skipPropertyName();
-        List<Element> propertyElementList = pomFile.getProperties();
-
-        for (Element propertyElement : propertyElementList){
-            if (!skipPropertyName.equals(propertyElement.getTagName()))
+        List<Element> jMeterPlugins = pomFile.getPluginsOccurrencesInParent(artifactId(), pomDoc.getDocumentElement(), INCLUDE_ALL_DESCENDANTS);
+        for (Element jMeterPlugin : jMeterPlugins) {
+            Element arguments = getOrCreateArgumentsElement(jMeterPlugin);
+            if (arguments == null) {
+                logger.warning("Unable to find/create 'jMeterProcessJVMSettings/arguments' element in '" + jMeterPlugin.getBaseURI() + "'");
                 continue;
-            if ("true".equalsIgnoreCase(propertyElement.getTextContent()))
-                return true;
+            }
+            List<Element> slArgumentList = createArgumentElementList();
+            for (Element slArgument : slArgumentList) {
+                arguments.appendChild(slArgument);
+            }
+            logger.debug("Integrated to plugin '" + pluginDescriptor() + "'.");
         }
-
-        return false;
     }
 
-    private Element getArgumentsElement(Element jMeterPlugin){
+    private Element getOrCreateArgumentsElement(Element jMeterPlugin) {
         try {
             List<Element> executionsElementList = pomFile.getOrCreateElements("executions", jMeterPlugin);
             List<Element> executionElementList = pomFile.getOrCreateElements("execution", executionsElementList.get(0));
@@ -117,7 +109,7 @@ public class LazerycodeJMeterPluginIntegrator extends PluginIntegrator {
             List<Element> arguments = pomFile.getOrCreateElements("arguments", jMeterProcessJVMSettings.get(0));
             if (!arguments.isEmpty())
                 return arguments.get(0);
-        }catch (Exception e){
+        } catch (Exception e) {
             logger.error("Unable to find or create 'arguments' tag in jMeter plugin. Error:", e);
         }
 
@@ -128,7 +120,7 @@ public class LazerycodeJMeterPluginIntegrator extends PluginIntegrator {
         List<Element> argumentElementList = pomFile.getElements("argument", argumentsElement);
         for (Element e : argumentElementList) {
             String arg = e.getTextContent();
-            if (arg.contains("-Dsl.")) {
+            if (arg.contains("-Dsl.customerId")) {
                 logger.info("Found sealights argument '" + arg + "' in '" + pluginDescriptor() + "' plugin. " +
                         "Assuming sealights is already configured. " +
                         "Skipping this plugin integration.");
@@ -144,87 +136,89 @@ public class LazerycodeJMeterPluginIntegrator extends PluginIntegrator {
         List<String> argumentList = new ArrayList<>();
 
         if (!pluginInfo.isEnabled()) {
-            tryAppendValue(argumentList, "sl.enabled", "false");
+            tryAppendValue(argumentList, Commons.ENABLED_PROPERTY, "false");
         }
 
-        tryAppendValue(argumentList, "sl.enableUpgrade", "false");
-        tryAppendValue(argumentList, "sl.customerId", pluginInfo.getCustomerId());
-        tryAppendValue(argumentList, "sl.server", pluginInfo.getServerUrl());
-        tryAppendValue(argumentList, "sl.proxy", pluginInfo.getProxy());
+        tryAppendValue(argumentList, Commons.ENABLE_UPGRADE_PROPERTY, "false");
+        tryAppendValue(argumentList, Commons.CUSTOMER_ID_PROPERTY, pluginInfo.getCustomerId());
+        tryAppendValue(argumentList, Commons.SERVER_PROPERTY, pluginInfo.getServerUrl());
+        tryAppendValue(argumentList, Commons.PROXY_PROPERTY, pluginInfo.getProxy());
 
         String appName = pluginInfo.getAppName();
         if ("Build Per Module".equalsIgnoreCase(pluginInfo.getBuildStrategy().getDisplayName())) {
             appName = "[" + pluginInfo.getAppName() + "] - " + pluginInfo.getModuleName();
         }
-        tryAppendValue(argumentList, "sl.appName", appName);
+        tryAppendValue(argumentList, Commons.APP_NAME_PROPERTY, appName);
 
-        tryAppendValue(argumentList, "sl.moduleName", pluginInfo.getModuleName());
-        tryAppendValue(argumentList, "sl.buildName", pluginInfo.getBuildName());
-        tryAppendValue(argumentList, "sl.branchName", pluginInfo.getBranchName());
-        tryAppendValue(argumentList, "sl.includes", pluginInfo.getPackagesIncluded());
+        tryAppendValue(argumentList, Commons.MODULE_NAME_PROPERTY, pluginInfo.getModuleName());
+        tryAppendValue(argumentList, Commons.BUILD_NAME_PROPERTY, pluginInfo.getBuildName());
+        tryAppendValue(argumentList, Commons.BRANCH_NAME_PROPERTY, pluginInfo.getBranchName());
+        tryAppendValue(argumentList, Commons.INCLUDES_PROPERTY, pluginInfo.getPackagesIncluded());
 
         String packagesExcluded = "*FastClassByGuice*, *ByCGLIB*, *EnhancerByMockitoWithCGLIB*, *EnhancerBySpringCGLIB*";
         if (!isNullOrEmpty(pluginInfo.getPackagesExcluded()))
             packagesExcluded = packagesExcluded + ", " + pluginInfo.getPackagesExcluded();
-        tryAppendValue(argumentList, "sl.excludes", packagesExcluded);
+        tryAppendValue(argumentList, Commons.EXCLUDES_PROPERTY, packagesExcluded);
 
         String classLoaderExcluded = "org.powermock.core.classloader.MockClassLoader";
         if (!isNullOrEmpty(pluginInfo.getClassLoadersExcluded()))
             classLoaderExcluded = classLoaderExcluded + ", " + pluginInfo.getClassLoadersExcluded();
-        tryAppendValue(argumentList, "sl.classLoadersExcluded", classLoaderExcluded);
+        tryAppendValue(argumentList, Commons.CLASS_LOADERS_EXCLUDED_PROPERTY, classLoaderExcluded);
 
-        tryAppendValue(argumentList, "sl.fileStorage", pluginInfo.getFilesStorage());
-        tryAppendValue(argumentList, "sl.config.file", pluginInfo.getListenerConfigFile());
-        tryAppendValue(argumentList, "sl.environmentName", pluginInfo.getEnvironment());
+        tryAppendValue(argumentList, Commons.FILES_STORAGE_PROPERTY, pluginInfo.getFilesStorage());
+        tryAppendValue(argumentList, Commons.CONFIG_FILE_PROPERTY, pluginInfo.getListenerConfigFile());
+        tryAppendValue(argumentList, Commons.ENVIRONMENT_NAME_PROPERTY, pluginInfo.getEnvironment());
 
-        tryAppendValue(argumentList, "sl.pathToMetaJson", pluginInfo.getFixedMetaJsonPath());
+        tryAppendValue(argumentList, Commons.PATH_TO_META_JSON_PROPERTY, pluginInfo.getFixedMetaJsonPath());
 
         if (pluginInfo.isLogEnabled()) {
-            tryAppendValue(argumentList, "sl.log.enabled", "true");
+            tryAppendValue(argumentList, Commons.LOG_ENABLED_PROPERTY, "true");
 
             String logLevel = LogLevel.INFO.name();
             if (pluginInfo.getLogLevel() != null)
                 logLevel = pluginInfo.getLogLevel().name();
-            tryAppendValue(argumentList, "sl.log.level", logLevel);
+            tryAppendValue(argumentList, Commons.LOG_LEVEL_PROPERTY, logLevel);
 
             if (pluginInfo.getLogDestination() != null && "file".equalsIgnoreCase(pluginInfo.getLogDestination().name())) {
-                tryAppendValue(argumentList, "sl.log.toFile", "true");
-                tryAppendValue(argumentList, "sl.log.filename", "test-listener");
-                tryAppendValue(argumentList, "sl.log.folder", detectLogFolder(pluginInfo.getFilesStorage(), pluginInfo.getLogFolder(), logFolderName));
+                tryAppendValue(argumentList, Commons.LOG_TO_FILE_PROPERTY, "true");
+                tryAppendValue(argumentList, Commons.LOG_FILE_NAME_PROPERTY, "test-listener");
+                tryAppendValue(argumentList, Commons.LOG_FOLDER_PROPERTY, pluginInfo.getLogFolder());
             }
         }
 
         String fixedListenerPath = pluginInfo.getFixedTestListenerPath();
-        if (StringUtils.isNullOrEmpty(fixedListenerPath)){
+        if (StringUtils.isNullOrEmpty(fixedListenerPath)) {
             throw new Exception("Unable to add argument '-javaagent' to the plugin. Missing path to the java agent.");
         }
-        String listenerArgument = "-javaagent:"+fixedListenerPath;
+        String listenerArgument = "-javaagent:" + fixedListenerPath;
         argumentList.add(listenerArgument);
 
         return argumentList;
     }
 
-    /**
-     *
-     * @param filesStorage the customer files storage where sealights saves files
-     * @param logFolderPath the path (absolute/relative) to the base folder where the logs will be saved
-     * @param logFolderName the name of the folder at the end of the @logFolderPath where log files are saved
-     * @return The absolute path to the folder where sealights should save the log files
-     */
-    private static String detectLogFolder(String filesStorage, String logFolderPath, String logFolderName){
-        if (PathUtils.isAbsolutePath(logFolderPath)){
-            logFolderPath = PathUtils.join(logFolderPath, logFolderName);
-        }else if (!StringUtils.isNullOrEmpty(filesStorage)){
-            logFolderPath = PathUtils.join(filesStorage, logFolderPath, logFolderName);
-        }else{
-            logFolderPath = PathUtils.join(System.getProperty("java.io.tmpdir"), logFolderPath, logFolderName);
-        }
-        return logFolderPath;
-    }
     private static void tryAppendValue(List<String> argumentList, String property, String value) {
         if (!isNullOrEmpty(value)) {
-            argumentList.add("-D"+property+"="+value);
+            argumentList.add("-D" + property + "=" + value);
         }
+    }
+
+    @Override
+    public boolean isAlreadyIntegrated() {
+        try {
+            List<Element> jMeterPlugins = pomFile.getPluginsOccurrencesInParent(artifactId(), pomDoc.getDocumentElement(), INCLUDE_ALL_DESCENDANTS);
+            for (Element jMeterPlugin : jMeterPlugins) {
+                Element arguments = getOrCreateArgumentsElement(jMeterPlugin);
+                boolean isSealightsConfigured = isSealightsAlreadyConfigured(arguments);
+                if (isSealightsConfigured)
+                    return true;
+            }
+
+        } catch (Exception e) {
+            logger.error("Unable to check if the pom was integrated manually with Sealights. Error: ", e);
+            return true;
+        }
+
+        return false;
     }
 
 }
