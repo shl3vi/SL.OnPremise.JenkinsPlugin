@@ -254,7 +254,7 @@ public class MavenIntegrationTest {
         slInfo.setLogLevel(LogLevel.INFO);
         slInfo.setLogFolder("c:\\fake-log-folder");
 
-        slInfo.setFixedTestListenerPath("override-test-listener-path");
+        slInfo.setOverrideTestListenerPath("/path/to/override-sl-test-listener.jar");
 
         Map<String, String> metadata = new HashMap<>();
         metadata.put("build", "someBuildInfo");

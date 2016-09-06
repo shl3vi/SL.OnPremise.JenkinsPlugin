@@ -15,8 +15,6 @@ import java.io.IOException;
  * Created by Nadav on 4/19/2016.
  */
 public class MavenIntegration {
-    private final static String SEALIGHTS_ARTIFACT_ID = "sealights-maven-plugin";
-
 
     private MavenIntegrationInfo mavenIntegrationInfo;
     private Logger log;
@@ -69,7 +67,12 @@ public class MavenIntegration {
 
     private boolean shouldIntegrateToPom(PomFile pomFile) {
         boolean shouldIntegrate = true;
-        if (pomFile.isPluginExistInEntirePom(SEALIGHTS_ARTIFACT_ID)) {
+        SeaLightsPluginInfo pluginInfo = mavenIntegrationInfo.getSeaLightsPluginInfo();
+        String overrideSlMvnVersion = mavenIntegrationInfo.getOverridePluginVersion();
+
+        SealightsMavenPluginIntegrator sealightsMavenPluginIntegrator
+                = new SealightsMavenPluginIntegrator(log, pluginInfo, overrideSlMvnVersion, pomFile);
+        if (sealightsMavenPluginIntegrator.isAlreadyIntegrated()) {
             log.info("MavenIntegration.shouldIntegrateToPom - " +
                     "SeaLights plugin is already defined in the the POM file. " +
                     "Should skip Sealights integration.");
@@ -83,7 +86,7 @@ public class MavenIntegration {
         }
 
         LazerycodeJMeterPluginIntegrator lazerycodeJMeterPluginIntegrator
-                = new LazerycodeJMeterPluginIntegrator(log, mavenIntegrationInfo.getSeaLightsPluginInfo(), pomFile);
+                = new LazerycodeJMeterPluginIntegrator(log, pluginInfo, pomFile);
         if (lazerycodeJMeterPluginIntegrator.isAlreadyIntegrated()) {
             log.info("MavenIntegration.shouldIntegrateToPom - " +
                     "Sealights is already integrated in '" + lazerycodeJMeterPluginIntegrator.pluginDescriptor() + "' plugin. " +

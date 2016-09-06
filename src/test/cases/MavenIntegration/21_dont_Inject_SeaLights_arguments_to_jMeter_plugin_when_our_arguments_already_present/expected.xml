@@ -38,7 +38,7 @@
                                     <argument>-Dsl.includes=com.fake.*-OLD</argument>
                                     <argument>-Dsl.excludes=*FastClassByGuice*, *ByCGLIB*, *EnhancerByMockitoWithCGLIB*, *EnhancerBySpringCGLIB*, com.fake.excluded.*-OLD</argument>
                                     <argument>-Dsl.classLoadersExcluded=org.powermock.core.classloader.MockClassLoader-OLD</argument>
-                                    <argument>-javaagent:override-test-listener-path-OLD</argument>
+                                    <argument>-javaagent:/path/to/override-sl-test-listener.jar-OLD</argument>
                                 </arguments>
                             </jMeterProcessJVMSettings>
                         </configuration>
@@ -68,7 +68,7 @@
                     <filesincluded>*.class</filesincluded>
                     <buildScannerJar>c:\fake-build-scanner.jar</buildScannerJar>
                     <testListenerJar>c:\fake-test-listener.jar</testListenerJar>
-                    <fixedTestListenerPath>override-test-listener-path</fixedTestListenerPath>
+                    <overrideTestListenerPath>/path/to/override-sl-test-listener.jar</overrideTestListenerPath>
                     <logLevel>INFO</logLevel>
                     <logFolder>c:\fake-log-folder</logFolder>
                     <metadata>

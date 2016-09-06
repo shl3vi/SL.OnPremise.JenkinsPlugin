@@ -32,6 +32,11 @@ public abstract class PluginIntegrator {
 
     public final void integrateSafe(){
         try{
+            if (shouldSkipIntegration()) {
+                logger.info("'" + skipPropertyName() + "' property is set to 'true'. " +
+                        "Skipping '" + pluginDescriptor() + "' plugin integration.");
+                return;
+            }
             integrate();
         }catch (Exception e){
             logger.error("Unable to integrate to plugin '"+pluginDescriptor()+"'. Error:", e);

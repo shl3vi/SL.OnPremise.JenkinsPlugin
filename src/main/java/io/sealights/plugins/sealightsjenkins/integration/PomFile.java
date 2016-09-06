@@ -283,14 +283,18 @@ public class PomFile {
     }
 
     public void verifyPluginsElement(String pluginBodyAsXml, Element parentElement) throws XPathExpressionException {
-        List<Element> pluginsElements = getOrCreateElements("plugins", parentElement);
-        try {
+        if (parentElement == null){
+            log.error("Unable to verify that 'plugins' element exists. The parent element is 'null'");
+            return;
+        }
 
+        try {
+            List<Element> pluginsElements = getOrCreateElements("plugins", parentElement);
             for (Element pluginsElement : pluginsElements) {
                 addPluginToPluginsElement(pluginBodyAsXml, pluginsElement);
             }
 
-        } catch (SAXException | IOException | ParserConfigurationException e) {
+        } catch (Exception e) {
             log.error("Unable to verify that 'plugins' element exists in '" + parentElement.getBaseURI() + "'. Error: ", e);
         }
     }

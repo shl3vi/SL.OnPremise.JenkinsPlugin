@@ -622,8 +622,8 @@ public class BeginAnalysis extends Builder {
         slInfo.setLogFolder(logFolder);
         slInfo.setExecutionType(executionType);
 
-        slInfo.setFixedTestListenerPath(createFixedTestListenerPath());
-        slInfo.setFixedMetaJsonPath(createFixedMetaJsonPath());
+        slInfo.setOverrideTestListenerPath(createOverrideTestListenerPath());
+        slInfo.setOverrideMetaJsonPath(createOverrideMetaJsonPath());
 
         String foldersToSearch;
         String patternsToSearch;
@@ -642,12 +642,12 @@ public class BeginAnalysis extends Builder {
         return slInfo;
     }
 
-    private String createFixedTestListenerPath(){
+    private String createOverrideTestListenerPath(){
         String fileName = "java-test-listener_" + UUID.randomUUID() + ".jar";
         return createAbsolutePathInFilesStorage(fileName);
     }
 
-    private String createFixedMetaJsonPath(){
+    private String createOverrideMetaJsonPath(){
         String fileName = "metadata_" + UUID.randomUUID() + ".json";
         return createAbsolutePathInFilesStorage(fileName);
     }

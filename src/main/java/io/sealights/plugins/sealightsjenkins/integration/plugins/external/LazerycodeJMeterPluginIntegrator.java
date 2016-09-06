@@ -32,8 +32,8 @@ public class LazerycodeJMeterPluginIntegrator extends PluginIntegrator {
 
     /**
      * @return 'argument' elements list.
-     * <p>
-     * sample:
+     *
+     * This function create an XML similar to the following:
      * <argument>-Dsl.enableUpgrade=false</argument>
      * <argument>-Dsl.customerId=fake-customer-id-123</argument>
      * <argument>-Dsl.server=http://fake-server-url.com</argument>
@@ -44,7 +44,8 @@ public class LazerycodeJMeterPluginIntegrator extends PluginIntegrator {
      * <argument>-Dsl.includes=com.fake.*</argument>
      * <argument>-Dsl.excludes=*FastClassByGuice*, *ByCGLIB*, *EnhancerByMockitoWithCGLIB*, *EnhancerBySpringCGLIB*, com.fake.excluded.*</argument>
      * <argument>-Dsl.classLoadersExcluded=org.powermock.core.classloader.MockClassLoader</argument>
-     * <argument>-javaagent:override-test-listener-path</argument>
+     * <argument>-javaagent:/path/to/override-sl-test-listener.jar</argument>
+     *
      * @throws Exception
      */
     private List<Element> createArgumentElementList() throws Exception {
@@ -79,11 +80,6 @@ public class LazerycodeJMeterPluginIntegrator extends PluginIntegrator {
 
     @Override
     protected void integrate() throws Exception {
-        if (shouldSkipIntegration()) {
-            logger.info("'" + skipPropertyName() + "' property is set to 'true'. " +
-                    "Skipping '" + pluginDescriptor() + "' plugin integration.");
-            return;
-        }
 
         List<Element> jMeterPlugins = pomFile.getPluginsOccurrencesInParent(artifactId(), pomDoc.getDocumentElement(), INCLUDE_ALL_DESCENDANTS);
         for (Element jMeterPlugin : jMeterPlugins) {
@@ -169,7 +165,7 @@ public class LazerycodeJMeterPluginIntegrator extends PluginIntegrator {
         tryAppendValue(argumentList, Commons.CONFIG_FILE_PROPERTY, pluginInfo.getListenerConfigFile());
         tryAppendValue(argumentList, Commons.ENVIRONMENT_NAME_PROPERTY, pluginInfo.getEnvironment());
 
-        tryAppendValue(argumentList, Commons.PATH_TO_META_JSON_PROPERTY, pluginInfo.getFixedMetaJsonPath());
+        tryAppendValue(argumentList, Commons.PATH_TO_META_JSON_PROPERTY, pluginInfo.getOverrideMetaJsonPath());
 
         if (pluginInfo.isLogEnabled()) {
             tryAppendValue(argumentList, Commons.LOG_ENABLED_PROPERTY, "true");
@@ -186,7 +182,7 @@ public class LazerycodeJMeterPluginIntegrator extends PluginIntegrator {
             }
         }
 
-        String fixedListenerPath = pluginInfo.getFixedTestListenerPath();
+        String fixedListenerPath = pluginInfo.getOverrideTestListenerPath();
         if (StringUtils.isNullOrEmpty(fixedListenerPath)) {
             throw new Exception("Unable to add argument '-javaagent' to the plugin. Missing path to the java agent.");
         }
@@ -214,7 +210,9 @@ public class LazerycodeJMeterPluginIntegrator extends PluginIntegrator {
             }
 
         } catch (Exception e) {
-            logger.error("Unable to check if the pom was integrated manually with Sealights. Error: ", e);
+            logger.error("Unable to check if the pom was integrated manually with Sealights. " +
+                    "Assuming that Sealights is already integrated. " +
+                    "Error: ", e);
             return true;
         }
 

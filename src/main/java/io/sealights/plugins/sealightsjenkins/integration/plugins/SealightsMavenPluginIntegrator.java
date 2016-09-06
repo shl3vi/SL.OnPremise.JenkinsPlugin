@@ -19,6 +19,9 @@ import static io.sealights.plugins.sealightsjenkins.utils.StringUtils.isNullOrEm
  * This class helps add the sealights-maven plugin to a pom file.
  */
 public class SealightsMavenPluginIntegrator extends PluginIntegrator {
+
+    private final static String SEALIGHTS_ARTIFACT_ID = "sealights-maven-plugin";
+
     private String overridePluginVersion;
     private SeaLightsPluginInfo pluginInfo;
     private Document pomDoc;
@@ -87,8 +90,8 @@ public class SealightsMavenPluginIntegrator extends PluginIntegrator {
         tryAppendValue(plugin, pluginInfo.getEnvironment(), "environment");
         tryAppendValue(plugin, pluginInfo.getFilesExcluded(), "filesexcluded");
 
-        tryAppendValue(plugin, pluginInfo.getFixedMetaJsonPath(), "fixedMetaJsonPath");
-        tryAppendValue(plugin, pluginInfo.getFixedTestListenerPath(), "fixedTestListenerPath");
+        tryAppendValue(plugin, pluginInfo.getOverrideMetaJsonPath(), "overrideMetaJsonPath");
+        tryAppendValue(plugin, pluginInfo.getOverrideTestListenerPath(), "overrideTestListenerPath");
 
         if (!pluginInfo.isRecursive()) {
             plugin.append("<recursive>false</recursive>");
@@ -168,12 +171,17 @@ public class SealightsMavenPluginIntegrator extends PluginIntegrator {
     }
 
     @Override
-    protected void integrate() throws Exception {
+    protected void integrate() throws XPathExpressionException {
         String pluginBodyAsXml = toPluginText();
 
         integrate(pluginBodyAsXml, pomDoc.getDocumentElement());
         integrateToAllProfiles(pluginBodyAsXml, pomDoc.getDocumentElement());
         logger.debug("Integrated to plugin '" + pluginDescriptor() + "'.");
+    }
+
+    @Override
+    public boolean isAlreadyIntegrated() {
+        return pomFile.isPluginExistInEntirePom(SEALIGHTS_ARTIFACT_ID);
     }
 
     private void integrateToAllProfiles(String pluginBodyAsXml, Element parent) throws XPathExpressionException {

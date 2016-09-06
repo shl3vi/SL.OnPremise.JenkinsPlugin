@@ -45,8 +45,8 @@ public class SeaLightsPluginInfo {
 
     private BuildStrategy buildStrategy;
 
-    private String fixedTestListenerPath;
-    private String fixedMetaJsonPath;
+    private String overrideTestListenerPath;
+    private String overrideMetaJsonPath;
 
     public boolean isRecursiveOnBuildFilesFolders() {
         return recursiveOnBuildFilesFolders;
@@ -288,20 +288,20 @@ public class SeaLightsPluginInfo {
         this.filesStorage = filesStorage;
     }
 
-    public String getFixedTestListenerPath() {
-        return fixedTestListenerPath;
+    public String getOverrideTestListenerPath() {
+        return overrideTestListenerPath;
     }
 
-    public void setFixedTestListenerPath(String fixedTestListenerPath) {
-        this.fixedTestListenerPath = fixedTestListenerPath;
+    public void setOverrideTestListenerPath(String overrideTestListenerPath) {
+        this.overrideTestListenerPath = overrideTestListenerPath;
     }
 
-    public String getFixedMetaJsonPath() {
-        return fixedMetaJsonPath;
+    public String getOverrideMetaJsonPath() {
+        return overrideMetaJsonPath;
     }
 
-    public void setFixedMetaJsonPath(String fixedMetaJsonPath) {
-        this.fixedMetaJsonPath = fixedMetaJsonPath;
+    public void setOverrideMetaJsonPath(String overrideMetaJsonPath) {
+        this.overrideMetaJsonPath = overrideMetaJsonPath;
     }
 }
 
