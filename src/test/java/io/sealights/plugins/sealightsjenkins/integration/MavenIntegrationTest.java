@@ -126,7 +126,7 @@ public class MavenIntegrationTest {
 
     @Test
     public void dontInjectSeaLightsArgumentsToJMeterPluginWhenOurArgumentsAlreadyPresent() throws Exception {
-        performTest("21_Dont_inject_SeaLights_arguments_to_jMeter_plugin_when_our_arguments_already_present", SHOULD_INTEGRATE, "1.1.1");
+        performTest("21_Dont_inject_SeaLights_arguments_to_jMeter_plugin_when_our_arguments_already_present", SHOULD_NOT_INTEGRATE, "1.1.1");
     }
 
     @Test
