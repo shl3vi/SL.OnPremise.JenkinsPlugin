@@ -3,16 +3,18 @@ package io.sealights.plugins.sealightsjenkins.integration;
 import io.sealights.plugins.sealightsjenkins.BuildStrategy;
 import io.sealights.plugins.sealightsjenkins.ExecutionType;
 import io.sealights.plugins.sealightsjenkins.LogLevel;
+import io.sealights.plugins.sealightsjenkins.entities.FileBackupInfo;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import io.sealights.plugins.sealightsjenkins.utils.PathUtils;
-import io.sealights.plugins.sealightsjenkins.entities.FileBackupInfo;
 import org.apache.commons.io.FileUtils;
 import org.custommonkey.xmlunit.DetailedDiff;
 import org.custommonkey.xmlunit.XMLUnit;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +22,8 @@ import java.util.Map;
 
 public class MavenIntegrationTest {
 
+    private final static boolean SHOULD_INTEGRATE = true;
+    private final static boolean SHOULD_NOT_INTEGRATE = false;
     private String PATH = PathUtils.join(System.getProperty("user.dir"), "src", "test", "cases", "MavenIntegration");
 
     @Test
@@ -44,27 +48,27 @@ public class MavenIntegrationTest {
 
     @Test
     public void dontInjectSeaLightsPluginIfAlreadyInjected() throws Exception {
-        performTest("5_Dont_inject_Sealights_plugin_if_already_injected", false);
+        performTest("5_Dont_inject_Sealights_plugin_if_already_injected", SHOULD_NOT_INTEGRATE);
     }
 
     @Test
     public void dontInjectSeaLightsPluginIfAlreadyInjectedInPluginManagement() throws Exception {
-        performTest("6_Dont_inject_Sealights_plugin_if_already_injected_in_pluginManagement", false);
+        performTest("6_Dont_inject_Sealights_plugin_if_already_injected_in_pluginManagement", SHOULD_NOT_INTEGRATE);
     }
 
     @Test
     public void dontInjectSeaLightsPluginIfAlreadyInjectedInPlugins() throws Exception {
-        performTest("7_Dont_inject_Sealights_plugin_if_already_injected_in_plugins", false);
+        performTest("7_Dont_inject_Sealights_plugin_if_already_injected_in_plugins", SHOULD_NOT_INTEGRATE);
     }
 
     @Test
     public void dontInjectSeaLightsPluginIfAlreadyInjectedInProfile() throws Exception {
-        performTest("8_Dont_inject_Sealights_plugin_if_already_injected_in_profile", false);
+        performTest("8_Dont_inject_Sealights_plugin_if_already_injected_in_profile", SHOULD_NOT_INTEGRATE);
     }
 
     @Test
     public void dontIntegrateIfUnsupportedForkModeNeverPresent() throws Exception {
-        performTest("9_Dont_integrate_if_unsupported_forkMode_never_present", false);
+        performTest("9_Dont_integrate_if_unsupported_forkMode_never_present", SHOULD_NOT_INTEGRATE);
     }
 
     @Test
@@ -74,12 +78,12 @@ public class MavenIntegrationTest {
 
     @Test
     public void dontIntegrateIfUnsupportedForkModePerthreadWithoutThreadCountPresent() throws Exception {
-        performTest("11_Dont_integrate_if_unsupported_forkMode_perthread_without_threadCount_present", false);
+        performTest("11_Dont_integrate_if_unsupported_forkMode_perthread_without_threadCount_present", SHOULD_NOT_INTEGRATE);
     }
 
     @Test
     public void dontIntegrateIfUnsupportedForkModePerthreadWithThreadCount0Present() throws Exception {
-        performTest("12_Dont_integrate_if_unsupported_forkMode_perthread_with_threadCount_0_present", false);
+        performTest("12_Dont_integrate_if_unsupported_forkMode_perthread_with_threadCount_0_present", SHOULD_NOT_INTEGRATE);
     }
 
     @Test
@@ -89,13 +93,18 @@ public class MavenIntegrationTest {
 
     @Test
     public void dontIntegrateIfUnsupportedForkCountPresent() throws Exception {
-        performTest("14_Dont_integrate_if_unsupported_forkCount_present", false);
+        performTest("14_Dont_integrate_if_unsupported_forkCount_present", SHOULD_NOT_INTEGRATE);
     }
 
     @Test
     public void injectSeaLightsIfForkCountGreaterThan0() throws Exception {
         performTest("15_Inject_SeaLights_if_forkCount_greater_than_0");
     }
+
+//    @Test
+//    public void dontIntegrateIfUnsupportedParallelPresent() throws Exception {
+//        performTest("16_Dont_integrate_if_unsupported_parallel_present", SHOULD_NOT_INTEGRATE);
+//    }
 
     @Test
     public void injectSeaLightsPluginToPomWith_surefire_that_has_argLine_element_that_doesnt_chain_old_values() throws Exception {
@@ -109,11 +118,51 @@ public class MavenIntegrationTest {
 
     @Test
     public void injectSeaLightsPluginWithSpecificVersionToAPomWithoutThePlugin() throws Exception {
-        performTest("19_Inject_SeaLights_plugin_with_specific_version_to_a_pom_without_the_plugin", true, "1.1.1");
+        performTest("19_Inject_SeaLights_plugin_with_specific_version_to_a_pom_without_the_plugin", SHOULD_INTEGRATE, "1.1.1");
+    }
+
+    @Test
+    public void injectSeaLightsArgumentsToJMeterPluginWhenArgumentsElementExists() throws Exception {
+        performTest("20_Inject_SeaLights_arguments_to_jMeter_plugin_when_arguments_element_exists", SHOULD_INTEGRATE, "1.1.1");
+    }
+
+    @Test
+    public void dontInjectSeaLightsArgumentsToJMeterPluginWhenOurArgumentsAlreadyPresent() throws Exception {
+        performTest("21_Dont_inject_SeaLights_arguments_to_jMeter_plugin_when_our_arguments_already_present", SHOULD_NOT_INTEGRATE, "1.1.1");
+    }
+
+    @Test
+    public void injectSeaLightsArgumentsToJMeterPluginWhenNonSealightsArgumentsExists() throws Exception {
+        performTest("22_Inject_SeaLights_arguments_to_jMeter_plugin_when_non-Sealights_arguments_exists", SHOULD_INTEGRATE, "1.1.1");
+    }
+
+    @Test
+    public void injectSeaLightsArgumentsToJMeterPluginWhenArgumentsElementNotExists() throws Exception {
+        performTest("23_Inject_SeaLights_arguments_to_jMeter_plugin_when_arguments_element_not_exists", SHOULD_INTEGRATE, "1.1.1");
+    }
+
+    @Test
+    public void InjectSeaLightsArgumentsToJMeterPluginInsideProfile() throws Exception {
+        performTest("24_Inject_SeaLights_arguments_to_jMeter_plugin_inside_profile", SHOULD_INTEGRATE, "1.1.1");
+    }
+
+    @Test
+    public void InjectSeaLightsArgumentsToJMeterPluginWhenOnlyJMeterProcessJVMSettingsExists() throws Exception {
+        performTest("25_Inject_SeaLights_arguments_to_jMeter_plugin_when_only_jMeterProcessJVMSettings_exists", SHOULD_INTEGRATE, "1.1.1");
+    }
+
+    @Test
+    public void InjectSeaLightsArgumentsToJMeterPluginWhenWithJMeterProcessJVMSettingsExistsWithElementOtherThanArguments() throws Exception {
+        performTest("26_Inject_SeaLights_arguments_to_jMeter_plugin_when_with_jMeterProcessJVMSettings_exists_with_element_other_than_element", SHOULD_INTEGRATE, "1.1.1");
+    }
+
+    @Test
+    public void dontInject_SeaLights_arguments_to_jMeter_plugin_when_property_skipJMeter_present() throws Exception {
+        performTest("27_Dont_inject_SeaLights_arguments_to_jMeter_plugin_when_property_skipJMeter_present", SHOULD_INTEGRATE, "1.1.1");
     }
 
     private void performTest(String testCase) throws Exception {
-        performTest(testCase, true, null);
+        performTest(testCase, SHOULD_INTEGRATE, null);
     }
 
     private void performTest(String testCase, boolean shouldFindActual) throws Exception {
@@ -126,7 +175,7 @@ public class MavenIntegrationTest {
         String testFolder = getTestFolder(testCase);
 
         MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder, specificVersion);
-        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.err)), mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
+        MavenIntegration mavenIntegration = new MavenIntegrationMock(new Logger(new PrintStream(System.err)), mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
 
         //Act
         mavenIntegration.integrate(false);
@@ -224,5 +273,22 @@ public class MavenIntegrationTest {
 
     private String getTestFolder(String testCaseName) {
         return PathUtils.join(PATH, testCaseName);
+    }
+
+    private class MavenIntegrationMock extends MavenIntegration{
+
+        public MavenIntegrationMock(Logger log, MavenIntegrationInfo mavenIntegrationInfo, boolean isJenkinsEnvironment) {
+            super(log, mavenIntegrationInfo, isJenkinsEnvironment);
+        }
+
+        @Override
+        protected String createOverrideTestListenerPath(){
+            return "/path/to/override-sl-test-listener.jar";
+        }
+
+        @Override
+        protected String createOverrideMetaJsonPath(){
+            return "/path/to/override-mata.json";
+        }
     }
 }

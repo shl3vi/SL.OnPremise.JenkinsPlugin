@@ -38,4 +38,12 @@ public class PathUtils {
 
         return path;
     }
+
+    public static boolean isAbsolutePath(String path){
+        if (path == null)
+            return false;
+
+        File f = new File(path);
+        return f.isAbsolute();
+    }
 }

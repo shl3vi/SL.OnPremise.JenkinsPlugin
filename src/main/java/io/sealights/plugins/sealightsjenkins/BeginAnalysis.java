@@ -31,10 +31,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 
 /**
@@ -641,6 +638,8 @@ public class BeginAnalysis extends Builder {
 
         return slInfo;
     }
+
+
 
     private void setGlobalConfiguration(SeaLightsPluginInfo slInfo, EnvVars envVars) {
 

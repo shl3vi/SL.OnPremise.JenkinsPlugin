@@ -1,45 +1,54 @@
-package io.sealights.plugins.sealightsjenkins.integration;
+package io.sealights.plugins.sealightsjenkins.integration.plugins;
 
 import io.sealights.plugins.sealightsjenkins.ExecutionType;
-import io.sealights.plugins.sealightsjenkins.utils.FileAndFolderUtils;
+import io.sealights.plugins.sealightsjenkins.integration.PomFile;
+import io.sealights.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
-import org.apache.commons.lang.StringUtils;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-import java.io.FileNotFoundException;
+import javax.xml.xpath.XPathExpressionException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 import static io.sealights.plugins.sealightsjenkins.utils.StringUtils.isNullOrEmpty;
 
 /**
- * Created by Nadav on 6/2/2016.
+ * This class helps add the sealights-maven plugin to a pom file.
  */
-public class SealightsMavenPluginHelper {
-    private String overridePluginVersion;
-    private Logger logger;
+public class SealightsMavenPluginIntegrator extends PluginIntegrator {
 
-    public SealightsMavenPluginHelper(Logger logger, String overridePluginVersion) {
-        this.logger = logger;
+    private String overridePluginVersion;
+    private SeaLightsPluginInfo pluginInfo;
+    private Document pomDoc;
+
+
+    public SealightsMavenPluginIntegrator
+            (Logger logger, SeaLightsPluginInfo pluginInfo, String overridePluginVersion, PomFile pomFile) {
+        super(logger, pomFile);
+        this.pluginInfo = pluginInfo;
         this.overridePluginVersion = overridePluginVersion;
+        this.pomDoc = pomFile.getDocument();
     }
 
-    public String toPluginText(SeaLightsPluginInfo pluginInfo) {
+    private String toPluginText() {
 
         StringBuilder plugin = new StringBuilder();
-        plugin.append("<groupId>io.sealights.on-premise.agents.plugin</groupId>");
-        plugin.append("<artifactId>sealights-maven-plugin</artifactId>");
+        plugin.append("<groupId>" + groupId() + "</groupId>");
+        plugin.append("<artifactId>" + artifactId() + "</artifactId>");
         if (!isNullOrEmpty(overridePluginVersion)) {
             plugin.append("<version>" + overridePluginVersion + "</version>");
         }
 
-        plugin = addConfigurationToPluginText(plugin, pluginInfo);
-        plugin = addExecutionsToPluginText(plugin, pluginInfo);
+        plugin = addConfigurationToPluginText(plugin);
+        plugin = addExecutionsToPluginText(plugin);
 
         return plugin.toString();
     }
 
-    private StringBuilder addConfigurationToPluginText(StringBuilder plugin, SeaLightsPluginInfo pluginInfo){
+    private StringBuilder addConfigurationToPluginText(StringBuilder plugin) {
         plugin.append("<configuration>");
 
         if (!pluginInfo.isEnabled()) {
@@ -79,6 +88,9 @@ public class SealightsMavenPluginHelper {
         tryAppendValue(plugin, pluginInfo.getEnvironment(), "environment");
         tryAppendValue(plugin, pluginInfo.getFilesExcluded(), "filesexcluded");
 
+        tryAppendValue(plugin, pluginInfo.getOverrideMetaJsonPath(), "overrideMetaJsonPath");
+        tryAppendValue(plugin, pluginInfo.getOverrideTestListenerPath(), "overrideTestListenerPath");
+
         if (!pluginInfo.isRecursive()) {
             plugin.append("<recursive>false</recursive>");
         }
@@ -95,20 +107,20 @@ public class SealightsMavenPluginHelper {
 
         tryAppendValue(plugin, pluginInfo.getLogFolder(), "logFolder");
 
-        plugin = addMetadataToConfigurationInPluginText(plugin, pluginInfo);
+        plugin = addMetadataToConfigurationInPluginText(plugin);
 
         plugin.append("</configuration>");
 
         return plugin;
     }
 
-    private StringBuilder addMetadataToConfigurationInPluginText(StringBuilder plugin, SeaLightsPluginInfo pluginInfo){
+    private StringBuilder addMetadataToConfigurationInPluginText(StringBuilder plugin) {
         Map<String, String> metadata = new TreeMap<String, String>(pluginInfo.getMetadata());
-        if (!(metadata == null || metadata.isEmpty())){
+        if (!(metadata == null || metadata.isEmpty())) {
             plugin.append("<metadata>");
             Iterator it = metadata.entrySet().iterator();
             while (it.hasNext()) {
-                Map.Entry<String, String> pair = (Map.Entry)it.next();
+                Map.Entry<String, String> pair = (Map.Entry) it.next();
                 tryAppendValue(plugin, pair.getValue(), pair.getKey());
             }
             plugin.append("</metadata>");
@@ -117,7 +129,7 @@ public class SealightsMavenPluginHelper {
         return plugin;
     }
 
-    private StringBuilder addExecutionsToPluginText(StringBuilder plugin, SeaLightsPluginInfo pluginInfo){
+    private StringBuilder addExecutionsToPluginText(StringBuilder plugin) {
         plugin.append("<executions>");
 
         boolean shouldExecuteScanner = ExecutionType.FULL.equals(pluginInfo.getExecutionType());
@@ -145,4 +157,52 @@ public class SealightsMavenPluginHelper {
             stringBuilder.append("</" + elementName + ">");
         }
     }
+
+    @Override
+    public String artifactId() {
+        return "sealights-maven-plugin";
+    }
+
+    @Override
+    public String groupId() {
+        return "io.sealights.on-premise.agents.plugin";
+    }
+
+    @Override
+    protected void integrate() throws XPathExpressionException {
+        String pluginBodyAsXml = toPluginText();
+
+        integrate(pluginBodyAsXml, pomDoc.getDocumentElement());
+        integrateToAllProfiles(pluginBodyAsXml, pomDoc.getDocumentElement());
+        logger.debug("Integrated to plugin '" + pluginDescriptor() + "'.");
+    }
+
+    @Override
+    public boolean isAlreadyIntegrated() {
+        return exists();
+    }
+
+    private void integrateToAllProfiles(String pluginBodyAsXml, Element parent) throws XPathExpressionException {
+        List<Element> profilesList = pomFile.getElements("profiles", parent);
+        for (Element profiles : profilesList) {
+            List<Element> profileList = pomFile.getElements("profile", profiles);
+            for (Element profile : profileList) {
+                integrate(pluginBodyAsXml, profile);
+            }
+        }
+    }
+
+    private void integrate(String pluginBodyAsXml, Element parent) throws XPathExpressionException {
+        List<Element> buildElements = pomFile.getOrCreateElements("build", parent);
+
+        for (Element buildElement : buildElements) {
+            pomFile.verifyPluginsElement(pluginBodyAsXml, buildElement);
+
+            if (pomFile.isNodeExist("pluginManagement", buildElement)) {
+                List<Element> pluginManagementElements = pomFile.getOrCreateElements("pluginManagement", buildElement);
+                pomFile.verifyPluginsElement(pluginBodyAsXml, pluginManagementElements.get(0));
+            }
+        }
+    }
+
 }

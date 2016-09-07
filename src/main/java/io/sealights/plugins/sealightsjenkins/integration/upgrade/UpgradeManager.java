@@ -27,7 +27,7 @@ public class UpgradeManager {
     public String queryServerForMavenPluginVersion() throws IOException {
         URL url = createUrlToGetRecommendedVersion();
         ObjectMapper mapper = new ObjectMapper();
-        logger.debug("Sending request to get recommended version: '"+url+"'");
+        logger.info("Sending request to get recommended version: '"+url+"'.");
         UpgradeResponse upgradeResponse = mapper.readValue(url, UpgradeResponse.class);
         return upgradeResponse.getAgent().getVersion();
     }
