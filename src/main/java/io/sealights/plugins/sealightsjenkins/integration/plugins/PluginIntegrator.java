@@ -20,6 +20,10 @@ public abstract class PluginIntegrator {
         this.pomFile = pomFile;
     }
 
+    public final boolean exists(){
+        return pomFile.isPluginExistInEntirePom(artifactId());
+    }
+
     protected abstract String artifactId();
 
     protected abstract String groupId();

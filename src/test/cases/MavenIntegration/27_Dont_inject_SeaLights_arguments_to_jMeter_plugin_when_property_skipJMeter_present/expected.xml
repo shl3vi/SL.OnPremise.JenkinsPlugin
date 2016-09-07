@@ -41,6 +41,7 @@
                     <filesincluded>*.class</filesincluded>
                     <buildScannerJar>c:\fake-build-scanner.jar</buildScannerJar>
                     <testListenerJar>c:\fake-test-listener.jar</testListenerJar>
+                    <overrideMetaJsonPath>/path/to/override-mata.json</overrideMetaJsonPath>
                     <overrideTestListenerPath>/path/to/override-sl-test-listener.jar</overrideTestListenerPath>
                     <logLevel>INFO</logLevel>
                     <logFolder>c:\fake-log-folder</logFolder>
@@ -107,6 +108,7 @@
                             <filesincluded>*.class</filesincluded>
                             <buildScannerJar>c:\fake-build-scanner.jar</buildScannerJar>
                             <testListenerJar>c:\fake-test-listener.jar</testListenerJar>
+                            <overrideMetaJsonPath>/path/to/override-mata.json</overrideMetaJsonPath>
                             <overrideTestListenerPath>/path/to/override-sl-test-listener.jar</overrideTestListenerPath>
                             <logLevel>INFO</logLevel>
                             <logFolder>c:\fake-log-folder</logFolder>

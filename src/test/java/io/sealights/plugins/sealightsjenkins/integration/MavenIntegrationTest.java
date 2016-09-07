@@ -3,16 +3,18 @@ package io.sealights.plugins.sealightsjenkins.integration;
 import io.sealights.plugins.sealightsjenkins.BuildStrategy;
 import io.sealights.plugins.sealightsjenkins.ExecutionType;
 import io.sealights.plugins.sealightsjenkins.LogLevel;
+import io.sealights.plugins.sealightsjenkins.entities.FileBackupInfo;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import io.sealights.plugins.sealightsjenkins.utils.PathUtils;
-import io.sealights.plugins.sealightsjenkins.entities.FileBackupInfo;
 import org.apache.commons.io.FileUtils;
 import org.custommonkey.xmlunit.DetailedDiff;
 import org.custommonkey.xmlunit.XMLUnit;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -173,7 +175,7 @@ public class MavenIntegrationTest {
         String testFolder = getTestFolder(testCase);
 
         MavenIntegrationInfo mavenIntegrationInfo = createDefaultMavenIntegrationInfo(testFolder, specificVersion);
-        MavenIntegration mavenIntegration = new MavenIntegration(new Logger(new PrintStream(System.err)), mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
+        MavenIntegration mavenIntegration = new MavenIntegrationMock(new Logger(new PrintStream(System.err)), mavenIntegrationInfo, SAVE_POM_USING_JENKINS_API);
 
         //Act
         mavenIntegration.integrate(false);
@@ -254,8 +256,6 @@ public class MavenIntegrationTest {
         slInfo.setLogLevel(LogLevel.INFO);
         slInfo.setLogFolder("c:\\fake-log-folder");
 
-        slInfo.setOverrideTestListenerPath("/path/to/override-sl-test-listener.jar");
-
         Map<String, String> metadata = new HashMap<>();
         metadata.put("build", "someBuildInfo");
         metadata.put("plugin", "somPluginInfo");
@@ -273,5 +273,22 @@ public class MavenIntegrationTest {
 
     private String getTestFolder(String testCaseName) {
         return PathUtils.join(PATH, testCaseName);
+    }
+
+    private class MavenIntegrationMock extends MavenIntegration{
+
+        public MavenIntegrationMock(Logger log, MavenIntegrationInfo mavenIntegrationInfo, boolean isJenkinsEnvironment) {
+            super(log, mavenIntegrationInfo, isJenkinsEnvironment);
+        }
+
+        @Override
+        protected String createOverrideTestListenerPath(){
+            return "/path/to/override-sl-test-listener.jar";
+        }
+
+        @Override
+        protected String createOverrideMetaJsonPath(){
+            return "/path/to/override-mata.json";
+        }
     }
 }

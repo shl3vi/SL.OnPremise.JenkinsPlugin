@@ -622,9 +622,6 @@ public class BeginAnalysis extends Builder {
         slInfo.setLogFolder(logFolder);
         slInfo.setExecutionType(executionType);
 
-        slInfo.setOverrideTestListenerPath(createOverrideTestListenerPath());
-        slInfo.setOverrideMetaJsonPath(createOverrideMetaJsonPath());
-
         String foldersToSearch;
         String patternsToSearch;
         if (enableMultipleBuildFiles) {
@@ -642,26 +639,7 @@ public class BeginAnalysis extends Builder {
         return slInfo;
     }
 
-    private String createOverrideTestListenerPath(){
-        String fileName = "java-test-listener_" + UUID.randomUUID() + ".jar";
-        return createAbsolutePathInFilesStorage(fileName);
-    }
 
-    private String createOverrideMetaJsonPath(){
-        String fileName = "metadata_" + UUID.randomUUID() + ".json";
-        return createAbsolutePathInFilesStorage(fileName);
-    }
-
-    private String createAbsolutePathInFilesStorage(String fileName){
-        String machineTmpFolder = System.getProperty("java.io.tmpdir");
-
-        String filesStorage = getDescriptor().getFilesStorage();
-        if (!StringUtils.isNullOrEmpty(filesStorage)){
-            return PathUtils.join(filesStorage, fileName);
-        }else{
-            return PathUtils.join(machineTmpFolder , "sealights", fileName);
-        }
-    }
 
     private void setGlobalConfiguration(SeaLightsPluginInfo slInfo, EnvVars envVars) {
 

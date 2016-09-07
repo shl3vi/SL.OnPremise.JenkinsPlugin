@@ -38,6 +38,7 @@
                                     <argument>-Dsl.includes=com.fake.*</argument>
                                     <argument>-Dsl.excludes=*FastClassByGuice*, *ByCGLIB*, *EnhancerByMockitoWithCGLIB*, *EnhancerBySpringCGLIB*, com.fake.excluded.*</argument>
                                     <argument>-Dsl.classLoadersExcluded=org.powermock.core.classloader.MockClassLoader</argument>
+                                    <argument>-Dsl.pathToMetaJson=/path/to/override-mata.json</argument>
                                     <argument>-javaagent:/path/to/override-sl-test-listener.jar</argument>
                                 </arguments>
                             </jMeterProcessJVMSettings>
@@ -68,6 +69,7 @@
                     <filesincluded>*.class</filesincluded>
                     <buildScannerJar>c:\fake-build-scanner.jar</buildScannerJar>
                     <testListenerJar>c:\fake-test-listener.jar</testListenerJar>
+                    <overrideMetaJsonPath>/path/to/override-mata.json</overrideMetaJsonPath>
                     <overrideTestListenerPath>/path/to/override-sl-test-listener.jar</overrideTestListenerPath>
                     <logLevel>INFO</logLevel>
                     <logFolder>c:\fake-log-folder</logFolder>

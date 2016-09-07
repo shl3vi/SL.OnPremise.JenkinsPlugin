@@ -7,8 +7,11 @@ import io.sealights.plugins.sealightsjenkins.entities.FileBackupInfo;
 import io.sealights.plugins.sealightsjenkins.integration.plugins.SealightsMavenPluginIntegrator;
 import io.sealights.plugins.sealightsjenkins.integration.plugins.external.LazerycodeJMeterPluginIntegrator;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
+import io.sealights.plugins.sealightsjenkins.utils.PathUtils;
+import io.sealights.plugins.sealightsjenkins.utils.StringUtils;
 
 import java.io.IOException;
+import java.util.UUID;
 
 
 /**
@@ -57,12 +60,29 @@ public class MavenIntegration {
             return;
         }
 
+        if (shouldOverrideTempPaths(pomFile)){
+            updateOverriddenTempPaths();
+        }
+
         if (shouldBackup) {
             backupPom(sourceFilename);
         }
 
         log.info("MavenIntegration.integrateToPomFile - About to modify pom: " + fileBackupInfo.getSourceFile());
         integrateToAllProfiles(fileBackupInfo, pomFile);
+    }
+
+    private void updateOverriddenTempPaths(){
+        SeaLightsPluginInfo pluginInfo = mavenIntegrationInfo.getSeaLightsPluginInfo();
+        pluginInfo.setOverrideTestListenerPath(createOverrideTestListenerPath());
+        pluginInfo.setOverrideMetaJsonPath(createOverrideMetaJsonPath());
+    }
+
+    private boolean shouldOverrideTempPaths(PomFile pomFile) {
+        SeaLightsPluginInfo pluginInfo = mavenIntegrationInfo.getSeaLightsPluginInfo();
+        LazerycodeJMeterPluginIntegrator lazerycodeJMeterPluginIntegrator
+                = new LazerycodeJMeterPluginIntegrator(log, pluginInfo, pomFile);
+        return lazerycodeJMeterPluginIntegrator.exists();
     }
 
     private boolean shouldIntegrateToPom(PomFile pomFile) {
@@ -143,6 +163,28 @@ public class MavenIntegration {
             pomFile.save(filename);
         } catch (Exception e) {
             log.error("Failed saving POM file. Error:", e);
+        }
+    }
+
+    protected String createOverrideTestListenerPath(){
+        String fileName = "java-test-listener_" + UUID.randomUUID() + ".jar";
+        return createAbsolutePathInFilesStorage(fileName);
+    }
+
+    protected String createOverrideMetaJsonPath(){
+        String fileName = "metadata_" + UUID.randomUUID() + ".json";
+        return createAbsolutePathInFilesStorage(fileName);
+    }
+
+    private String createAbsolutePathInFilesStorage(String fileName){
+        String machineTmpFolder = System.getProperty("java.io.tmpdir");
+        SeaLightsPluginInfo pluginInfo = mavenIntegrationInfo.getSeaLightsPluginInfo();
+
+        String filesStorage = pluginInfo.getFilesStorage();
+        if (!StringUtils.isNullOrEmpty(filesStorage)){
+            return PathUtils.join(filesStorage, fileName);
+        }else{
+            return PathUtils.join(machineTmpFolder , "sealights", fileName);
         }
     }
 

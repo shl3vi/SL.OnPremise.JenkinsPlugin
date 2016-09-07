@@ -20,8 +20,6 @@ import static io.sealights.plugins.sealightsjenkins.utils.StringUtils.isNullOrEm
  */
 public class SealightsMavenPluginIntegrator extends PluginIntegrator {
 
-    private final static String SEALIGHTS_ARTIFACT_ID = "sealights-maven-plugin";
-
     private String overridePluginVersion;
     private SeaLightsPluginInfo pluginInfo;
     private Document pomDoc;
@@ -181,7 +179,7 @@ public class SealightsMavenPluginIntegrator extends PluginIntegrator {
 
     @Override
     public boolean isAlreadyIntegrated() {
-        return pomFile.isPluginExistInEntirePom(SEALIGHTS_ARTIFACT_ID);
+        return exists();
     }
 
     private void integrateToAllProfiles(String pluginBodyAsXml, Element parent) throws XPathExpressionException {
