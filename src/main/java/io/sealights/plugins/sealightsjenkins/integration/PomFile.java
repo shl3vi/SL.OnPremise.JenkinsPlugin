@@ -130,7 +130,6 @@ public class PomFile {
         if (isParallelExist(surefirePlugin)) {
             log.warning("Found an unsupported 'parallel' value of SureFire.");
             System.err.println("[SeaLights Jenkins Plugin] - WARNING - Found an unsupported 'parallel' tag of SureFire.");
-            return false;
         }
         return true;
     }

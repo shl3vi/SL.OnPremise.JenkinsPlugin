@@ -101,10 +101,10 @@ public class MavenIntegrationTest {
         performTest("15_Inject_SeaLights_if_forkCount_greater_than_0");
     }
 
-//    @Test
-//    public void dontIntegrateIfUnsupportedParallelPresent() throws Exception {
-//        performTest("16_Dont_integrate_if_unsupported_parallel_present", SHOULD_NOT_INTEGRATE);
-//    }
+    @Test
+    public void injectSealightsIfUnsupportedParallelPresent() throws Exception {
+        performTest("16_Inject_Sealights_if_unsupported_parallel_present");
+    }
 
     @Test
     public void injectSeaLightsPluginToPomWith_surefire_that_has_argLine_element_that_doesnt_chain_old_values() throws Exception {
