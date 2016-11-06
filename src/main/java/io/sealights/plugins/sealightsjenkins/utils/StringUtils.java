@@ -37,4 +37,11 @@ public class StringUtils {
     public static boolean isNullOrEmpty(String str){
         return (str == null || "".equals(str));
     }
+
+    public static List<String> commaSeparatedToList(String str){
+        if (str == null){
+            new ArrayList<>();
+        }
+        return  Arrays.asList(str.split("\\s*,\\s*"));
+    }
 }

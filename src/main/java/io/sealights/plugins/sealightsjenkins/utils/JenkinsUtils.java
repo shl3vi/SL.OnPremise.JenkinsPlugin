@@ -3,9 +3,11 @@ package io.sealights.plugins.sealightsjenkins.utils;
 import hudson.EnvVars;
 import hudson.Util;
 import hudson.model.AbstractBuild;
+import hudson.model.Cause;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -69,6 +71,38 @@ public class JenkinsUtils {
             }
         }
         return envVarKey;
+    }
+
+    public static String getUpstreamBuildName(AbstractBuild<?, ?> build, String upstreamProjectName, Logger logger) {
+        String finalBuildName = getBuildNumberFromUpstreamBuild(build.getCauses(), upstreamProjectName);
+        if (StringUtils.isNullOrEmpty(finalBuildName)) {
+            logger.warning("Couldn't find build number for " + upstreamProjectName + ". Using this job's build name.");
+            return null;
+        }
+
+        logger.info("Upstream project: " + upstreamProjectName + " # " + finalBuildName);
+        return finalBuildName;
+    }
+
+    private static String getBuildNumberFromUpstreamBuild(List<Cause> causes, String trigger) {
+        String buildNum = null;
+        for (Cause c : causes) {
+            if (c instanceof Cause.UpstreamCause) {
+                buildNum = checkCauseRecursivelyForBuildNumber((Cause.UpstreamCause) c, trigger);
+                if (!StringUtils.isNullOrEmpty(buildNum)) {
+                    break;
+                }
+            }
+        }
+        return buildNum;
+    }
+
+    private static String checkCauseRecursivelyForBuildNumber(Cause.UpstreamCause cause, String trigger) {
+        if (trigger.equals(cause.getUpstreamProject())) {
+            return String.valueOf(cause.getUpstreamBuild());
+        }
+
+        return getBuildNumberFromUpstreamBuild(cause.getUpstreamCauses(), trigger);
     }
 
 }

@@ -76,6 +76,8 @@ public class BeginAnalysis extends Builder {
     private String override_url;
     private String override_proxy;
 
+    public BeginAnalysis(){}
+
     @DataBoundConstructor
     public BeginAnalysis(LogLevel logLevel,
                          String appName, String moduleName, String branch, boolean enableMultipleBuildFiles,
@@ -493,27 +495,6 @@ public class BeginAnalysis extends Builder {
         return pomPath;
     }
 
-    private String getBuildNumberFromUpstreamBuild(List<Cause> causes, String trigger) {
-        String buildNum = null;
-        for (Cause c : causes) {
-            if (c instanceof Cause.UpstreamCause) {
-                buildNum = checkCauseRecursivelyForBuildNumber((Cause.UpstreamCause) c, trigger);
-                if (!StringUtils.isNullOrEmpty(buildNum)) {
-                    break;
-                }
-            }
-        }
-        return buildNum;
-    }
-
-    private String checkCauseRecursivelyForBuildNumber(Cause.UpstreamCause cause, String trigger) {
-        if (trigger.equals(cause.getUpstreamProject())) {
-            return String.valueOf(cause.getUpstreamBuild());
-        }
-
-        return getBuildNumberFromUpstreamBuild(cause.getUpstreamCauses(), trigger);
-    }
-
     private void doMavenIntegration(Logger logger, SeaLightsPluginInfo slInfo, String mvnPluginVersionToUse) throws IOException, InterruptedException {
 
         List<String> folders = Arrays.asList(slInfo.getBuildFilesFolders().split("\\s*,\\s*"));
@@ -543,19 +524,6 @@ public class BeginAnalysis extends Builder {
         return insertedBuildName;
     }
 
-    private String getUpstreamBuildName(AbstractBuild<?, ?> build, Logger logger) {
-        BuildName.UpstreamBuildName upstream = (BuildName.UpstreamBuildName) buildName;
-        String upstreamProjectName = upstream.getUpstreamProjectName();
-        String finalBuildName = getBuildNumberFromUpstreamBuild(build.getCauses(), upstreamProjectName);
-        if (StringUtils.isNullOrEmpty(finalBuildName)) {
-            logger.warning("Couldn't find build number for " + upstreamProjectName + ". Using this job's build name.");
-            return null;
-        }
-
-        logger.info("Upstream project: " + upstreamProjectName + " # " + finalBuildName);
-        return finalBuildName;
-    }
-
     private String getFinalBuildName(AbstractBuild<?, ?> build, Logger logger) throws IllegalStateException {
 
         String finalBuildName = null;
@@ -574,7 +542,9 @@ public class BeginAnalysis extends Builder {
             finalBuildName = getManualBuildName();
 
         } else if (BuildNamingStrategy.JENKINS_UPSTREAM.equals(buildName.getBuildNamingStrategy())) {
-            finalBuildName = getUpstreamBuildName(build, logger);
+            BuildName.UpstreamBuildName upstream = (BuildName.UpstreamBuildName) buildName;
+            String upstreamProjectName = upstream.getUpstreamProjectName();
+            finalBuildName = JenkinsUtils.getUpstreamBuildName(build, upstreamProjectName, logger);
         }
 
         if (StringUtils.isNullOrEmpty(finalBuildName)) {
