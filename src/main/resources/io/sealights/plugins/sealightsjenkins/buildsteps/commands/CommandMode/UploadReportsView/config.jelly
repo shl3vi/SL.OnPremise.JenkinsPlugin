@@ -18,7 +18,7 @@
 
     <f:entry title="Source" field="source"
              description="The test report provider">
-        <f:textbox value="${source}" default="JUnit Report"/>
+        <f:textbox value="${source}"/>
     </f:entry>
 
 </j:jelly>

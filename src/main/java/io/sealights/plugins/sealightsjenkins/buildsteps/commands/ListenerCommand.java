@@ -18,6 +18,10 @@ import io.sealights.plugins.sealightsjenkins.buildsteps.commands.executors.Abstr
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.executors.EndCommandExecutor;
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.executors.StartCommandExecutor;
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.executors.UploadReportsCommandExecutor;
+import io.sealights.plugins.sealightsjenkins.integration.upgrade.AbstractUpgradeManager;
+import io.sealights.plugins.sealightsjenkins.integration.upgrade.TestListenerUpgradeManager;
+import io.sealights.plugins.sealightsjenkins.integration.upgrade.UpgradeProxy;
+import io.sealights.plugins.sealightsjenkins.integration.upgrade.entities.UpgradeConfiguration;
 import io.sealights.plugins.sealightsjenkins.utils.JenkinsUtils;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import io.sealights.plugins.sealightsjenkins.utils.StringUtils;
@@ -32,7 +36,7 @@ import org.kohsuke.stapler.export.ExportedBean;
 import java.io.IOException;
 
 @ExportedBean
-public class ListenerCommand extends Builder{
+public class ListenerCommand extends Builder {
 
     private String appName;
     private String branchName;
@@ -138,7 +142,7 @@ public class ListenerCommand extends Builder{
     }
 
     @Override
-    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener){
+    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
         return true;
     }
 
@@ -156,43 +160,28 @@ public class ListenerCommand extends Builder{
             commonArgs.setBranchName(JenkinsUtils.tryGetEnvVariable(envVars, branchName));
             commonArgs.setEnvironment(JenkinsUtils.tryGetEnvVariable(envVars, environment));
 
-            logger.info("#####################################################################");
-            logger.info("#####################################################################");
+            AbstractUpgradeManager upgradeManager = createUpgradeManager(logger, commonArgs);
+            String agentPath = upgradeManager.ensureLatestAgentPresentLocally();
 
-            logger.info(commonArgs.getAppName());
-            logger.info(commonArgs.getBuildName());
-            logger.info(commonArgs.getBranchName());
-            logger.info(commonArgs.getCustomerId());
-            logger.info(commonArgs.getEnvironment());
-            logger.info(commonArgs.getUrl());
-            logger.info(commonArgs.getProxy());
-
-            logger.info("mode:" + commandMode.getCurrentMode().getName());
-            logger.info("Done!");
-            logger.info("#####################################################################");
-            logger.info("#####################################################################");
-
-            AbstractExecutor executor = executeCommand(logger, commandMode, commonArgs);
+            AbstractExecutor executor = executeCommand(logger, agentPath, commandMode, commonArgs);
             executor.execute();
-        }catch (Exception e){
+        } catch (Exception e) {
             logger.error("Error occurred while performing 'Sealights Listener Command'. Error: ", e);
         }
 
         return true;
     }
 
-    private AbstractExecutor executeCommand(Logger logger, CommandMode commandMode, CommonCommandArguments commonArgs) {
+    private AbstractExecutor executeCommand(Logger logger, String agentPath, CommandMode commandMode, CommonCommandArguments commonArgs) {
         AbstractExecutor executor;
-        String agentPath = "C:\\Users\\shahar\\workspace\\sealights\\SL.OnPremise.Agents.Java\\java-agent-bootstrapper\\target\\java-agent-bootstrapper-1.0.0-SNAPSHOT-jar-with-dependencies.jar";
 
-        if (CommandModes.Start.equals(commandMode.getCurrentMode())){
+        if (CommandModes.Start.equals(commandMode.getCurrentMode())) {
             StartCommandArguments startCommandArguments = getStartCommandArguments(commandMode, commonArgs);
             executor = new StartCommandExecutor(logger, agentPath, startCommandArguments);
-        }
-        else if (CommandModes.End.equals(commandMode.getCurrentMode())){
-            EndCommandArguments endCommandArguments = getEndCommandArguments(commandMode, commonArgs);
+        } else if (CommandModes.End.equals(commandMode.getCurrentMode())) {
+            EndCommandArguments endCommandArguments = getEndCommandArguments(commonArgs);
             executor = new EndCommandExecutor(logger, agentPath, endCommandArguments);
-        }else {
+        } else {
 
             UploadReportsCommandArguments uploadReportsCommandArguments = getUploadReportsCommandArguments(commandMode, commonArgs);
             executor = new UploadReportsCommandExecutor(logger, agentPath, uploadReportsCommandArguments);
@@ -201,16 +190,16 @@ public class ListenerCommand extends Builder{
         return executor;
     }
 
-    private StartCommandArguments getStartCommandArguments(CommandMode commandMode, CommonCommandArguments commonArgs){
+    private StartCommandArguments getStartCommandArguments(CommandMode commandMode, CommonCommandArguments commonArgs) {
         CommandMode.StartView startView = (CommandMode.StartView) commandMode;
         return new StartCommandArguments(commonArgs, startView.getNewEnvironment());
     }
 
-    private EndCommandArguments getEndCommandArguments(CommandMode commandMode, CommonCommandArguments commonArgs){
+    private EndCommandArguments getEndCommandArguments(CommonCommandArguments commonArgs) {
         return new EndCommandArguments(commonArgs);
     }
 
-    private UploadReportsCommandArguments getUploadReportsCommandArguments(CommandMode commandMode, CommonCommandArguments commonArgs){
+    private UploadReportsCommandArguments getUploadReportsCommandArguments(CommandMode commandMode, CommonCommandArguments commonArgs) {
         CommandMode.UploadReportsView uploadReportsView = (CommandMode.UploadReportsView) commandMode;
         return new UploadReportsCommandArguments(
                 commonArgs,
@@ -218,6 +207,29 @@ public class ListenerCommand extends Builder{
                 uploadReportsView.getReportsFolders(),
                 uploadReportsView.getHasMoreRequests(),
                 uploadReportsView.getSource());
+    }
+
+    private AbstractUpgradeManager createUpgradeManager(Logger logger, CommonCommandArguments commonArgs) {
+        UpgradeConfiguration upgradeConfiguration = createUpgradeConfiguration(commonArgs);
+        UpgradeProxy upgradeProxy = new UpgradeProxy(upgradeConfiguration, logger);
+        return new TestListenerUpgradeManager(upgradeProxy, upgradeConfiguration, logger);
+    }
+
+    private UpgradeConfiguration createUpgradeConfiguration(CommonCommandArguments commonArgs) {
+        String filesStorage = this.beginAnalysis.getDescriptor().getFilesStorage();
+        if (StringUtils.isNullOrEmpty(filesStorage)) {
+            filesStorage = System.getProperty("java.io.tmpdir");
+        }
+
+        return new UpgradeConfiguration(
+                commonArgs.getCustomerId(),
+                commonArgs.getAppName(),
+                commonArgs.getEnvironment(),
+                commonArgs.getBranchName(),
+                commonArgs.getUrl(),
+                commonArgs.getProxy(),
+                filesStorage
+        );
     }
 
     private void setGlobalConfiguration(CommonCommandArguments commonArgs, EnvVars envVars) {
@@ -296,7 +308,7 @@ public class ListenerCommand extends Builder{
 
         @Override
         public synchronized void load() {
-                super.load();
+            super.load();
         }
 
         public DescriptorExtensionList<BuildName, BuildName.BuildNameDescriptor> getBuildNameDescriptorList() {

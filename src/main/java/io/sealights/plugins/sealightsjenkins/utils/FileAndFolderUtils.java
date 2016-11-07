@@ -6,65 +6,32 @@ import java.util.List;
 
 public class FileAndFolderUtils {
 
-    public static String readFileFromResources(String fileName, Logger logger) throws FileNotFoundException {
-        //Get file from resources folder
-        InputStream inputStream = FileAndFolderUtils.class.getClassLoader().getResourceAsStream(fileName);
-        String content = StreamUtils.toString(inputStream);
-        return content;
+    public static boolean verifyFolderExists(String folder) {
+        if (folder == null) {
+            throw new NullPointerException("Argument 'folder' can't be 'null'.");
+        }
+        File f = new File(folder);
+        if (f.isFile()) {
+            throw new IllegalArgumentException("'" + folder + "' should be path to a folder and not to a file.");
+        }
+
+        return f.isDirectory() || f.mkdirs();
     }
 
-    public static List<String> findAllFilesWithFilter(String rootpath, Boolean recursive, IncludeExcludeFilter filter) {
 
-        List<String> result = new ArrayList<>();
-        File rootDir = new File(rootpath);
-        if (rootDir.isFile()) {
-            if (filter.filter(rootpath)) {
-                result.add(rootpath);
-            }
-            return result;
-        } else if (rootDir.isDirectory()) {
-            return search(rootDir, recursive, filter);
+    public static File findFileInFolder(String folder, String fileName) {
+        File folderFile = new File(folder);
+        File[] files = folderFile.listFiles();
+
+        if (files == null)
+            return null;
+
+        for (File f : files) {
+            if (f.getName().equals(fileName))
+                return f;
         }
 
-        return result;
+        return null;
     }
-
-    private static List<String> search(File directory, Boolean recursive, IncludeExcludeFilter filter) {
-
-        List<String> returnedFiles = new ArrayList<String>();
-
-        if (!directory.isDirectory()) {
-            throw new RuntimeException("The specified directory is not a valid directory: " + directory);
-        }
-        if (!directory.canRead()) {
-            throw new RuntimeException("There is no permission to read from the specified directory: " + directory);
-        }
-
-        File[] files = directory.listFiles();
-        if (files != null) {
-            for (File fileOrFolder : files) {
-                if (fileOrFolder == null)
-                    continue;
-                if (fileOrFolder.isDirectory() && recursive) {
-                    returnedFiles.addAll(search(fileOrFolder, recursive, filter));
-                } else {
-                    if (filter.filter(fileOrFolder.getName())) {
-                        returnedFiles.add(fileOrFolder.getAbsoluteFile().toString());
-                    }
-                }
-            }
-        }
-        return returnedFiles;
-    }
-
-//    public static String getFileExtension(String file) {
-//        String extension = "";
-//        int lastDot = file.lastIndexOf('.');
-//        if (lastDot > 0) {
-//            extension = file.substring(lastDot+1);
-//        }
-//        return extension;
-//    }
-
 
 }
