@@ -129,14 +129,11 @@ public class ListenerCommand extends Builder {
 
             Properties additionalProps = PropertiesUtils.toProperties(additionalArguments);
             CommonCommandArguments commonArgs = new CommonCommandArguments();
+
             setGlobalConfiguration(commonArgs, additionalProps, envVars);
-
-            commonArgs.setAppName(JenkinsUtils.tryGetEnvVariable(envVars, appName));
-            commonArgs.setBuildName(getFinalBuildName(build, logger));
-            commonArgs.setBranchName(JenkinsUtils.tryGetEnvVariable(envVars, branchName));
-            commonArgs.setEnvironment(JenkinsUtils.tryGetEnvVariable(envVars, environment));
-
+            setConfiguration(logger, build, envVars, commonArgs);
             String agentPath = tryGetAgentPath(logger, commonArgs, additionalProps);
+
             AbstractExecutor executor = executeCommand(logger, agentPath, commandMode, commonArgs);
             executor.execute();
 
@@ -217,7 +214,6 @@ public class ListenerCommand extends Builder {
         );
     }
 
-
     private void setGlobalConfiguration(CommonCommandArguments commonArgs, Properties additionalProps, EnvVars envVars) {
 
         String customer = (String) additionalProps.get("customerid");
@@ -237,6 +233,13 @@ public class ListenerCommand extends Builder {
             proxy = beginAnalysis.getDescriptor().getProxy();
         }
         commonArgs.setProxy(JenkinsUtils.tryGetEnvVariable(envVars, proxy));
+    }
+
+    private void setConfiguration(Logger logger, AbstractBuild<?, ?> build, EnvVars envVars, CommonCommandArguments commonArgs){
+        commonArgs.setAppName(JenkinsUtils.tryGetEnvVariable(envVars, appName));
+        commonArgs.setBuildName(getFinalBuildName(build, logger));
+        commonArgs.setBranchName(JenkinsUtils.tryGetEnvVariable(envVars, branchName));
+        commonArgs.setEnvironment(JenkinsUtils.tryGetEnvVariable(envVars, environment));
     }
 
     private String getFinalBuildName(AbstractBuild<?, ?> build, Logger logger) throws IllegalStateException {
