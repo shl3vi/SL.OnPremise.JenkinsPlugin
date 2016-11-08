@@ -11,8 +11,6 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 import io.sealights.plugins.sealightsjenkins.BeginAnalysis;
-import io.sealights.plugins.sealightsjenkins.BuildName;
-import io.sealights.plugins.sealightsjenkins.BuildNamingStrategy;
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities.*;
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.executors.AbstractExecutor;
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.executors.EndCommandExecutor;
@@ -24,6 +22,7 @@ import io.sealights.plugins.sealightsjenkins.integration.upgrade.UpgradeProxy;
 import io.sealights.plugins.sealightsjenkins.integration.upgrade.entities.UpgradeConfiguration;
 import io.sealights.plugins.sealightsjenkins.utils.JenkinsUtils;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
+import io.sealights.plugins.sealightsjenkins.utils.PropertiesUtils;
 import io.sealights.plugins.sealightsjenkins.utils.StringUtils;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
@@ -33,31 +32,27 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Properties;
 
 @ExportedBean
 public class ListenerCommand extends Builder {
 
     private String appName;
     private String branchName;
-    private BuildName buildName;
+    private CommandBuildName buildName;
     private String environment;
-
-    private String override_customerId;
-    private String override_url;
-    private String override_proxy;
+    private String additionalArguments;
     private BeginAnalysis beginAnalysis = new BeginAnalysis();
 
     @DataBoundConstructor
-    public ListenerCommand(String appName, String branchName, BuildName buildName, String environment,
-                           String override_customerId, String override_url, String override_proxy) {
+    public ListenerCommand(String appName, String branchName, CommandBuildName buildName, String environment, String additionalArguments) {
         this.appName = appName;
         this.branchName = branchName;
         this.buildName = buildName;
         this.environment = environment;
-        this.override_customerId = override_customerId;
-        this.override_url = override_url;
-        this.override_proxy = override_proxy;
+        this.additionalArguments = additionalArguments;
     }
 
 
@@ -82,12 +77,12 @@ public class ListenerCommand extends Builder {
     }
 
     @Exported
-    public BuildName getBuildName() {
+    public CommandBuildName getBuildName() {
         return buildName;
     }
 
     @Exported
-    public void setBuildName(BuildName buildName) {
+    public void setBuildName(CommandBuildName buildName) {
         this.buildName = buildName;
     }
 
@@ -102,36 +97,6 @@ public class ListenerCommand extends Builder {
     }
 
     @Exported
-    public String getOverride_customerId() {
-        return override_customerId;
-    }
-
-    @Exported
-    public void setOverride_customerId(String override_customerId) {
-        this.override_customerId = override_customerId;
-    }
-
-    @Exported
-    public String getOverride_url() {
-        return override_url;
-    }
-
-    @Exported
-    public void setOverride_url(String override_url) {
-        this.override_url = override_url;
-    }
-
-    @Exported
-    public String getOverride_proxy() {
-        return override_proxy;
-    }
-
-    @Exported
-    public void setOverride_proxy(String override_proxy) {
-        this.override_proxy = override_proxy;
-    }
-
-    @Exported
     public BeginAnalysis getBeginAnalysis() {
         return beginAnalysis;
     }
@@ -139,6 +104,16 @@ public class ListenerCommand extends Builder {
     @Exported
     public void setBeginAnalysis(BeginAnalysis beginAnalysis) {
         this.beginAnalysis = beginAnalysis;
+    }
+
+    @Exported
+    public String getAdditionalArguments() {
+        return additionalArguments;
+    }
+
+    @Exported
+    public void setAdditionalArguments(String additionalArguments) {
+        this.additionalArguments = additionalArguments;
     }
 
     @Override
@@ -149,27 +124,37 @@ public class ListenerCommand extends Builder {
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, CommandMode commandMode, Logger logger) throws IOException, InterruptedException {
 
         try {
-            setDefaultValues(logger);
+            setDefaultValues();
             EnvVars envVars = build.getEnvironment(listener);
 
+            Properties additionalProps = PropertiesUtils.toProperties(additionalArguments);
             CommonCommandArguments commonArgs = new CommonCommandArguments();
-            setGlobalConfiguration(commonArgs, envVars);
+            setGlobalConfiguration(commonArgs, additionalProps, envVars);
 
             commonArgs.setAppName(JenkinsUtils.tryGetEnvVariable(envVars, appName));
             commonArgs.setBuildName(getFinalBuildName(build, logger));
             commonArgs.setBranchName(JenkinsUtils.tryGetEnvVariable(envVars, branchName));
             commonArgs.setEnvironment(JenkinsUtils.tryGetEnvVariable(envVars, environment));
 
-            AbstractUpgradeManager upgradeManager = createUpgradeManager(logger, commonArgs);
-            String agentPath = upgradeManager.ensureLatestAgentPresentLocally();
-
+            String agentPath = tryGetAgentPath(logger, commonArgs, additionalProps);
             AbstractExecutor executor = executeCommand(logger, agentPath, commandMode, commonArgs);
             executor.execute();
+
         } catch (Exception e) {
             logger.error("Error occurred while performing 'Sealights Listener Command'. Error: ", e);
         }
 
         return true;
+    }
+
+    private String tryGetAgentPath(Logger logger, CommonCommandArguments commonArgs, Properties props) {
+        String agentPath = (String) props.get("agentpath");
+        if (StringUtils.isNullOrEmpty(agentPath) || !(new File(agentPath).isFile())) {
+            AbstractUpgradeManager upgradeManager = createUpgradeManager(logger, commonArgs);
+            agentPath = upgradeManager.ensureLatestAgentPresentLocally();
+        }
+
+        return agentPath;
     }
 
     private AbstractExecutor executeCommand(Logger logger, String agentPath, CommandMode commandMode, CommonCommandArguments commonArgs) {
@@ -232,40 +217,41 @@ public class ListenerCommand extends Builder {
         );
     }
 
-    private void setGlobalConfiguration(CommonCommandArguments commonArgs, EnvVars envVars) {
 
-        String customer = override_customerId;
+    private void setGlobalConfiguration(CommonCommandArguments commonArgs, Properties additionalProps, EnvVars envVars) {
+
+        String customer = (String) additionalProps.get("customerid");
         if (StringUtils.isNullOrEmpty(customer)) {
             customer = beginAnalysis.getDescriptor().getCustomerId();
         }
         commonArgs.setCustomerId(JenkinsUtils.tryGetEnvVariable(envVars, customer));
 
-        String url = override_url;
+        String url = (String) additionalProps.get("server");
         if (StringUtils.isNullOrEmpty(url)) {
             url = beginAnalysis.getDescriptor().getUrl();
         }
-        commonArgs.setUrl(url);
+        commonArgs.setUrl(JenkinsUtils.tryGetEnvVariable(envVars, url));
 
-        String proxy = override_proxy;
+        String proxy = (String) additionalProps.get("proxy");
         if (StringUtils.isNullOrEmpty(proxy)) {
             proxy = beginAnalysis.getDescriptor().getProxy();
         }
-        commonArgs.setProxy(proxy);
+        commonArgs.setProxy(JenkinsUtils.tryGetEnvVariable(envVars, proxy));
     }
 
     private String getFinalBuildName(AbstractBuild<?, ?> build, Logger logger) throws IllegalStateException {
 
         String finalBuildName = null;
 
-        if (BuildNamingStrategy.LATEST_BUILD.equals(buildName.getBuildNamingStrategy())) {
+        if (CommandBuildNamingStrategy.LATEST_BUILD.equals(buildName.getBuildNamingStrategy())) {
             return null;
         }
 
-        if (BuildNamingStrategy.MANUAL.equals(buildName.getBuildNamingStrategy())) {
+        if (CommandBuildNamingStrategy.MANUAL.equals(buildName.getBuildNamingStrategy())) {
             finalBuildName = getManualBuildName();
 
-        } else if (BuildNamingStrategy.JENKINS_UPSTREAM.equals(buildName.getBuildNamingStrategy())) {
-            BuildName.UpstreamBuildName upstream = (BuildName.UpstreamBuildName) buildName;
+        } else if (CommandBuildNamingStrategy.JENKINS_UPSTREAM.equals(buildName.getBuildNamingStrategy())) {
+            CommandBuildName.UpstreamBuildName upstream = (CommandBuildName.UpstreamBuildName) buildName;
             String upstreamProjectName = upstream.getUpstreamProjectName();
             finalBuildName = JenkinsUtils.getUpstreamBuildName(build, upstreamProjectName, logger);
         }
@@ -277,14 +263,14 @@ public class ListenerCommand extends Builder {
         return finalBuildName;
     }
 
-    private void setDefaultValues(Logger logger) {
+    private void setDefaultValues() {
 
         if (this.buildName == null)
-            this.buildName = new BuildName.DefaultBuildName();
+            this.buildName = new CommandBuildName.DefaultBuildName();
     }
 
     private String getManualBuildName() {
-        BuildName.ManualBuildName manual = (BuildName.ManualBuildName) buildName;
+        CommandBuildName.ManualBuildName manual = (CommandBuildName.ManualBuildName) buildName;
         String insertedBuildName = manual.getInsertedBuildName();
         return insertedBuildName;
     }
@@ -311,8 +297,8 @@ public class ListenerCommand extends Builder {
             super.load();
         }
 
-        public DescriptorExtensionList<BuildName, BuildName.BuildNameDescriptor> getBuildNameDescriptorList() {
-            return Jenkins.getInstance().getDescriptorList(BuildName.class);
+        public DescriptorExtensionList<CommandBuildName, CommandBuildName.CommandBuildNameDescriptor> getBuildNameDescriptorList() {
+            return Jenkins.getInstance().getDescriptorList(CommandBuildName.class);
         }
 
         public FormValidation doCheckAppName(@QueryParameter String appName) {

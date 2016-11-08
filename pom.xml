@@ -9,6 +9,8 @@
         <version>2.3</version>
         <relativePath/>
     </parent>
+
+
     <groupId>io.sealights.plugins</groupId>
     <artifactId>sealights-jenkins</artifactId>
     <version>1.0-SNAPSHOT</version>
@@ -42,8 +44,8 @@
 
     <licenses>
         <license>
-            <name>MIT License</name>
-            <url>http://opensource.org/licenses/MIT</url>
+            <name>Sealights Jenkins License</name>
+            <url>https://github.com/Sealights/SL.OnPremise.JenkinsPlugin/blob/master/LICENSE.txt</url>
         </license>
     </licenses>
 
@@ -52,11 +54,13 @@
             <id>sl3vi</id>
             <name>Shahar Levi</name>
             <email>shahar@sealights.io</email>
+            <organization>sealights</organization>
         </developer>
         <developer>
             <id>nadavye</id>
             <name>Nadav Yeheskel</name>
-            <email>nadavr@sealights.io</email>
+            <email>nadav@sealights.io</email>
+            <organization>sealights</organization>
         </developer>
     </developers>
 

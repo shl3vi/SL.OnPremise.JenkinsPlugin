@@ -24,15 +24,9 @@
         </j:forEach>
     </f:dropdownList>
 
-    <f:advanced title="Override Global Configuration">
-        <f:entry title="Customer Id" field="override_customerId">
-            <f:textbox value="${override_customerId}"/>
-        </f:entry>
-        <f:entry title="SeaLights Server" field="override_url">
-            <f:textbox value="${override_url}"/>
-        </f:entry>
-        <f:entry title="Proxy Url (Optional)" field="override_proxy">
-            <f:textbox value="${override_proxy}"/>
+    <f:advanced title="Advance">
+        <f:entry title="${%Additional Arguments}" field="additionalArguments">
+            <f:expandableTextbox value="${additionalArguments}"/>
         </f:entry>
     </f:advanced>
 

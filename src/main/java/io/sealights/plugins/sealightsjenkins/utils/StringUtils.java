@@ -6,6 +6,9 @@ import java.util.List;
 
 public class StringUtils {
 
+    public static final String windows_newline = "\r\n";
+    public static final String unix_newline = "\n";
+
     public static String join(String[] strings, char delimiter){
 
         if (strings == null){
@@ -15,6 +18,7 @@ public class StringUtils {
         List<String> stringsAsList = Arrays.asList(strings);
         return join(stringsAsList,delimiter);
     }
+
     public static String join(List<String> strings, char delimiter){
 
         if (strings == null){
@@ -43,5 +47,12 @@ public class StringUtils {
             new ArrayList<>();
         }
         return  Arrays.asList(str.split("\\s*,\\s*"));
+    }
+
+    public static String fixOSEnding(String str){
+        if (OsDetector.isWindows())
+            return str.replace(unix_newline, windows_newline);
+
+        return str.replace(windows_newline, unix_newline);
     }
 }
