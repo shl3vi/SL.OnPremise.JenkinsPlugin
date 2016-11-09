@@ -1,6 +1,5 @@
 package io.sealights.plugins.sealightsjenkins.buildsteps.commands.executors;
 
-import io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities.CommandModes;
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities.UploadReportsCommandArguments;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import io.sealights.plugins.sealightsjenkins.utils.StringUtils;
@@ -8,14 +7,14 @@ import io.sealights.plugins.sealightsjenkins.utils.StringUtils;
 import java.util.List;
 
 /**
- * Created by shahar on 11/4/2016.
+ * Executor for the 'uploadReports' command.
  */
-public class UploadReportsCommandExecutor extends AbstractExecutor{
+public class UploadReportsCommandExecutor extends AbstractCommandExecutor {
 
     private UploadReportsCommandArguments uploadReportsCommandArguments;
 
-    public UploadReportsCommandExecutor(Logger logger, String agentPath, UploadReportsCommandArguments uploadReportsCommandArguments) {
-        super(logger, agentPath, CommandModes.UploadReports, uploadReportsCommandArguments.getCommonCommandArguments());
+    public UploadReportsCommandExecutor(Logger logger, UploadReportsCommandArguments uploadReportsCommandArguments) {
+        super(logger, uploadReportsCommandArguments.getBaseArgs());
         this.uploadReportsCommandArguments = uploadReportsCommandArguments;
     }
 

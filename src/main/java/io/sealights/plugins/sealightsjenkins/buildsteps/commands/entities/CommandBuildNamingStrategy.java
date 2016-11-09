@@ -1,7 +1,7 @@
 package io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities;
 
 /**
- * Created by shahar on 11/8/2016.
+ * The optionals strategies to get build name.
  */
 public enum CommandBuildNamingStrategy {
     JENKINS_BUILD() {

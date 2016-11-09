@@ -1,18 +1,17 @@
 package io.sealights.plugins.sealightsjenkins.buildsteps.commands.executors;
 
-import io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities.CommandModes;
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities.EndCommandArguments;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 
 /**
- * Created by shahar on 11/4/2016.
+ * Executor for the 'end' command.
  */
-public class EndCommandExecutor extends AbstractExecutor {
+public class EndCommandExecutor extends AbstractCommandExecutor {
 
     private EndCommandArguments endCommandArguments;
 
-    public EndCommandExecutor(Logger logger, String agentPath, EndCommandArguments endCommandArguments) {
-        super(logger, agentPath, CommandModes.End, endCommandArguments.getCommonCommandArguments());
+    public EndCommandExecutor(Logger logger, EndCommandArguments endCommandArguments) {
+        super(logger, endCommandArguments.getBaseArgs());
         this.endCommandArguments = endCommandArguments;
     }
 

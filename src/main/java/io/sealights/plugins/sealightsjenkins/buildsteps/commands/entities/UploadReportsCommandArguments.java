@@ -1,21 +1,26 @@
 package io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities;
 
 /**
- * Created by shahar on 11/4/2016.
+ * Arguments for the 'uploadReports' command.
  */
-public class UploadReportsCommandArguments extends AbstractCommandArguments{
+public class UploadReportsCommandArguments extends BaseCommandArguments {
 
+    private BaseCommandArguments baseArgs;
     private String reportFiles;
     private String reportsFolders;
     private boolean hasMoreRequests;
     private String source;
 
-    public UploadReportsCommandArguments( CommonCommandArguments commonCommandArguments, String reportFiles, String reportsFolders, boolean hasMoreRequests, String source) {
-        super(CommandModes.UploadReports, commonCommandArguments);
+    public UploadReportsCommandArguments(BaseCommandArguments baseArgs, String reportFiles, String reportsFolders, boolean hasMoreRequests, String source) {
+        this.baseArgs = baseArgs;
         this.reportFiles = reportFiles;
         this.reportsFolders = reportsFolders;
         this.hasMoreRequests = hasMoreRequests;
         this.source = source;
+    }
+
+    public BaseCommandArguments getBaseArgs() {
+        return baseArgs;
     }
 
     public String getReportFiles() {

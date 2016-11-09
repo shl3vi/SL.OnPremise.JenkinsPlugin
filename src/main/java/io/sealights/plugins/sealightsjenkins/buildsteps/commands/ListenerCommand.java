@@ -11,15 +11,8 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 import io.sealights.plugins.sealightsjenkins.BeginAnalysis;
-import io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities.*;
-import io.sealights.plugins.sealightsjenkins.buildsteps.commands.executors.AbstractExecutor;
-import io.sealights.plugins.sealightsjenkins.buildsteps.commands.executors.EndCommandExecutor;
-import io.sealights.plugins.sealightsjenkins.buildsteps.commands.executors.StartCommandExecutor;
-import io.sealights.plugins.sealightsjenkins.buildsteps.commands.executors.UploadReportsCommandExecutor;
-import io.sealights.plugins.sealightsjenkins.integration.upgrade.AbstractUpgradeManager;
-import io.sealights.plugins.sealightsjenkins.integration.upgrade.TestListenerUpgradeManager;
-import io.sealights.plugins.sealightsjenkins.integration.upgrade.UpgradeProxy;
-import io.sealights.plugins.sealightsjenkins.integration.upgrade.entities.UpgradeConfiguration;
+import io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities.BaseCommandArguments;
+import io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities.CommandBuildNamingStrategy;
 import io.sealights.plugins.sealightsjenkins.utils.JenkinsUtils;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import io.sealights.plugins.sealightsjenkins.utils.PropertiesUtils;
@@ -32,7 +25,6 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
 
@@ -124,18 +116,23 @@ public class ListenerCommand extends Builder {
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, CommandMode commandMode, Logger logger) throws IOException, InterruptedException {
 
         try {
+            // This step must be first
             setDefaultValues();
-            EnvVars envVars = build.getEnvironment(listener);
 
             Properties additionalProps = PropertiesUtils.toProperties(additionalArguments);
-            CommonCommandArguments commonArgs = new CommonCommandArguments();
+            EnvVars envVars = build.getEnvironment(listener);
+            BaseCommandArguments baseArgs = createBaseCommandArguments(logger, build, additionalProps, envVars);
+            baseArgs.setMode(commandMode);
 
-            setGlobalConfiguration(commonArgs, additionalProps, envVars);
-            setConfiguration(logger, build, envVars, commonArgs);
-            String agentPath = tryGetAgentPath(logger, commonArgs, additionalProps);
+            String filesStorage = resolveFilesStorage(additionalProps);
 
-            AbstractExecutor executor = executeCommand(logger, agentPath, commandMode, commonArgs);
-            executor.execute();
+            ListenerCommandHandler listenerCommandHandler = new ListenerCommandHandler(
+                    logger,
+                    filesStorage,
+                    baseArgs
+            );
+
+            listenerCommandHandler.handle();
 
         } catch (Exception e) {
             logger.error("Error occurred while performing 'Sealights Listener Command'. Error: ", e);
@@ -144,102 +141,59 @@ public class ListenerCommand extends Builder {
         return true;
     }
 
-    private String tryGetAgentPath(Logger logger, CommonCommandArguments commonArgs, Properties props) {
-        String agentPath = (String) props.get("agentpath");
-        if (StringUtils.isNullOrEmpty(agentPath) || !(new File(agentPath).isFile())) {
-            AbstractUpgradeManager upgradeManager = createUpgradeManager(logger, commonArgs);
-            agentPath = upgradeManager.ensureLatestAgentPresentLocally();
+    private BaseCommandArguments createBaseCommandArguments(
+            Logger logger, AbstractBuild<?, ?> build, Properties additionalProps, EnvVars envVars) {
+
+        BaseCommandArguments baseArgs = new BaseCommandArguments();
+        setGlobalConfiguration(baseArgs, additionalProps, envVars);
+        setConfiguration(logger, build, envVars, baseArgs);
+
+        baseArgs.setAgentPath((String) additionalProps.get("agentpath"));
+        baseArgs.setJavaPath((String) additionalProps.get("javapath"));
+
+        return baseArgs;
+    }
+
+    private String resolveFilesStorage(Properties additionalProps) {
+        String filesStorage = (String) additionalProps.get("filesstorage");
+        if (!StringUtils.isNullOrEmpty(filesStorage)){
+            return filesStorage;
         }
 
-        return agentPath;
-    }
-
-    private AbstractExecutor executeCommand(Logger logger, String agentPath, CommandMode commandMode, CommonCommandArguments commonArgs) {
-        AbstractExecutor executor;
-
-        if (CommandModes.Start.equals(commandMode.getCurrentMode())) {
-            StartCommandArguments startCommandArguments = getStartCommandArguments(commandMode, commonArgs);
-            executor = new StartCommandExecutor(logger, agentPath, startCommandArguments);
-        } else if (CommandModes.End.equals(commandMode.getCurrentMode())) {
-            EndCommandArguments endCommandArguments = getEndCommandArguments(commonArgs);
-            executor = new EndCommandExecutor(logger, agentPath, endCommandArguments);
-        } else {
-
-            UploadReportsCommandArguments uploadReportsCommandArguments = getUploadReportsCommandArguments(commandMode, commonArgs);
-            executor = new UploadReportsCommandExecutor(logger, agentPath, uploadReportsCommandArguments);
+        filesStorage = this.beginAnalysis.getDescriptor().getFilesStorage();
+        if (!StringUtils.isNullOrEmpty(filesStorage)) {
+            return filesStorage;
         }
 
-        return executor;
+        return System.getProperty("java.io.tmpdir");
     }
 
-    private StartCommandArguments getStartCommandArguments(CommandMode commandMode, CommonCommandArguments commonArgs) {
-        CommandMode.StartView startView = (CommandMode.StartView) commandMode;
-        return new StartCommandArguments(commonArgs, startView.getNewEnvironment());
-    }
-
-    private EndCommandArguments getEndCommandArguments(CommonCommandArguments commonArgs) {
-        return new EndCommandArguments(commonArgs);
-    }
-
-    private UploadReportsCommandArguments getUploadReportsCommandArguments(CommandMode commandMode, CommonCommandArguments commonArgs) {
-        CommandMode.UploadReportsView uploadReportsView = (CommandMode.UploadReportsView) commandMode;
-        return new UploadReportsCommandArguments(
-                commonArgs,
-                uploadReportsView.getReportFiles(),
-                uploadReportsView.getReportsFolders(),
-                uploadReportsView.getHasMoreRequests(),
-                uploadReportsView.getSource());
-    }
-
-    private AbstractUpgradeManager createUpgradeManager(Logger logger, CommonCommandArguments commonArgs) {
-        UpgradeConfiguration upgradeConfiguration = createUpgradeConfiguration(commonArgs);
-        UpgradeProxy upgradeProxy = new UpgradeProxy(upgradeConfiguration, logger);
-        return new TestListenerUpgradeManager(upgradeProxy, upgradeConfiguration, logger);
-    }
-
-    private UpgradeConfiguration createUpgradeConfiguration(CommonCommandArguments commonArgs) {
-        String filesStorage = this.beginAnalysis.getDescriptor().getFilesStorage();
-        if (StringUtils.isNullOrEmpty(filesStorage)) {
-            filesStorage = System.getProperty("java.io.tmpdir");
-        }
-
-        return new UpgradeConfiguration(
-                commonArgs.getCustomerId(),
-                commonArgs.getAppName(),
-                commonArgs.getEnvironment(),
-                commonArgs.getBranchName(),
-                commonArgs.getUrl(),
-                commonArgs.getProxy(),
-                filesStorage
-        );
-    }
-
-    private void setGlobalConfiguration(CommonCommandArguments commonArgs, Properties additionalProps, EnvVars envVars) {
+    private void setGlobalConfiguration(BaseCommandArguments baseArgs, Properties additionalProps, EnvVars envVars) {
 
         String customer = (String) additionalProps.get("customerid");
         if (StringUtils.isNullOrEmpty(customer)) {
             customer = beginAnalysis.getDescriptor().getCustomerId();
         }
-        commonArgs.setCustomerId(JenkinsUtils.tryGetEnvVariable(envVars, customer));
+        baseArgs.setCustomerId(JenkinsUtils.tryGetEnvVariable(envVars, customer));
 
         String url = (String) additionalProps.get("server");
         if (StringUtils.isNullOrEmpty(url)) {
             url = beginAnalysis.getDescriptor().getUrl();
         }
-        commonArgs.setUrl(JenkinsUtils.tryGetEnvVariable(envVars, url));
+        baseArgs.setUrl(JenkinsUtils.tryGetEnvVariable(envVars, url));
 
         String proxy = (String) additionalProps.get("proxy");
         if (StringUtils.isNullOrEmpty(proxy)) {
             proxy = beginAnalysis.getDescriptor().getProxy();
         }
-        commonArgs.setProxy(JenkinsUtils.tryGetEnvVariable(envVars, proxy));
+        baseArgs.setProxy(JenkinsUtils.tryGetEnvVariable(envVars, proxy));
     }
 
-    private void setConfiguration(Logger logger, AbstractBuild<?, ?> build, EnvVars envVars, CommonCommandArguments commonArgs){
-        commonArgs.setAppName(JenkinsUtils.tryGetEnvVariable(envVars, appName));
-        commonArgs.setBuildName(getFinalBuildName(build, logger));
-        commonArgs.setBranchName(JenkinsUtils.tryGetEnvVariable(envVars, branchName));
-        commonArgs.setEnvironment(JenkinsUtils.tryGetEnvVariable(envVars, environment));
+    private void setConfiguration(Logger logger, AbstractBuild<?, ?> build, EnvVars envVars, BaseCommandArguments baseArgs) {
+        baseArgs.setAppName(JenkinsUtils.tryGetEnvVariable(envVars, appName));
+        baseArgs.setBuildName(getFinalBuildName(build, logger));
+        baseArgs.setBranchName(JenkinsUtils.tryGetEnvVariable(envVars, branchName));
+        baseArgs.setEnvironment(JenkinsUtils.tryGetEnvVariable(envVars, environment));
     }
 
     private String getFinalBuildName(AbstractBuild<?, ?> build, Logger logger) throws IllegalStateException {

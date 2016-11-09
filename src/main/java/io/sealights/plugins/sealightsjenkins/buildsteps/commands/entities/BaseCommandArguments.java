@@ -1,10 +1,13 @@
 package io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities;
 
-/**
- * Created by shahar on 11/4/2016.
- */
-public class CommonCommandArguments {
+import io.sealights.plugins.sealightsjenkins.buildsteps.commands.CommandMode;
 
+/**
+ * Basic arguments that is needed for the executors
+ */
+public class BaseCommandArguments {
+
+    private CommandMode mode;
     private String appName;
     private String branchName;
     private String buildName;
@@ -12,6 +15,16 @@ public class CommonCommandArguments {
     private String url;
     private String proxy;
     private String environment;
+    private String agentPath;
+    private String javaPath;
+
+    public CommandMode getMode() {
+        return mode;
+    }
+
+    public void setMode(CommandMode mode) {
+        this.mode = mode;
+    }
 
     public String getAppName() {
         return appName;
@@ -61,11 +74,27 @@ public class CommonCommandArguments {
         this.proxy = proxy;
     }
 
+    public String getEnvironment() {
+        return environment;
+    }
+
     public void setEnvironment(String environment) {
         this.environment = environment;
     }
 
-    public String getEnvironment() {
-        return environment;
+    public String getAgentPath() {
+        return agentPath;
+    }
+
+    public void setAgentPath(String agentPath) {
+        this.agentPath = agentPath;
+    }
+
+    public String getJavaPath() {
+        return javaPath;
+    }
+
+    public void setJavaPath(String javaPath) {
+        this.javaPath = javaPath;
     }
 }

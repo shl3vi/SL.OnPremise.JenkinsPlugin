@@ -1,11 +1,17 @@
 package io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities;
 
 /**
- * Created by shahar on 11/4/2016.
+ * Arguments for the 'end' command.
  */
-public class EndCommandArguments extends AbstractCommandArguments{
+public class EndCommandArguments{
 
-    public EndCommandArguments(CommonCommandArguments commonCommandArguments) {
-        super(CommandModes.End, commonCommandArguments);
+    private BaseCommandArguments baseArgs;
+
+    public EndCommandArguments(BaseCommandArguments baseArgs) {
+        this.baseArgs = baseArgs;
+    }
+
+    public BaseCommandArguments getBaseArgs() {
+        return baseArgs;
     }
 }

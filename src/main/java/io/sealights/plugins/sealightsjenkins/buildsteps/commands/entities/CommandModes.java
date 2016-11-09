@@ -1,7 +1,7 @@
 package io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities;
 
 /**
- * Created by shahar on 11/3/2016.
+ * modes that can be executed.
  */
 public enum CommandModes {
     Start("start") {
@@ -16,7 +16,7 @@ public enum CommandModes {
     },
     UploadReports("uploadReports") {
         @Override public String getDisplayName() {
-            return "Upload JUnit tests reports";
+            return "Upload tests reports";
         }
     };
 

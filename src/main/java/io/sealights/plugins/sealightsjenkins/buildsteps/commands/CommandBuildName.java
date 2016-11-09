@@ -9,6 +9,7 @@ import hudson.model.Hudson;
 import hudson.util.FormValidation;
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities.CommandBuildNamingStrategy;
 import io.sealights.plugins.sealightsjenkins.utils.StringUtils;
+import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.export.Exported;
@@ -16,7 +17,7 @@ import org.kohsuke.stapler.export.Exported;
 import java.io.Serializable;
 
 /**
- * Created by shahar on 11/8/2016.
+ * This class holds the different possible build names and their arguments in the UI
  */
 public class CommandBuildName implements Describable<CommandBuildName>, ExtensionPoint, Serializable {
 
@@ -33,7 +34,7 @@ public class CommandBuildName implements Describable<CommandBuildName>, Extensio
 
     @Override
     public Descriptor<CommandBuildName> getDescriptor() {
-        return Hudson.getInstance().getDescriptorOrDie(getClass());
+        return Jenkins.getInstance().getDescriptorOrDie(getClass());
     }
 
     public static class CommandBuildNameDescriptor extends Descriptor<CommandBuildName> {

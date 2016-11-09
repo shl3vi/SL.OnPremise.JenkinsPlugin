@@ -56,10 +56,6 @@ public class ListenerCommandsBuildStep extends Builder {
         return true;
     }
 
-    private void resolveJobBuildProperties(){
-
-    }
-
     @Override
     public DescriptorImpl getDescriptor() {
         return (DescriptorImpl) super.getDescriptor();

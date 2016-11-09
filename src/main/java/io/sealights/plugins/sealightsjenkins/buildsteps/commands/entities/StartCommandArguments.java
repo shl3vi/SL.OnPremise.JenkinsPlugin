@@ -1,14 +1,15 @@
 package io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities;
 
 /**
- * Created by shahar on 11/4/2016.
+ * Arguments for the 'start' command.
  */
-public class StartCommandArguments extends AbstractCommandArguments{
+public class StartCommandArguments {
 
+    private BaseCommandArguments baseArgs;
     private String newEnvironment;
 
-    public StartCommandArguments(CommonCommandArguments commonCommandArguments, String newEnvironment) {
-        super(CommandModes.Start, commonCommandArguments);
+    public StartCommandArguments(BaseCommandArguments baseArgs, String newEnvironment) {
+        this.baseArgs = baseArgs;
         this.newEnvironment = newEnvironment;
     }
 
@@ -16,4 +17,7 @@ public class StartCommandArguments extends AbstractCommandArguments{
         return newEnvironment;
     }
 
+    public BaseCommandArguments getBaseArgs() {
+        return baseArgs;
+    }
 }

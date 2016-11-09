@@ -7,13 +7,14 @@ import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.Hudson;
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities.CommandModes;
+import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.export.Exported;
 
 import java.io.Serializable;
 
 /**
- * Created by shahar on 11/3/2016.
+ * This class holds the different command options and their arguments in the UI
  */
 public class CommandMode implements Describable<CommandMode>, ExtensionPoint, Serializable {
 
@@ -30,7 +31,7 @@ public class CommandMode implements Describable<CommandMode>, ExtensionPoint, Se
 
     @Override
     public Descriptor<CommandMode> getDescriptor() {
-        return Hudson.getInstance().getDescriptorOrDie(getClass());
+        return Jenkins.getInstance().getDescriptorOrDie(getClass());
     }
 
     public static class CommandModeDescriptor extends Descriptor<CommandMode> {
