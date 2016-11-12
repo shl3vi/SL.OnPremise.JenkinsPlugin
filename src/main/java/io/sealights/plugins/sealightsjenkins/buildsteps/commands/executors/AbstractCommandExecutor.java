@@ -20,32 +20,46 @@ public abstract class AbstractCommandExecutor implements ICommandExecutor {
     }
 
     public boolean execute() {
-        String commandName = baseArgs.getMode().getCurrentMode().getName();
         try {
-            String arguments = getBaseArgumentsLine() + getAdditionalArguments();
-            String execCommand = resolvedJavaPath() + " -jar " + baseArgs.getAgentPath() + " " + commandName + " " + arguments;
+            String execCommand = createExecutionCommand();
 
             // Run a java app in a separate system process
             logger.info("About to execute command: " + execCommand);
             Process proc = Runtime.getRuntime().exec(execCommand);
 
-            // Receive the process output
-            String outputInfo = StreamUtils.toString(proc.getInputStream());
-            String outputErrors = StreamUtils.toString(proc.getErrorStream());
-            logger.info("Process ended with exit code: " + proc.exitValue());
-            if (!StringUtils.isNullOrEmpty(outputInfo)) {
-                logger.info("Process output:");
-                logger.info(outputInfo);
-            }
-            if (!StringUtils.isNullOrEmpty(outputErrors)) {
-                logger.info("Process errors output:");
-                logger.error(outputErrors);
-            }
+            printStreams(proc);
+
         } catch (Exception e) {
-            logger.error("Unable to perform '" + commandName + "' command. Error: ", e);
+            logger.error("Unable to perform '" + getCommandName() + "' command. Error: ", e);
         }
 
         return true;
+    }
+
+    protected void printStreams(Process proc) {
+        // Receive the process output
+        String outputInfo = StreamUtils.toString(proc.getInputStream());
+        String outputErrors = StreamUtils.toString(proc.getErrorStream());
+        logger.info("Process ended with exit code: " + proc.exitValue());
+        if (!StringUtils.isNullOrEmpty(outputInfo)) {
+            logger.info("Process output:");
+            logger.info(outputInfo);
+        }
+        if (!StringUtils.isNullOrEmpty(outputErrors)) {
+            logger.info("Process errors output:");
+            logger.error(outputErrors);
+        }
+    }
+
+
+    public String createExecutionCommand() {
+        String arguments = getBaseArgumentsLine() + getAdditionalArguments();
+        String execCommand = resolvedJavaPath() + " -jar " + baseArgs.getAgentPath() + " " + getCommandName() + " " + arguments;
+        return execCommand.trim();
+    }
+
+    private String getCommandName() {
+        return baseArgs.getMode().getCurrentMode().getName();
     }
 
     public abstract String getAdditionalArguments();

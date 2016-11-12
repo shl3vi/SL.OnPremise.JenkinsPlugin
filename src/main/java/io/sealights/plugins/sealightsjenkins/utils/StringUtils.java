@@ -44,7 +44,7 @@ public class StringUtils {
 
     public static List<String> commaSeparatedToList(String str){
         if (str == null){
-            new ArrayList<>();
+            return new ArrayList<>();
         }
         return  Arrays.asList(str.split("\\s*,\\s*"));
     }
