@@ -6,17 +6,17 @@ package io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities;
 public enum CommandModes {
     Start("start") {
         @Override public String getDisplayName() {
-            return "Start new execution";
+            return "Step 1 - Start Test Execution";
         }
     },
     End("end") {
         @Override public String getDisplayName() {
-            return "End execution";
+            return "Step 3 - End Test Execution";
         }
     },
     UploadReports("uploadReports") {
         @Override public String getDisplayName() {
-            return "Upload tests reports";
+            return "Step 2 - Upload Report";
         }
     };
 
