@@ -54,8 +54,8 @@ public class CommandExecutorsFactoryTest {
         //Act
         ICommandExecutor executor = factory.createExecutor(nullLogger, null);
         //Assert
-        boolean isUploadReportsExecutor = executor instanceof NullCommandExecutor;
-        Assert.assertTrue("The created executor is not an instance of 'NullCommandExecutor'", isUploadReportsExecutor);
+        boolean isNullExecutor = executor instanceof NullCommandExecutor;
+        Assert.assertTrue("The created executor is not an instance of 'NullCommandExecutor'", isNullExecutor);
     }
 
     @Test
@@ -65,8 +65,8 @@ public class CommandExecutorsFactoryTest {
         //Act
         ICommandExecutor executor = factory.createExecutor(nullLogger, createBaseCommandArguments(null));
         //Assert
-        boolean isUploadReportsExecutor = executor instanceof NullCommandExecutor;
-        Assert.assertTrue("The created executor is not an instance of 'NullCommandExecutor'", isUploadReportsExecutor);
+        boolean isNullExecutor = executor instanceof NullCommandExecutor;
+        Assert.assertTrue("The created executor is not an instance of 'NullCommandExecutor'", isNullExecutor);
     }
 
 

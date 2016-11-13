@@ -23,6 +23,7 @@ public class ListenerCommandTest {
 
     @Test
     public void perform_overrideCustomerIdFromAdditionalArgs_shouldOverride() throws IOException, InterruptedException {
+        //Arrange & Act
         ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest("customerid", "fake-customer");
 
         //Assert
@@ -34,6 +35,7 @@ public class ListenerCommandTest {
 
     @Test
     public void perform_overrideCustomerIdWithEnvVar_shouldResolveAndOverride() throws IOException, InterruptedException {
+        //Arrange & Act
         ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest("customerid", "fake-customer", "TEST_CUSTOMER");
 
         //Assert
@@ -45,6 +47,7 @@ public class ListenerCommandTest {
 
     @Test
     public void perform_overrideServerFromAdditionalArgs_shouldOverride() throws IOException, InterruptedException {
+        //Arrange & Act
         ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest("server", "fake-server");
 
         //Assert
@@ -56,6 +59,7 @@ public class ListenerCommandTest {
 
     @Test
     public void perform_overrideServerWithEnvVar_shouldResolveAndOverride() throws IOException, InterruptedException {
+        //Arrange & Act
         ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest("server", "fake-server", "SERVER");
 
         //Assert
@@ -67,6 +71,7 @@ public class ListenerCommandTest {
 
     @Test
     public void perform_overrideProxyFromAdditionalArgs_shouldOverride() throws IOException, InterruptedException {
+        //Arrange & Act
         ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest("proxy", "fake-proxy");
 
         //Assert
@@ -78,6 +83,7 @@ public class ListenerCommandTest {
 
     @Test
     public void perform_overrideProxyWithEnvVars_shouldOverride() throws IOException, InterruptedException {
+        //Arrange & Act
         ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest("proxy", "fake-proxy", "PROXY");
 
         //Assert
@@ -89,6 +95,7 @@ public class ListenerCommandTest {
 
     @Test
     public void perform_overrideAgentPathFromAdditionalArgs_shouldOverride() throws IOException, InterruptedException {
+        //Arrange & Act
         ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest("agentpath", "fake-agent-path");
 
         //Assert
@@ -100,6 +107,7 @@ public class ListenerCommandTest {
 
     @Test
     public void perform_overrideAgentPathWithEnvVars_shouldOverride() throws IOException, InterruptedException {
+        //Arrange & Act
         ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest("agentpath", "fake-agent-path", "AGENT_PATH");
 
         //Assert
@@ -111,6 +119,7 @@ public class ListenerCommandTest {
 
     @Test
     public void perform_overrideJavaPathFromAdditionalArgs_shouldOverride() throws IOException, InterruptedException {
+        //Arrange & Act
         ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest("javapath", "fake-java-path");
 
         //Assert
@@ -122,6 +131,7 @@ public class ListenerCommandTest {
 
     @Test
     public void perform_overrideJavaPathWithEnvVars_shouldOverride() throws IOException, InterruptedException {
+        //Arrange & Act
         ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest("javapath", "fake-java-path", "JAVA_PATH");
 
         //Assert
@@ -133,24 +143,26 @@ public class ListenerCommandTest {
 
     @Test
     public void perform_overrideFilesStorageFromAdditionalArgs_shouldOverride() throws IOException, InterruptedException {
+        //Arrange & Act
         ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest("filesstorage", "fake-files-storage");
 
         //Assert
-        String expectedJavaPath = "fake-files-storage";
-        String actualJavaPath = listenerCommandHandler.getFilesStorage();
+        String expectedFilesStorage = "fake-files-storage";
+        String actualFilesStorage = listenerCommandHandler.getFilesStorage();
 
-        Assert.assertEquals("filesstorage should be override by the additional arguments", expectedJavaPath, actualJavaPath);
+        Assert.assertEquals("filesstorage should be override by the additional arguments", expectedFilesStorage, actualFilesStorage);
     }
 
     @Test
     public void perform_overrideFilesStorageWithEnvVars_shouldOverride() throws IOException, InterruptedException {
+        //Arrange & Act
         ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest("filesstorage", "fake-files-storage", "FILES_STORAGE");
 
         //Assert
-        String expectedJavaPath = "fake-files-storage";
-        String actualJavaPath = listenerCommandHandler.getFilesStorage();
+        String expectedFilesStorage = "fake-files-storage";
+        String actualFilesStorage = listenerCommandHandler.getFilesStorage();
 
-        Assert.assertEquals("filesstorage should be override by the additional arguments", expectedJavaPath, actualJavaPath);
+        Assert.assertEquals("filesstorage should be override by the additional arguments", expectedFilesStorage, actualFilesStorage);
     }
 
 
