@@ -113,7 +113,9 @@ public class ListenerCommand extends Builder {
         return true;
     }
 
-    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, CommandMode commandMode, Logger logger) throws IOException, InterruptedException {
+    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener,
+                           CommandMode commandMode, ListenerCommandHandler listenerCommandHandler, Logger logger)
+            throws IOException, InterruptedException {
 
         try {
             // This step must be first
@@ -126,11 +128,8 @@ public class ListenerCommand extends Builder {
 
             String filesStorage = resolveFilesStorage(additionalProps);
 
-            ListenerCommandHandler listenerCommandHandler = new ListenerCommandHandler(
-                    logger,
-                    filesStorage,
-                    baseArgs
-            );
+            listenerCommandHandler.setBaseArgs(baseArgs);
+            listenerCommandHandler.setFilesStorage(filesStorage);
 
             listenerCommandHandler.handle();
 

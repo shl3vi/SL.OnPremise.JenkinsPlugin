@@ -12,7 +12,7 @@ import org.junit.Test;
 
 public class CommandExecutorTest {
 
-    Logger nullLogger = new NullLogger();
+    private Logger nullLogger = new NullLogger();
 
     @Test
     public void startCommandExecutor_shouldCreateGoodExecutionLine() {

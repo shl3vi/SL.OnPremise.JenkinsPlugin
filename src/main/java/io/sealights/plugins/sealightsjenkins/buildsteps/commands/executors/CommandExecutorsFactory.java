@@ -9,24 +9,29 @@ import io.sealights.plugins.sealightsjenkins.utils.Logger;
  */
 public class CommandExecutorsFactory {
 
-    public ICommandExecutor createExecutor(Logger logger, BaseCommandArguments baseArgs){
+    public ICommandExecutor createExecutor(Logger logger, BaseCommandArguments baseArgs) {
         ICommandExecutor executor;
-        CommandMode mode = baseArgs.getMode();
 
-        if (CommandModes.Start.equals(mode.getCurrentMode())) {
-            StartCommandArguments startCommandArguments = getStartCommandArguments(baseArgs);
-            executor = new StartCommandExecutor(logger, startCommandArguments);
-        } else if (CommandModes.End.equals(mode.getCurrentMode())) {
-            EndCommandArguments endCommandArguments = getEndCommandArguments(baseArgs);
-            executor = new EndCommandExecutor(logger, endCommandArguments);
-        } else if (CommandModes.UploadReports.equals(mode.getCurrentMode())){
-            UploadReportsCommandArguments uploadReportsCommandArguments = getUploadReportsCommandArguments(baseArgs);
-            executor = new UploadReportsCommandExecutor(logger, uploadReportsCommandArguments);
-        }else{
-            logger.error("Something's wrong!");
+        if (baseArgs == null || baseArgs.getMode() == null) {
+            logger.error("BaseCommandArguments or mode is 'null'");
             executor = new NullCommandExecutor();
-        }
+        } else {
+            CommandMode mode = baseArgs.getMode();
 
+            if (CommandModes.Start.equals(mode.getCurrentMode())) {
+                StartCommandArguments startCommandArguments = getStartCommandArguments(baseArgs);
+                executor = new StartCommandExecutor(logger, startCommandArguments);
+            } else if (CommandModes.End.equals(mode.getCurrentMode())) {
+                EndCommandArguments endCommandArguments = getEndCommandArguments(baseArgs);
+                executor = new EndCommandExecutor(logger, endCommandArguments);
+            } else if (CommandModes.UploadReports.equals(mode.getCurrentMode())) {
+                UploadReportsCommandArguments uploadReportsCommandArguments = getUploadReportsCommandArguments(baseArgs);
+                executor = new UploadReportsCommandExecutor(logger, uploadReportsCommandArguments);
+            } else {
+                logger.error("Something's wrong!");
+                executor = new NullCommandExecutor();
+            }
+        }
         return executor;
     }
 
@@ -48,4 +53,5 @@ public class CommandExecutorsFactory {
                 uploadReportsView.getHasMoreRequests(),
                 uploadReportsView.getSource());
     }
+
 }

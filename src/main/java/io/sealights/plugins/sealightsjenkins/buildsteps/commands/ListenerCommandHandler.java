@@ -21,10 +21,8 @@ public class ListenerCommandHandler {
     private String filesStorage;
     private BaseCommandArguments baseArgs;
 
-    public ListenerCommandHandler(Logger logger, String filesStorage, BaseCommandArguments baseArgs) {
+    public ListenerCommandHandler(Logger logger) {
         this.logger = logger;
-        this.filesStorage = filesStorage;
-        this.baseArgs = baseArgs;
     }
 
     public boolean handle(){
@@ -64,4 +62,19 @@ public class ListenerCommandHandler {
         );
     }
 
+    public String getFilesStorage() {
+        return filesStorage;
+    }
+
+    public void setFilesStorage(String filesStorage) {
+        this.filesStorage = filesStorage;
+    }
+
+    public BaseCommandArguments getBaseArgs() {
+        return baseArgs;
+    }
+
+    public void setBaseArgs(BaseCommandArguments baseArgs) {
+        this.baseArgs = baseArgs;
+    }
 }

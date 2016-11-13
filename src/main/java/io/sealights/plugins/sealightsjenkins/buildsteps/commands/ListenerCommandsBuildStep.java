@@ -48,7 +48,8 @@ public class ListenerCommandsBuildStep extends Builder {
         Logger logger = new Logger(listener.getLogger());
 
         try {
-            listenerCommand.perform(build, launcher, listener, commandMode, logger);
+            ListenerCommandHandler listenerCommandHandler = new ListenerCommandHandler(logger);
+            listenerCommand.perform(build, launcher, listener, commandMode, listenerCommandHandler, logger);
         }catch (Exception e){
             logger.error("Error occurred while performing 'Sealights Listener Command'. Error: ", e);
         }
