@@ -28,7 +28,7 @@ public class CommandExecutorsFactory {
                 UploadReportsCommandArguments uploadReportsCommandArguments = getUploadReportsCommandArguments(baseArgs);
                 executor = new UploadReportsCommandExecutor(logger, uploadReportsCommandArguments);
             } else {
-                logger.error("Something's wrong!");
+                logger.error("Current mode is invalid! Cannot create executor.");
                 executor = new NullCommandExecutor();
             }
         }

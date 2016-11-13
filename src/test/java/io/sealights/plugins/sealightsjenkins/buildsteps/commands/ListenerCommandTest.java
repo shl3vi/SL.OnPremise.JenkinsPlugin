@@ -7,6 +7,7 @@ import hudson.model.TaskListener;
 import io.sealights.plugins.sealightsjenkins.BeginAnalysis;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import io.sealights.plugins.sealightsjenkins.utils.NullLogger;
+import io.sealights.plugins.sealightsjenkins.utils.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -21,14 +22,10 @@ public class ListenerCommandTest {
     private Logger nullLogger = new NullLogger();
 
     @Test
-    public void overrideCustomerId() throws IOException, InterruptedException {
+    public void perform_overrideCustomerIdFromAdditionalArgs_shouldOverride() throws IOException, InterruptedException {
+        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest("customerid", "fake-customer");
 
-        String customerIdOverride = "customerid=fake-customer";
-        ListenerCommand listenerCommand = createListenerCommand(customerIdOverride);
-        ListenerCommandHandler listenerCommandHandler = new ListenerCommandHandlerMock(nullLogger);
-
-        performListenerCommand(listenerCommand, listenerCommandHandler);
-
+        //Assert
         String expectedCustomerId = "fake-customer";
         String actualCustomerId = listenerCommandHandler.getBaseArgs().getCustomerId();
 
@@ -36,14 +33,21 @@ public class ListenerCommandTest {
     }
 
     @Test
-    public void overrideServer() throws IOException, InterruptedException {
+    public void perform_overrideCustomerIdWithEnvVar_shouldResolveAndOverride() throws IOException, InterruptedException {
+        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest("customerid", "fake-customer", "TEST_CUSTOMER");
 
-        String serverOverride = "server=fake-server";
-        ListenerCommand listenerCommand = createListenerCommand(serverOverride);
-        ListenerCommandHandler listenerCommandHandler = new ListenerCommandHandlerMock(nullLogger);
+        //Assert
+        String expectedCustomerId = "fake-customer";
+        String actualCustomerId = listenerCommandHandler.getBaseArgs().getCustomerId();
 
-        performListenerCommand(listenerCommand, listenerCommandHandler);
+        Assert.assertEquals("customerid should be override by the additional arguments", expectedCustomerId, actualCustomerId);
+    }
 
+    @Test
+    public void perform_overrideServerFromAdditionalArgs_shouldOverride() throws IOException, InterruptedException {
+        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest("server", "fake-server");
+
+        //Assert
         String expectedServer = "fake-server";
         String actualServer = listenerCommandHandler.getBaseArgs().getUrl();
 
@@ -51,14 +55,21 @@ public class ListenerCommandTest {
     }
 
     @Test
-    public void overrideProxy() throws IOException, InterruptedException {
+    public void perform_overrideServerWithEnvVar_shouldResolveAndOverride() throws IOException, InterruptedException {
+        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest("server", "fake-server", "SERVER");
 
-        String proxyOverride = "proxy=fake-proxy";
-        ListenerCommand listenerCommand = createListenerCommand(proxyOverride);
-        ListenerCommandHandler listenerCommandHandler = new ListenerCommandHandlerMock(nullLogger);
+        //Assert
+        String expectedServer = "fake-server";
+        String actualServer = listenerCommandHandler.getBaseArgs().getUrl();
 
-        performListenerCommand(listenerCommand, listenerCommandHandler);
+        Assert.assertEquals("server should be override by the additional arguments", expectedServer, actualServer);
+    }
 
+    @Test
+    public void perform_overrideProxyFromAdditionalArgs_shouldOverride() throws IOException, InterruptedException {
+        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest("proxy", "fake-proxy");
+
+        //Assert
         String expectedProxy = "fake-proxy";
         String actualProxy = listenerCommandHandler.getBaseArgs().getProxy();
 
@@ -66,14 +77,21 @@ public class ListenerCommandTest {
     }
 
     @Test
-    public void overrideAgentPath() throws IOException, InterruptedException {
+    public void perform_overrideProxyWithEnvVars_shouldOverride() throws IOException, InterruptedException {
+        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest("proxy", "fake-proxy", "PROXY");
 
-        String agentPathOverride = "agentpath=fake-agent-path";
-        ListenerCommand listenerCommand = createListenerCommand(agentPathOverride);
-        ListenerCommandHandler listenerCommandHandler = new ListenerCommandHandlerMock(nullLogger);
+        //Assert
+        String expectedProxy = "fake-proxy";
+        String actualProxy = listenerCommandHandler.getBaseArgs().getProxy();
 
-        performListenerCommand(listenerCommand, listenerCommandHandler);
+        Assert.assertEquals("proxy should be override by the additional arguments", expectedProxy, actualProxy);
+    }
 
+    @Test
+    public void perform_overrideAgentPathFromAdditionalArgs_shouldOverride() throws IOException, InterruptedException {
+        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest("agentpath", "fake-agent-path");
+
+        //Assert
         String expectedAgentPath = "fake-agent-path";
         String actualAgentPath = listenerCommandHandler.getBaseArgs().getAgentPath();
 
@@ -81,14 +99,21 @@ public class ListenerCommandTest {
     }
 
     @Test
-    public void overrideJavaPath() throws IOException, InterruptedException {
+    public void perform_overrideAgentPathWithEnvVars_shouldOverride() throws IOException, InterruptedException {
+        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest("agentpath", "fake-agent-path", "AGENT_PATH");
 
-        String javaPathOverride = "javapath=fake-java-path";
-        ListenerCommand listenerCommand = createListenerCommand(javaPathOverride);
-        ListenerCommandHandler listenerCommandHandler = new ListenerCommandHandlerMock(nullLogger);
+        //Assert
+        String expectedAgentPath = "fake-agent-path";
+        String actualAgentPath = listenerCommandHandler.getBaseArgs().getAgentPath();
 
-        performListenerCommand(listenerCommand, listenerCommandHandler);
+        Assert.assertEquals("agentpath should be override by the additional arguments", expectedAgentPath, actualAgentPath);
+    }
 
+    @Test
+    public void perform_overrideJavaPathFromAdditionalArgs_shouldOverride() throws IOException, InterruptedException {
+        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest("javapath", "fake-java-path");
+
+        //Assert
         String expectedJavaPath = "fake-java-path";
         String actualJavaPath = listenerCommandHandler.getBaseArgs().getJavaPath();
 
@@ -96,24 +121,85 @@ public class ListenerCommandTest {
     }
 
     @Test
-    public void overrideFileStorage() throws IOException, InterruptedException {
+    public void perform_overrideJavaPathWithEnvVars_shouldOverride() throws IOException, InterruptedException {
+        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest("javapath", "fake-java-path", "JAVA_PATH");
 
-        String filesStorageOverride = "filesstorage=fake-files-storage";
-        ListenerCommand listenerCommand = createListenerCommand(filesStorageOverride);
-        ListenerCommandHandler listenerCommandHandler = new ListenerCommandHandlerMock(nullLogger);
+        //Assert
+        String expectedJavaPath = "fake-java-path";
+        String actualJavaPath = listenerCommandHandler.getBaseArgs().getJavaPath();
 
-        performListenerCommand(listenerCommand, listenerCommandHandler);
+        Assert.assertEquals("javapath should be override by the additional arguments", expectedJavaPath, actualJavaPath);
+    }
 
+    @Test
+    public void perform_overrideFilesStorageFromAdditionalArgs_shouldOverride() throws IOException, InterruptedException {
+        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest("filesstorage", "fake-files-storage");
+
+        //Assert
         String expectedJavaPath = "fake-files-storage";
         String actualJavaPath = listenerCommandHandler.getFilesStorage();
 
         Assert.assertEquals("filesstorage should be override by the additional arguments", expectedJavaPath, actualJavaPath);
     }
 
-    private void performListenerCommand(ListenerCommand listenerCommand, ListenerCommandHandler listenerCommandHandler) throws IOException, InterruptedException {
-        BuildListener listener = mock(BuildListener.class);
+    @Test
+    public void perform_overrideFilesStorageWithEnvVars_shouldOverride() throws IOException, InterruptedException {
+        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest("filesstorage", "fake-files-storage", "FILES_STORAGE");
+
+        //Assert
+        String expectedJavaPath = "fake-files-storage";
+        String actualJavaPath = listenerCommandHandler.getFilesStorage();
+
+        Assert.assertEquals("filesstorage should be override by the additional arguments", expectedJavaPath, actualJavaPath);
+    }
+
+
+    private ListenerCommandHandler runPerformOverrideTest(String field, String value)
+            throws IOException, InterruptedException {
+        return runPerformOverrideTest(field, value, null);
+    }
+
+    private ListenerCommandHandler runPerformOverrideTest(String field, String value, String envVar)
+            throws IOException, InterruptedException {
+        //Arrange
+        String fieldOverride = createFieldOverrideString(field, value, envVar);
+        ListenerCommand listenerCommand = createListenerCommand(fieldOverride);
+        ListenerCommandHandler listenerCommandHandler = new ListenerCommandHandlerMock(nullLogger);
+        AbstractBuild<?, ?> build = createJenkinsBuildObject(envVar, value);
+
+        //Act
+        performListenerCommand(listenerCommand, listenerCommandHandler, build);
+
+        return listenerCommandHandler;
+    }
+
+    private String createFieldOverrideString(String field, String value, String envVar){
+        String fieldOverride = field + "=";
+        if (StringUtils.isNullOrEmpty(envVar)) {
+            fieldOverride += value;
+        } else {
+            fieldOverride += "${"+envVar+"}";
+        }
+
+        return fieldOverride;
+    }
+    private AbstractBuild<?, ?> createJenkinsBuildObject(String envKey, String envValue)
+            throws IOException, InterruptedException {
+
         AbstractBuild<?, ?> build = mock(AbstractBuild.class);
-        when(build.getEnvironment(any(TaskListener.class))).thenReturn(new EnvVars());
+        EnvVars envVars = new EnvVars();
+        if (!StringUtils.isNullOrEmpty(envKey)) {
+            envVars.put(envKey, envValue);
+        }
+        when(build.getEnvironment(any(TaskListener.class))).thenReturn(envVars);
+
+        return build;
+    }
+
+    private void performListenerCommand(ListenerCommand listenerCommand, ListenerCommandHandler listenerCommandHandler,
+                                        AbstractBuild<?, ?> build)
+            throws IOException, InterruptedException {
+        BuildListener listener = mock(BuildListener.class);
         listenerCommand.setBeginAnalysis(createBeginAnalysis());
         CommandMode commandMode = new CommandMode.EndView();
         listenerCommand.perform(build, null, listener, commandMode, listenerCommandHandler, nullLogger);
@@ -127,7 +213,7 @@ public class ListenerCommandTest {
     }
 
     private ListenerCommand createListenerCommand(String additionalArgs) {
-        return new ListenerCommand("","",null,"",additionalArgs);
+        return new ListenerCommand("", "", null, "", additionalArgs);
     }
 
     private class ListenerCommandHandlerMock extends ListenerCommandHandler {
@@ -137,7 +223,7 @@ public class ListenerCommandTest {
         }
 
         @Override
-        public boolean handle(){
+        public boolean handle() {
             return true;
         }
     }

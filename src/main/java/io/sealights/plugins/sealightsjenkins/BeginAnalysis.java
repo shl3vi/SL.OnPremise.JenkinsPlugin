@@ -749,7 +749,7 @@ public class BeginAnalysis extends Builder {
         private String toolsPathOnMaster;
         private final String DEFAULT_TOOLS_PATH = "/var/lib/jenkins/tools";
 
-        // TODO: this is foe testing.. need to find more elegant way to mock.
+        // TODO: this is for testing. need to find more elegant way to mock.
         public DescriptorImpl(boolean b) {
 
         }

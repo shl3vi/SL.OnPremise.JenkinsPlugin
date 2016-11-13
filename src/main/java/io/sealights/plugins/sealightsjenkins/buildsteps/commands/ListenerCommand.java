@@ -126,7 +126,7 @@ public class ListenerCommand extends Builder {
             BaseCommandArguments baseArgs = createBaseCommandArguments(logger, build, additionalProps, envVars);
             baseArgs.setMode(commandMode);
 
-            String filesStorage = resolveFilesStorage(additionalProps);
+            String filesStorage = resolveFilesStorage(additionalProps, envVars);
 
             listenerCommandHandler.setBaseArgs(baseArgs);
             listenerCommandHandler.setFilesStorage(filesStorage);
@@ -147,16 +147,20 @@ public class ListenerCommand extends Builder {
         setGlobalConfiguration(baseArgs, additionalProps, envVars);
         setConfiguration(logger, build, envVars, baseArgs);
 
-        baseArgs.setAgentPath((String) additionalProps.get("agentpath"));
-        baseArgs.setJavaPath((String) additionalProps.get("javapath"));
+        baseArgs.setAgentPath(resolveEnvVar(envVars, (String) additionalProps.get("agentpath")));
+        baseArgs.setJavaPath(resolveEnvVar(envVars, (String) additionalProps.get("javapath")));
 
         return baseArgs;
     }
 
-    private String resolveFilesStorage(Properties additionalProps) {
+    private String resolveEnvVar(EnvVars envVars, String envVarKey){
+        return JenkinsUtils.tryGetEnvVariable(envVars, envVarKey);
+    }
+
+    private String resolveFilesStorage(Properties additionalProps, EnvVars envVars) {
         String filesStorage = (String) additionalProps.get("filesstorage");
         if (!StringUtils.isNullOrEmpty(filesStorage)){
-            return filesStorage;
+            return resolveEnvVar(envVars, filesStorage);
         }
 
         filesStorage = this.beginAnalysis.getDescriptor().getFilesStorage();
@@ -173,26 +177,26 @@ public class ListenerCommand extends Builder {
         if (StringUtils.isNullOrEmpty(customer)) {
             customer = beginAnalysis.getDescriptor().getCustomerId();
         }
-        baseArgs.setCustomerId(JenkinsUtils.tryGetEnvVariable(envVars, customer));
+        baseArgs.setCustomerId(resolveEnvVar(envVars, customer));
 
         String url = (String) additionalProps.get("server");
         if (StringUtils.isNullOrEmpty(url)) {
             url = beginAnalysis.getDescriptor().getUrl();
         }
-        baseArgs.setUrl(JenkinsUtils.tryGetEnvVariable(envVars, url));
+        baseArgs.setUrl(resolveEnvVar(envVars, url));
 
         String proxy = (String) additionalProps.get("proxy");
         if (StringUtils.isNullOrEmpty(proxy)) {
             proxy = beginAnalysis.getDescriptor().getProxy();
         }
-        baseArgs.setProxy(JenkinsUtils.tryGetEnvVariable(envVars, proxy));
+        baseArgs.setProxy(resolveEnvVar(envVars, proxy));
     }
 
     private void setConfiguration(Logger logger, AbstractBuild<?, ?> build, EnvVars envVars, BaseCommandArguments baseArgs) {
-        baseArgs.setAppName(JenkinsUtils.tryGetEnvVariable(envVars, appName));
+        baseArgs.setAppName(resolveEnvVar(envVars, appName));
         baseArgs.setBuildName(getFinalBuildName(build, logger));
-        baseArgs.setBranchName(JenkinsUtils.tryGetEnvVariable(envVars, branchName));
-        baseArgs.setEnvironment(JenkinsUtils.tryGetEnvVariable(envVars, environment));
+        baseArgs.setBranchName(resolveEnvVar(envVars, branchName));
+        baseArgs.setEnvironment(resolveEnvVar(envVars, environment));
     }
 
     private String getFinalBuildName(AbstractBuild<?, ?> build, Logger logger) throws IllegalStateException {

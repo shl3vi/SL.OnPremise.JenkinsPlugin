@@ -15,52 +15,60 @@ public class CommandExecutorTest {
     private Logger nullLogger = new NullLogger();
 
     @Test
-    public void startCommandExecutor_shouldCreateGoodExecutionLine() {
+    public void createExecutionCommand_startCommandExecutor_shouldCreateGoodExecutionLine() {
+        //Arrange
         String newEnvironment = "Integration";
         CommandMode mode = new CommandMode.StartView(newEnvironment);
         BaseCommandArguments baseArguments = createBaseCommandArguments(mode);
         StartCommandArguments startArguments = new StartCommandArguments(baseArguments, newEnvironment);
-        AbstractCommandExecutor commandExecutor = new StartCommandExecutor(nullLogger, startArguments);
-        String expectedCommand = "java -jar /fake/path/to/agent.jar start -customerid \"fake-customer\" -appname \"fake-app\" -branchname \"fake-branch\" -environment \"fake-env\" -server \"https://fake-url/api\" -buildname \"fake-build\" -testPhase \"Integration\"";
+        BaseCommandExecutor commandExecutor = new StartCommandExecutor(nullLogger, startArguments);
+        //Act
         String actualCommand = commandExecutor.createExecutionCommand();
-
+        //Assert
+        String expectedCommand = "java -jar /fake/path/to/agent.jar start -customerid \"fake-customer\" -appname \"fake-app\" -branchname \"fake-branch\" -environment \"fake-env\" -server \"https://fake-url/api\" -buildname \"fake-build\" -testPhase \"Integration\"";
         Assert.assertEquals("execution command is not as expected", expectedCommand, actualCommand);
     }
 
     @Test
-    public void endCommandExecutor_shouldCreateGoodExecutionLine() {
+    public void createExecutionCommand_endCommandExecutor_shouldCreateGoodExecutionLine() {
+        //Arrange
         CommandMode mode = new CommandMode.EndView();
         BaseCommandArguments baseArguments = createBaseCommandArguments(mode);
         EndCommandArguments endArguments = new EndCommandArguments(baseArguments);
-        AbstractCommandExecutor commandExecutor = new EndCommandExecutor(nullLogger, endArguments);
-        String expectedCommand = "java -jar /fake/path/to/agent.jar end -customerid \"fake-customer\" -appname \"fake-app\" -branchname \"fake-branch\" -environment \"fake-env\" -server \"https://fake-url/api\" -buildname \"fake-build\"";
+        BaseCommandExecutor commandExecutor = new EndCommandExecutor(nullLogger, endArguments);
+        //Act
         String actualCommand = commandExecutor.createExecutionCommand();
-
+        //Assert
+        String expectedCommand = "java -jar /fake/path/to/agent.jar end -customerid \"fake-customer\" -appname \"fake-app\" -branchname \"fake-branch\" -environment \"fake-env\" -server \"https://fake-url/api\" -buildname \"fake-build\"";
         Assert.assertEquals("execution command is not as expected", expectedCommand, actualCommand);
     }
 
     @Test
-    public void uploadReportsCommandExecutor_shouldCreateGoodExecutionLine() {
+    public void createExecutionCommand_uploadReportsCommandExecutor_shouldCreateGoodExecutionLine() {
+        //Arrange
         CommandMode mode = new CommandMode.UploadReportsView(null, null, false, null);
         BaseCommandArguments baseArguments = createBaseCommandArguments(mode);
         UploadReportsCommandArguments uploadReportsArguments = new UploadReportsCommandArguments(baseArguments, null, null, false, null);
-        AbstractCommandExecutor commandExecutor = new UploadReportsCommandExecutor(nullLogger, uploadReportsArguments);
-        String expectedCommand = "java -jar /fake/path/to/agent.jar uploadReports -customerid \"fake-customer\" -appname \"fake-app\" -branchname \"fake-branch\" -environment \"fake-env\" -server \"https://fake-url/api\" -buildname \"fake-build\" -hasMoreRequests \"false\" -source \"null\"";
+        BaseCommandExecutor commandExecutor = new UploadReportsCommandExecutor(nullLogger, uploadReportsArguments);
+        //Act
         String actualCommand = commandExecutor.createExecutionCommand();
-
+        //Assert
+        String expectedCommand = "java -jar /fake/path/to/agent.jar uploadReports -customerid \"fake-customer\" -appname \"fake-app\" -branchname \"fake-branch\" -environment \"fake-env\" -server \"https://fake-url/api\" -buildname \"fake-build\" -hasMoreRequests \"false\" -source \"null\"";
         Assert.assertEquals("execution command is not as expected", expectedCommand, actualCommand);
     }
 
     @Test
-    public void setJavaPath_shouldUseGivenJavaPath() {
+    public void createExecutionCommand_setJavaPath_shouldUseGivenJavaPath() {
+        //Arrange
         String newEnvironment = "Integration";
         CommandMode mode = new CommandMode.StartView(newEnvironment);
         BaseCommandArguments baseArguments = createBaseCommandArguments(mode, "path/to/java");
         StartCommandArguments startArguments = new StartCommandArguments(baseArguments, newEnvironment);
-        AbstractCommandExecutor commandExecutor = new StartCommandExecutor(nullLogger, startArguments);
-        String expectedCommand = "path/to/java -jar /fake/path/to/agent.jar start -customerid \"fake-customer\" -appname \"fake-app\" -branchname \"fake-branch\" -environment \"fake-env\" -server \"https://fake-url/api\" -buildname \"fake-build\" -testPhase \"Integration\"";
+        BaseCommandExecutor commandExecutor = new StartCommandExecutor(nullLogger, startArguments);
+        //Act
         String actualCommand = commandExecutor.createExecutionCommand();
-
+        //Assert
+        String expectedCommand = "path/to/java -jar /fake/path/to/agent.jar start -customerid \"fake-customer\" -appname \"fake-app\" -branchname \"fake-branch\" -environment \"fake-env\" -server \"https://fake-url/api\" -buildname \"fake-build\" -testPhase \"Integration\"";
         Assert.assertEquals("execution command is not as expected", expectedCommand, actualCommand);
     }
 

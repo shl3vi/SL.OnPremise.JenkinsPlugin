@@ -6,7 +6,7 @@ import io.sealights.plugins.sealightsjenkins.utils.Logger;
 /**
  * Executor for the 'start' command.
  */
-public class StartCommandExecutor extends AbstractCommandExecutor {
+public class StartCommandExecutor extends BaseCommandExecutor {
 
     private StartCommandArguments startCommandArguments;
 

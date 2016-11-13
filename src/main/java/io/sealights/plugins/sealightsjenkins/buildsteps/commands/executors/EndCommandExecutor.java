@@ -6,7 +6,7 @@ import io.sealights.plugins.sealightsjenkins.utils.Logger;
 /**
  * Executor for the 'end' command.
  */
-public class EndCommandExecutor extends AbstractCommandExecutor {
+public class EndCommandExecutor extends BaseCommandExecutor {
 
     private EndCommandArguments endCommandArguments;
 

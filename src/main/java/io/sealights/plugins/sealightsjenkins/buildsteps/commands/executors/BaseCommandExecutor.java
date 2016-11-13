@@ -9,12 +9,12 @@ import io.sealights.plugins.sealightsjenkins.utils.StringUtils;
 /**
  * Abstract class for command executors.
  */
-public abstract class AbstractCommandExecutor implements ICommandExecutor {
+public abstract class BaseCommandExecutor implements ICommandExecutor {
 
     protected Logger logger;
     private BaseCommandArguments baseArgs;
 
-    public AbstractCommandExecutor(Logger logger, BaseCommandArguments baseArgs) {
+    public BaseCommandExecutor(Logger logger, BaseCommandArguments baseArgs) {
         this.logger = logger;
         this.baseArgs = baseArgs;
     }

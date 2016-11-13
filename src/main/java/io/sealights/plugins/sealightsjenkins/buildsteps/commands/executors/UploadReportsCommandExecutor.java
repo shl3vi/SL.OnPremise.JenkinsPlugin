@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Executor for the 'uploadReports' command.
  */
-public class UploadReportsCommandExecutor extends AbstractCommandExecutor {
+public class UploadReportsCommandExecutor extends BaseCommandExecutor {
 
     private UploadReportsCommandArguments uploadReportsCommandArguments;
 
