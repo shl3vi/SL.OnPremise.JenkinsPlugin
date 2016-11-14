@@ -1,0 +1,33 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+
+
+
+    <f:entry title="App Name" field="appName">
+        <f:textbox value="${appName}" default="$${JOB_NAME}"/>
+    </f:entry>
+    <f:entry title="Environment" field="environment">
+        <f:textbox value="${environment}"/>
+    </f:entry>
+
+    <f:entry title="Branch Name" field="branchName">
+        <f:textbox value="${branch}" default="$${GIT_BRANCH}"/>
+    </f:entry>
+
+    <f:dropdownList name="buildName" title="Build Name">
+        <j:forEach var="currentDescriptor" items="${descriptor.buildNameDescriptorList}" varStatus="loop">
+            <f:dropdownListBlock title="${currentDescriptor.displayName}" value="${loop.index}" selected="${currentDescriptor == instance.buildName.descriptor || (instance.buildName.descriptor == null &amp;&amp; currentDescriptor.default)}" staplerClass="${currentDescriptor.clazz.name}">
+                <j:set var="instance" value="${instance.buildName}" />
+                <j:set var="descriptor" value="${instance.descriptor}" />
+                <st:include page="${currentDescriptor.configPage}" from="${currentDescriptor}"/>
+            </f:dropdownListBlock>
+        </j:forEach>
+    </f:dropdownList>
+
+    <f:advanced title="Advance">
+        <f:entry title="${%Additional Arguments}" field="additionalArguments">
+            <f:expandableTextbox value="${additionalArguments}"/>
+        </f:entry>
+    </f:advanced>
+
+</j:jelly>

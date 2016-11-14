@@ -1,0 +1,24 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+
+    <f:entry title="Report Files" field="reportFiles"
+             description="Comma separated list of files to be uploaded.">
+        <f:textbox value="${reportFiles}"/>
+    </f:entry>
+
+    <f:entry title="Reports Folders" field="reportsFolders"
+             description="Comma separated list of folders that contains reports and only reports (All files in folder will be uploaded).">
+        <f:textbox value="${reportsFolders}"/>
+    </f:entry>
+
+    <f:entry title="Has more requests" field="hasMoreRequests"
+             description="When unchecked, 'execution end' will be triggered after uploading finishes.">
+        <f:checkbox default="true"/>
+    </f:entry>
+
+    <f:entry title="Source" field="source"
+             description="The test report provider">
+        <f:textbox value="${source}"/>
+    </f:entry>
+
+</j:jelly>
