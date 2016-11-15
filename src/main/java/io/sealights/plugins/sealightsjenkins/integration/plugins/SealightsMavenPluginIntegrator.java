@@ -4,6 +4,7 @@ import io.sealights.plugins.sealightsjenkins.ExecutionType;
 import io.sealights.plugins.sealightsjenkins.integration.PomFile;
 import io.sealights.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
+import io.sealights.plugins.sealightsjenkins.utils.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -55,8 +56,14 @@ public class SealightsMavenPluginIntegrator extends PluginIntegrator {
             plugin.append("<enable>false</enable>");
         }
 
-        tryAppendValue(plugin, pluginInfo.getCustomerId(), "customerid");
-        tryAppendValue(plugin, pluginInfo.getServerUrl(), "server");
+        if (!StringUtils.isNullOrEmpty(pluginInfo.getToken())){
+            tryAppendValue(plugin, pluginInfo.getToken(), "token");
+        }else{
+            tryAppendValue(plugin, pluginInfo.getCustomerId(), "customerid");
+            tryAppendValue(plugin, pluginInfo.getServerUrl(), "server");
+        }
+
+
         tryAppendValue(plugin, pluginInfo.getProxy(), "proxy");
 
 

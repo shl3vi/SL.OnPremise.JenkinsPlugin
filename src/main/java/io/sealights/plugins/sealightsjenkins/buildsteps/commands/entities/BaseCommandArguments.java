@@ -11,6 +11,7 @@ public class BaseCommandArguments {
     private String appName;
     private String branchName;
     private String buildName;
+    private String token;
     private String customerId;
     private String url;
     private String proxy;
@@ -48,6 +49,14 @@ public class BaseCommandArguments {
 
     public void setBuildName(String buildName) {
         this.buildName = buildName;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 
     public String getCustomerId() {

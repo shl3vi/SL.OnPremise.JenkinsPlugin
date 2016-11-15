@@ -6,6 +6,7 @@ package io.sealights.plugins.sealightsjenkins.integration;
 public class Commons {
     public static final String ENABLED_PROPERTY = "sl.enabled";
     public static final String APP_NAME_PROPERTY = "sl.appName";
+    public static final String TOKEN_PROPERTY = "sl.token";
     public static final String SERVER_PROPERTY = "sl.server";
     public static final String CUSTOMER_ID_PROPERTY = "sl.customerId";
     public static final String ENABLE_UPGRADE_PROPERTY = "sl.enableUpgrade";

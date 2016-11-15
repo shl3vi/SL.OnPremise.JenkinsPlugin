@@ -116,7 +116,7 @@ public class LazerycodeJMeterPluginIntegrator extends PluginIntegrator {
         List<Element> argumentElementList = pomFile.getElements("argument", argumentsElement);
         for (Element e : argumentElementList) {
             String arg = e.getTextContent();
-            if (arg.contains("-Dsl.customerId")) {
+            if (arg.contains("-Dsl.customerId") || arg.contains("-Dsl.token")) {
                 logger.info("Found sealights argument '" + arg + "' in '" + pluginDescriptor() + "' plugin. " +
                         "Assuming sealights is already configured. " +
                         "Skipping this plugin integration.");
@@ -136,8 +136,15 @@ public class LazerycodeJMeterPluginIntegrator extends PluginIntegrator {
         }
 
         tryAppendValue(argumentList, Commons.ENABLE_UPGRADE_PROPERTY, "false");
-        tryAppendValue(argumentList, Commons.CUSTOMER_ID_PROPERTY, pluginInfo.getCustomerId());
-        tryAppendValue(argumentList, Commons.SERVER_PROPERTY, pluginInfo.getServerUrl());
+
+        if (!StringUtils.isNullOrEmpty(pluginInfo.getToken())){
+            tryAppendValue(argumentList, Commons.TOKEN_PROPERTY, pluginInfo.getToken());
+        }else{
+            tryAppendValue(argumentList, Commons.CUSTOMER_ID_PROPERTY, pluginInfo.getCustomerId());
+            tryAppendValue(argumentList, Commons.SERVER_PROPERTY, pluginInfo.getServerUrl());
+        }
+
+
         tryAppendValue(argumentList, Commons.PROXY_PROPERTY, pluginInfo.getProxy());
 
         String appName = pluginInfo.getAppName();

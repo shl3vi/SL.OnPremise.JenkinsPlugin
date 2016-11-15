@@ -66,11 +66,17 @@ public abstract class BaseCommandExecutor implements ICommandExecutor {
 
     private String getBaseArgumentsLine() {
         StringBuilder sb = new StringBuilder();
-        addArgumentKeyVal(sb, "customerid", baseArgs.getCustomerId());
+
+        if (!StringUtils.isNullOrEmpty(baseArgs.getToken())){
+            addArgumentKeyVal(sb, "token", baseArgs.getToken());
+        }else{
+            addArgumentKeyVal(sb, "customerid", baseArgs.getCustomerId());
+            addArgumentKeyVal(sb, "server", baseArgs.getUrl());
+        }
+
         addArgumentKeyVal(sb, "appname", baseArgs.getAppName());
         addArgumentKeyVal(sb, "branchname", baseArgs.getBranchName());
         addArgumentKeyVal(sb, "environment", baseArgs.getEnvironment());
-        addArgumentKeyVal(sb, "server", baseArgs.getUrl());
         addArgumentKeyVal(sb, "proxy", baseArgs.getProxy());
         addArgumentKeyVal(sb, "buildname", baseArgs.getBuildName());
 

@@ -88,6 +88,10 @@
             <f:textbox value="${slMvnPluginVersion}"/>
         </f:entry>
 
+        <f:entry title="${%Additional Arguments}" field="additionalArguments">
+            <f:expandableTextbox value="${additionalArguments}"/>
+        </f:entry>
+
         <f:advanced title="Multiple build files">
 
             <f:entry title="Enable" field="enableMultipleBuildFiles"

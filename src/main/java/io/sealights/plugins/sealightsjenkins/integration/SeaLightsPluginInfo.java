@@ -12,6 +12,7 @@ import java.util.Map;
  */
 public class SeaLightsPluginInfo {
     private boolean isEnabled;
+    private String token;
     private String appName;
     private String moduleName;
     private String buildName;
@@ -302,6 +303,14 @@ public class SeaLightsPluginInfo {
 
     public void setOverrideMetaJsonPath(String overrideMetaJsonPath) {
         this.overrideMetaJsonPath = overrideMetaJsonPath;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 }
 
