@@ -5,6 +5,7 @@ import io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities.BaseCo
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities.EndCommandArguments;
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities.StartCommandArguments;
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities.UploadReportsCommandArguments;
+import io.sealights.plugins.sealightsjenkins.entities.TokenData;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import io.sealights.plugins.sealightsjenkins.utils.NullLogger;
 import org.junit.Assert;
@@ -140,21 +141,24 @@ public class CommandExecutorTest {
 
     private BaseCommandArguments createBaseCommandArgumentsWithoutToken(CommandMode mode, String javaPath) {
         BaseCommandArguments baseArgs = createBaseCommandArguments(mode, javaPath);
-        baseArgs.setToken(null);
+        baseArgs.setTokenData(null);
         return baseArgs;
     }
 
     private BaseCommandArguments createBaseCommandArgumentsWithoutToken(CommandMode mode) {
         BaseCommandArguments baseArgs = createBaseCommandArguments(mode);
-        baseArgs.setToken(null);
+        baseArgs.setTokenData(null);
         return baseArgs;
     }
 
     private BaseCommandArguments createBaseCommandArguments(CommandMode mode) {
         BaseCommandArguments baseArgs = new BaseCommandArguments();
 
+        TokenData tokenData = new TokenData();
+        tokenData.setToken(validToken);
+
         baseArgs.setMode(mode);
-        baseArgs.setToken(validToken);
+        baseArgs.setTokenData(tokenData);
         baseArgs.setAgentPath("/fake/path/to/agent.jar");
         baseArgs.setAppName("fake-app");
         baseArgs.setBuildName("fake-build");

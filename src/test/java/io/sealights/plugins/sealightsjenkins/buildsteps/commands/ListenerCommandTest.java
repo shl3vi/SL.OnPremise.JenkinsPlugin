@@ -5,6 +5,7 @@ import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.TaskListener;
 import io.sealights.plugins.sealightsjenkins.BeginAnalysis;
+import io.sealights.plugins.sealightsjenkins.entities.TokenData;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import io.sealights.plugins.sealightsjenkins.utils.NullLogger;
 import io.sealights.plugins.sealightsjenkins.utils.StringUtils;
@@ -29,7 +30,7 @@ public class ListenerCommandTest {
         ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest(additionalArguments);
 
         //Assert
-        String actualToken = listenerCommandHandler.getBaseArgs().getToken();
+        TokenData actualToken = listenerCommandHandler.getBaseArgs().getTokenData();
 
         Assert.assertNull("token should be 'null' as the provided token is invalid", actualToken);
     }
@@ -41,7 +42,7 @@ public class ListenerCommandTest {
         ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest(additionalArguments);
 
         //Assert
-        String actualToken = listenerCommandHandler.getBaseArgs().getToken();
+        TokenData actualToken = listenerCommandHandler.getBaseArgs().getTokenData();
         String actualCustomerId = listenerCommandHandler.getBaseArgs().getCustomerId();
         String actualServer = listenerCommandHandler.getBaseArgs().getUrl();
 
@@ -58,7 +59,7 @@ public class ListenerCommandTest {
 
         //Assert
         String expectedToken = validToken;
-        String actualToken = listenerCommandHandler.getBaseArgs().getToken();
+        String actualToken = listenerCommandHandler.getBaseArgs().getTokenData().getToken();
         String actualCustomerId = listenerCommandHandler.getBaseArgs().getCustomerId();
         String actualServer = listenerCommandHandler.getBaseArgs().getUrl();
 
@@ -75,7 +76,7 @@ public class ListenerCommandTest {
 
         //Assert
         String expectedToken = validToken;
-        String actualToken = listenerCommandHandler.getBaseArgs().getToken();
+        String actualToken = listenerCommandHandler.getBaseArgs().getTokenData().getToken();
 
         Assert.assertEquals("token should be override by the additional arguments", expectedToken, actualToken);
     }
@@ -90,7 +91,7 @@ public class ListenerCommandTest {
 
         //Assert
         String expectedToken = validToken;
-        String actualToken = listenerCommandHandler.getBaseArgs().getToken();
+        String actualToken = listenerCommandHandler.getBaseArgs().getTokenData().getToken();
 
         Assert.assertEquals("token should be override by the additional arguments and as environment variable", expectedToken, actualToken);
     }

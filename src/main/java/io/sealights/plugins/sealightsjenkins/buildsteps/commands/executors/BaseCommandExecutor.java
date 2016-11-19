@@ -67,8 +67,8 @@ public abstract class BaseCommandExecutor implements ICommandExecutor {
     private String getBaseArgumentsLine() {
         StringBuilder sb = new StringBuilder();
 
-        if (!StringUtils.isNullOrEmpty(baseArgs.getToken())){
-            addArgumentKeyVal(sb, "token", baseArgs.getToken());
+        if (baseArgs.getTokenData() != null){
+            addArgumentKeyVal(sb, "token", baseArgs.getTokenData().getToken());
         }else{
             addArgumentKeyVal(sb, "customerid", baseArgs.getCustomerId());
             addArgumentKeyVal(sb, "server", baseArgs.getUrl());

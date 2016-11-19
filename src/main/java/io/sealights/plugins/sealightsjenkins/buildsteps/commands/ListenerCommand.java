@@ -128,6 +128,11 @@ public class ListenerCommand extends Builder {
 
             String filesStorage = resolveFilesStorage(additionalProps, envVars);
 
+            logger.info("Inside perform for command. serverUrl:" + baseArgs.getUrl());
+            logger.info("Inside perform for command. customerId:" + baseArgs.getCustomerId());
+            logger.info("Inside perform for command. token.serverUrl:" + baseArgs.getTokenData().getServer());
+            logger.info("Inside perform for command. token.customerId:" + baseArgs.getTokenData().getCustomerId());
+            logger.info("Inside perform for command. token.token: " + baseArgs.getTokenData().getToken());
             listenerCommandHandler.setBaseArgs(baseArgs);
             listenerCommandHandler.setFilesStorage(filesStorage);
 
@@ -209,13 +214,12 @@ public class ListenerCommand extends Builder {
                 }
             }
 
-            boolean isValidToken = validateToken(logger, token);
+            boolean isValidToken = validateAndTryUseToken(logger, token, baseArgs);
             if (!isValidToken) {
                 logger.error("The provided token is invalid. Sealights will try to run without it.");
                 return false;
             }
 
-            baseArgs.setToken(token);
             return true;
         } catch (Exception e) {
             logger.error("Failed to use token. Error: ", e);
@@ -223,7 +227,7 @@ public class ListenerCommand extends Builder {
         }
     }
 
-    private boolean validateToken(Logger logger, String token) {
+    private boolean validateAndTryUseToken(Logger logger, String token, BaseCommandArguments baseArgs) {
         TokenData tokenData;
         try {
             tokenData = TokenData.parse(token);
@@ -242,6 +246,7 @@ public class ListenerCommand extends Builder {
             return false;
         }
 
+        baseArgs.setTokenData(tokenData);
         return true;
     }
 

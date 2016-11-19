@@ -9,6 +9,7 @@ import org.apache.commons.codec.binary.Base64;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TokenData {
     private static final int NUMBER_OF_IWJT_TOKEN_PARTS = 3;
+    private String token;
     private String customerId;
     private String subject;
     private String role;
@@ -25,6 +26,10 @@ public class TokenData {
     * */
     public final static String TokenPrefix = "eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.";
 
+    @JsonProperty("x-sl-customerId")
+    public void setCustomerId(String customerId) {
+        this.customerId = customerId;
+    }
 
     public String getCustomerId() {
         if (customerId != null)
@@ -38,6 +43,14 @@ public class TokenData {
         }
 
         return customerId;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 
     public String getSubject() {
@@ -68,6 +81,7 @@ public class TokenData {
 
     public static TokenData parse(String token) {
         try {
+            String fullToken = token;
             if (StringUtils.isNullOrEmpty(token)) {
                 return new TokenData();
             }
@@ -79,6 +93,7 @@ public class TokenData {
             String tokenAsJson = new String(bytes);
             ObjectMapper mapper = new ObjectMapper();
             TokenData tokenData = mapper.readValue(tokenAsJson, TokenData.class);
+            tokenData.setToken(fullToken);
             return tokenData;
 
         } catch (IllegalArgumentException e) {

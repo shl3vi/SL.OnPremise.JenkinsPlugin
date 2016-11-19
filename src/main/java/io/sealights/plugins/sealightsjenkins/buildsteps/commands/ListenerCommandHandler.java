@@ -3,6 +3,7 @@ package io.sealights.plugins.sealightsjenkins.buildsteps.commands;
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities.BaseCommandArguments;
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.executors.CommandExecutorsFactory;
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.executors.ICommandExecutor;
+import io.sealights.plugins.sealightsjenkins.entities.TokenData;
 import io.sealights.plugins.sealightsjenkins.integration.upgrade.AbstractUpgradeManager;
 import io.sealights.plugins.sealightsjenkins.integration.upgrade.TestListenerUpgradeManager;
 import io.sealights.plugins.sealightsjenkins.integration.upgrade.UpgradeProxy;
@@ -25,7 +26,7 @@ public class ListenerCommandHandler {
         this.logger = logger;
     }
 
-    public boolean handle(){
+    public boolean handle() {
         String agentPath = tryGetAgentPath(logger, baseArgs);
         baseArgs.setAgentPath(agentPath);
 
@@ -51,12 +52,24 @@ public class ListenerCommandHandler {
 
     private UpgradeConfiguration createUpgradeConfiguration(BaseCommandArguments baseArgs) {
 
+        String token = null;
+        String customerId = baseArgs.getCustomerId();
+        String server = baseArgs.getUrl();
+
+        TokenData tokenData = baseArgs.getTokenData();
+        if (tokenData != null){
+            token = tokenData.getToken();
+            customerId = tokenData.getCustomerId();
+            server = tokenData.getServer();
+        }
+
         return new UpgradeConfiguration(
-                baseArgs.getCustomerId(),
+                token,
+                customerId,
                 baseArgs.getAppName(),
                 baseArgs.getEnvironment(),
                 baseArgs.getBranchName(),
-                baseArgs.getUrl(),
+                server,
                 baseArgs.getProxy(),
                 filesStorage
         );

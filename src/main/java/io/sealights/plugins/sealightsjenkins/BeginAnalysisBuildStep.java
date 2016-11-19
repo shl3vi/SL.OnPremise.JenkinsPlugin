@@ -8,14 +8,12 @@ import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
-import io.sealights.plugins.sealightsjenkins.utils.CustomFile;
 import io.sealights.plugins.sealightsjenkins.exceptions.SeaLightsIllegalStateException;
-import io.sealights.plugins.sealightsjenkins.utils.JenkinsUtils;
+import io.sealights.plugins.sealightsjenkins.utils.CustomFile;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
-import java.util.Map;
 
 /**
  * Created by shahar on 5/3/2016.
@@ -63,7 +61,8 @@ public class BeginAnalysisBuildStep extends Builder {
             return beginAnalysis.perform(build, cleanupManager, logger, pomPath, envVars);
         } catch (SeaLightsIllegalStateException e) {
             logger.error(e.getMessage());
-            return false;
+            //we should never fail build!
+            return true;
         }
     }
 

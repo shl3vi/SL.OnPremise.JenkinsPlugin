@@ -18,7 +18,7 @@ import io.sealights.plugins.sealightsjenkins.exceptions.SeaLightsIllegalStateExc
 import io.sealights.plugins.sealightsjenkins.integration.MavenIntegration;
 import io.sealights.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
 import io.sealights.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
-import io.sealights.plugins.sealightsjenkins.integration.upgrade.UpgradeManager;
+import io.sealights.plugins.sealightsjenkins.integration.upgrade.MavenPluginUpgradeManager;
 import io.sealights.plugins.sealightsjenkins.utils.*;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
@@ -410,7 +410,7 @@ public class BeginAnalysis extends Builder {
 
         try {
             if (!isValidVersion(recommendedVersion)) {
-                UpgradeManager upgradeManager = new UpgradeManager(slInfo, logger);
+                MavenPluginUpgradeManager upgradeManager = new MavenPluginUpgradeManager(slInfo, logger);
                 recommendedVersion = upgradeManager.queryServerForMavenPluginVersion();
             }
         } catch (FileNotFoundException e) {
@@ -631,9 +631,8 @@ public class BeginAnalysis extends Builder {
 
     private void setGlobalConfiguration(Logger logger, SeaLightsPluginInfo slInfo, Properties additionalProps, EnvVars envVars) {
 
-        boolean usingToken;
         String tokenPropertyValue = JenkinsUtils.tryGetEnvVariable(envVars, (String) additionalProps.get("token"));
-        usingToken = tryUseToken(logger, slInfo, tokenPropertyValue);
+        boolean usingToken = tryUseToken(logger, slInfo, tokenPropertyValue);
 
         if (!usingToken) {
             // set customerId
@@ -696,13 +695,12 @@ public class BeginAnalysis extends Builder {
                 }
             }
 
-            boolean isValidToken = validateToken(logger, token);
+            boolean isValidToken = validateAndTryUseToken(logger, token, slInfo);
             if (!isValidToken) {
                 logger.error("The provided token is invalid. Sealights will try to run without it.");
                 return false;
             }
 
-            slInfo.setToken(token);
             return true;
         } catch (Exception e) {
             logger.error("Failed to use token. Error: ", e);
@@ -710,7 +708,7 @@ public class BeginAnalysis extends Builder {
         }
     }
 
-    private boolean validateToken(Logger logger, String token) {
+    private boolean validateAndTryUseToken(Logger logger, String token, SeaLightsPluginInfo slInfo) {
         TokenData tokenData;
         try {
             tokenData = TokenData.parse(token);
@@ -729,6 +727,7 @@ public class BeginAnalysis extends Builder {
             return false;
         }
 
+        slInfo.setTokenData(tokenData);
         return true;
     }
 

@@ -137,8 +137,8 @@ public class LazerycodeJMeterPluginIntegrator extends PluginIntegrator {
 
         tryAppendValue(argumentList, Commons.ENABLE_UPGRADE_PROPERTY, "false");
 
-        if (!StringUtils.isNullOrEmpty(pluginInfo.getToken())){
-            tryAppendValue(argumentList, Commons.TOKEN_PROPERTY, pluginInfo.getToken());
+        if (pluginInfo.getTokenData() != null){
+            tryAppendValue(argumentList, Commons.TOKEN_PROPERTY, pluginInfo.getTokenData().getToken());
         }else{
             tryAppendValue(argumentList, Commons.CUSTOMER_ID_PROPERTY, pluginInfo.getCustomerId());
             tryAppendValue(argumentList, Commons.SERVER_PROPERTY, pluginInfo.getServerUrl());
