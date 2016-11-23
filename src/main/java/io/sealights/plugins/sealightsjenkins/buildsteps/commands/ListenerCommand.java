@@ -128,11 +128,18 @@ public class ListenerCommand extends Builder {
 
             String filesStorage = resolveFilesStorage(additionalProps, envVars);
 
-            logger.info("ListenerCommand.serverUrl:" + baseArgs.getUrl());
-            logger.info("ListenerCommand.customerId:" + baseArgs.getCustomerId());
-            logger.info("ListenerCommand.tokenData.serverUrl:" + baseArgs.getTokenData().getServer());
-            logger.info("ListenerCommand.tokenData.customerId:" + baseArgs.getTokenData().getCustomerId());
-            logger.info("ListenerCommand.tokenData.token: " + baseArgs.getTokenData().getToken());
+            if (baseArgs != null){
+                logger.info("ListenerCommand.serverUrl:" + baseArgs.getUrl());
+                logger.info("ListenerCommand.customerId:" + baseArgs.getCustomerId());
+                if (baseArgs.getTokenData() != null){
+                    logger.info("ListenerCommand.tokenData.serverUrl:" + baseArgs.getTokenData().getServer());
+                    logger.info("ListenerCommand.tokenData.customerId:" + baseArgs.getTokenData().getCustomerId());
+                    logger.info("ListenerCommand.tokenData.token: " + baseArgs.getTokenData().getToken());
+                }
+                else{
+                    logger.warn("ListenerCommand.tokenData is null.");
+                }
+            }
             listenerCommandHandler.setBaseArgs(baseArgs);
             listenerCommandHandler.setFilesStorage(filesStorage);
 
