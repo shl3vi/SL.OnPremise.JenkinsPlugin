@@ -128,11 +128,11 @@ public class ListenerCommand extends Builder {
 
             String filesStorage = resolveFilesStorage(additionalProps, envVars);
 
-            logger.info("Inside perform for command. serverUrl:" + baseArgs.getUrl());
-            logger.info("Inside perform for command. customerId:" + baseArgs.getCustomerId());
-            logger.info("Inside perform for command. token.serverUrl:" + baseArgs.getTokenData().getServer());
-            logger.info("Inside perform for command. token.customerId:" + baseArgs.getTokenData().getCustomerId());
-            logger.info("Inside perform for command. token.token: " + baseArgs.getTokenData().getToken());
+            logger.info("ListenerCommand.serverUrl:" + baseArgs.getUrl());
+            logger.info("ListenerCommand.customerId:" + baseArgs.getCustomerId());
+            logger.info("ListenerCommand.tokenData.serverUrl:" + baseArgs.getTokenData().getServer());
+            logger.info("ListenerCommand.tokenData.customerId:" + baseArgs.getTokenData().getCustomerId());
+            logger.info("ListenerCommand.tokenData.token: " + baseArgs.getTokenData().getToken());
             listenerCommandHandler.setBaseArgs(baseArgs);
             listenerCommandHandler.setFilesStorage(filesStorage);
 
