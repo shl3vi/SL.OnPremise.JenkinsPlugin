@@ -37,8 +37,10 @@ public class UpgradeProxy {
 
     private String createUrlToGetRecommendedVersion(String componentName) throws MalformedURLException {
         UrlBuilder urlBuilder = new UrlBuilder();
+        String token = this.upgradeConfiguration.getToken();
+        String apiVersion = (token != null) ? "v2" : "v1";
         return urlBuilder.withHost(upgradeConfiguration.getServer())
-                .withPath("v2", "agents", componentName, "recommended")
+                .withPath(apiVersion, "agents", componentName, "recommended")
                 .withQueryParam("customerId", upgradeConfiguration.getCustomerId())
                 .withQueryParam("appName", upgradeConfiguration.getAppName())
                 .withQueryParam("branch", upgradeConfiguration.getBranchName())
