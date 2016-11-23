@@ -4,6 +4,7 @@ import io.sealights.plugins.sealightsjenkins.BuildStrategy;
 import io.sealights.plugins.sealightsjenkins.ExecutionType;
 import io.sealights.plugins.sealightsjenkins.LogDestination;
 import io.sealights.plugins.sealightsjenkins.LogLevel;
+import io.sealights.plugins.sealightsjenkins.entities.TokenData;
 
 import java.util.Map;
 
@@ -12,6 +13,7 @@ import java.util.Map;
  */
 public class SeaLightsPluginInfo {
     private boolean isEnabled;
+    private TokenData tokenData;
     private String appName;
     private String moduleName;
     private String buildName;
@@ -302,6 +304,14 @@ public class SeaLightsPluginInfo {
 
     public void setOverrideMetaJsonPath(String overrideMetaJsonPath) {
         this.overrideMetaJsonPath = overrideMetaJsonPath;
+    }
+
+    public TokenData getTokenData() {
+        return tokenData;
+    }
+
+    public void setTokenData(TokenData tokenData) {
+        this.tokenData = tokenData;
     }
 }
 

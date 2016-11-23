@@ -1,7 +1,10 @@
 package io.sealights.plugins.sealightsjenkins;
 
 import hudson.*;
-import hudson.model.*;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
+import hudson.model.Computer;
 import hudson.remoting.VirtualChannel;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
@@ -9,11 +12,13 @@ import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import hudson.util.XStream2;
 import io.sealights.plugins.sealightsjenkins.entities.FileBackupInfo;
+import io.sealights.plugins.sealightsjenkins.entities.TokenData;
+import io.sealights.plugins.sealightsjenkins.entities.ValidationError;
 import io.sealights.plugins.sealightsjenkins.exceptions.SeaLightsIllegalStateException;
 import io.sealights.plugins.sealightsjenkins.integration.MavenIntegration;
 import io.sealights.plugins.sealightsjenkins.integration.MavenIntegrationInfo;
 import io.sealights.plugins.sealightsjenkins.integration.SeaLightsPluginInfo;
-import io.sealights.plugins.sealightsjenkins.integration.upgrade.UpgradeManager;
+import io.sealights.plugins.sealightsjenkins.integration.upgrade.MavenPluginUpgradeManager;
 import io.sealights.plugins.sealightsjenkins.utils.*;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
@@ -75,8 +80,10 @@ public class BeginAnalysis extends Builder {
     private String override_customerId;
     private String override_url;
     private String override_proxy;
+    private String additionalArguments;
 
-    public BeginAnalysis(){}
+    public BeginAnalysis() {
+    }
 
     @DataBoundConstructor
     public BeginAnalysis(LogLevel logLevel,
@@ -90,8 +97,9 @@ public class BeginAnalysis extends Builder {
                          String buildFilesPatterns, String buildFilesFolders,
                          boolean logEnabled, LogDestination logDestination, String logFolder,
                          BuildStrategy buildStrategy, String slMvnPluginVersion,
-                         BuildName buildName, ExecutionType executionType,
-                         String override_customerId, String override_url, String override_proxy) throws IOException {
+                         BuildName buildName, ExecutionType executionType, String override_customerId,
+                         String override_url, String override_proxy, String additionalArguments)
+            throws IOException {
 
         this.override_customerId = override_customerId;
         this.override_url = override_url;
@@ -127,6 +135,8 @@ public class BeginAnalysis extends Builder {
         this.buildScannerJar = buildScannerJar;
         this.testListenerJar = testListenerJar;
         this.slMvnPluginVersion = slMvnPluginVersion;
+
+        this.additionalArguments = additionalArguments;
     }
 
     private void setDefaultValuesForStrings(Logger logger) {
@@ -374,6 +384,14 @@ public class BeginAnalysis extends Builder {
         this.slMvnPluginVersion = slMvnPluginVersion;
     }
 
+    public String getAdditionalArguments() {
+        return additionalArguments;
+    }
+
+    public void setAdditionalArguments(String additionalArguments) {
+        this.additionalArguments = additionalArguments;
+    }
+
     private void copyAgentsToSlaveIfNeeded(Logger logger, CleanupManager cleanupManager) throws IOException, InterruptedException {
         if (!StringUtils.isNullOrEmpty(buildScannerJar)) {
             CustomFile customFile = new CustomFile(logger, cleanupManager, buildScannerJar);
@@ -392,18 +410,16 @@ public class BeginAnalysis extends Builder {
 
         try {
             if (!isValidVersion(recommendedVersion)) {
-                UpgradeManager upgradeManager = new UpgradeManager(slInfo, logger);
+                MavenPluginUpgradeManager upgradeManager = new MavenPluginUpgradeManager(slInfo, logger);
                 recommendedVersion = upgradeManager.queryServerForMavenPluginVersion();
             }
-        }
-        catch (FileNotFoundException e) {
+        } catch (FileNotFoundException e) {
             logger.error("Error while trying to resolve Sealights maven plugin version. " +
                     "Probably the server did not found latest maven plugin version." +
                     "Skipping Sealights integration.");
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             logger.error("Error while trying to resolve Sealights maven plugin version. " +
-                    "'"+e.getMessage()+"'."+
+                    "'" + e.getMessage() + "'." +
                     " Skipping Sealights integration.");
         }
 
@@ -418,6 +434,7 @@ public class BeginAnalysis extends Builder {
         try {
             setDefaultValues(logger);
 
+            Properties additionalProps = PropertiesUtils.toProperties(additionalArguments);
             Map<String, String> metadata = JenkinsUtils.createMetadataFromEnvVars(envVars);
 
             FilePath ws = build.getWorkspace();
@@ -435,7 +452,7 @@ public class BeginAnalysis extends Builder {
                 tryAddRestoreBuildFilePublisher(build, logger);
             }
 
-            SeaLightsPluginInfo slInfo = createSeaLightsPluginInfo(build, envVars, metadata, ws, logger);
+            SeaLightsPluginInfo slInfo = createSeaLightsPluginInfo(build, envVars, metadata, ws, additionalProps, logger);
 
             printFields(slInfo, logger);
 
@@ -555,10 +572,12 @@ public class BeginAnalysis extends Builder {
     }
 
     private SeaLightsPluginInfo createSeaLightsPluginInfo(
-            AbstractBuild<?, ?> build, EnvVars envVars, Map<String, String> metadata, FilePath ws, Logger logger) throws SeaLightsIllegalStateException {
+            AbstractBuild<?, ?> build, EnvVars envVars, Map<String, String> metadata, FilePath ws,
+            Properties additionalProps, Logger logger)
+            throws SeaLightsIllegalStateException {
 
         SeaLightsPluginInfo slInfo = new SeaLightsPluginInfo();
-        setGlobalConfiguration(slInfo, envVars);
+        setGlobalConfiguration(logger, slInfo, additionalProps, envVars);
 
         slInfo.setMetadata(metadata);
 
@@ -610,28 +629,106 @@ public class BeginAnalysis extends Builder {
     }
 
 
+    private void setGlobalConfiguration(Logger logger, SeaLightsPluginInfo slInfo, Properties additionalProps, EnvVars envVars) {
 
-    private void setGlobalConfiguration(SeaLightsPluginInfo slInfo, EnvVars envVars) {
+        String tokenPropertyValue = JenkinsUtils.tryGetEnvVariable(envVars, (String) additionalProps.get("token"));
+        boolean usingToken = tryUseToken(logger, slInfo, tokenPropertyValue);
 
-        String customer = override_customerId;
-        if (StringUtils.isNullOrEmpty(customer)) {
-            customer = getDescriptor().getCustomerId();
+        if (!usingToken) {
+            // set customerId
+            String customer = (String) additionalProps.get("customerid");
+            if (StringUtils.isNullOrEmpty(customer)) {
+                customer = override_customerId;
+                if (StringUtils.isNullOrEmpty(customer)) {
+                    customer = getDescriptor().getCustomerId();
+                }
+            }
+            slInfo.setCustomerId(JenkinsUtils.tryGetEnvVariable(envVars, customer));
+
+            // set url
+            String server = (String) additionalProps.get("server");
+            if (StringUtils.isNullOrEmpty(server)) {
+                server = override_url;
+                if (StringUtils.isNullOrEmpty(server)) {
+                    server = getDescriptor().getUrl();
+                }
+            }
+            slInfo.setServerUrl(JenkinsUtils.tryGetEnvVariable(envVars, server));
         }
-        slInfo.setCustomerId(JenkinsUtils.tryGetEnvVariable(envVars, customer));
 
-        if (StringUtils.isNullOrEmpty(override_url)) {
-            slInfo.setServerUrl(getDescriptor().getUrl());
-        } else {
-            slInfo.setServerUrl(override_url);
+        // set proxy
+        String proxy = (String) additionalProps.get("proxy");
+        if (StringUtils.isNullOrEmpty(proxy)){
+            proxy = override_proxy;
+            if (StringUtils.isNullOrEmpty(proxy)){
+                proxy = getDescriptor().getProxy();
+            }
+        }
+        slInfo.setProxy(proxy);
+
+        String filesstorage = resolveFilesStorage(additionalProps, envVars);
+        slInfo.setFilesStorage(filesstorage);
+    }
+
+    private String resolveFilesStorage(Properties additionalProps, EnvVars envVars) {
+        String filesStorage = (String) additionalProps.get("filesstorage");
+        if (!StringUtils.isNullOrEmpty(filesStorage)) {
+            return JenkinsUtils.tryGetEnvVariable(envVars, filesStorage);
         }
 
-        if (StringUtils.isNullOrEmpty(override_proxy)) {
-            slInfo.setProxy(getDescriptor().getProxy());
-        } else {
-            slInfo.setProxy(override_proxy);
+        filesStorage = getDescriptor().getFilesStorage();
+        if (!StringUtils.isNullOrEmpty(filesStorage)) {
+            return filesStorage;
         }
 
-        slInfo.setFilesStorage(getDescriptor().getFilesStorage());
+        return System.getProperty("java.io.tmpdir");
+    }
+
+    private boolean tryUseToken(Logger logger, SeaLightsPluginInfo slInfo, String tokenPropertyValue) {
+        try {
+            String token = tokenPropertyValue;
+            if (StringUtils.isNullOrEmpty(token)) {
+                token = getDescriptor().getToken();
+                if (StringUtils.isNullOrEmpty(token)) {
+                    logger.warning("Sealights token is not set. Sealights will try to run without it.");
+                    return false;
+                }
+            }
+
+            boolean isValidToken = validateAndTryUseToken(logger, token, slInfo);
+            if (!isValidToken) {
+                logger.error("The provided token is invalid. Sealights will try to run without it.");
+                return false;
+            }
+
+            return true;
+        } catch (Exception e) {
+            logger.error("Failed to use token. Error: ", e);
+            return false;
+        }
+    }
+
+    private boolean validateAndTryUseToken(Logger logger, String token, SeaLightsPluginInfo slInfo) {
+        TokenData tokenData;
+        try {
+            tokenData = TokenData.parse(token);
+        } catch (IllegalArgumentException e) {
+            logger.error("Invalid token. Error: ", e);
+            return false;
+        }
+
+        TokenValidator tokenValidator = new TokenValidator();
+        List<ValidationError> validationErrors = tokenValidator.validate(tokenData);
+        if (validationErrors.size() > 0) {
+            logger.error("Invalid token. The token contains the following errors:");
+            for (ValidationError validationError : validationErrors) {
+                logger.error("Field: '" + validationError.getName() + "', Error: '" + validationError.getProblem() + "'.");
+            }
+            return false;
+        }
+
+        slInfo.setTokenData(tokenData);
+        return true;
     }
 
     private List<FileBackupInfo> getPomFiles(List<String> folders, String patterns, Logger logger, String pomPath) throws IOException, InterruptedException {
@@ -742,6 +839,7 @@ public class BeginAnalysis extends Builder {
             return true;
         }
 
+        private String token;
         private String customerId;
         private String url;
         private String proxy;
@@ -794,6 +892,7 @@ public class BeginAnalysis extends Builder {
 
         @Override
         public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
+            token = json.getString("token");
             customerId = json.getString("customerId");
             url = json.getString("url");
             proxy = json.getString("proxy");
@@ -801,6 +900,14 @@ public class BeginAnalysis extends Builder {
             toolsPathOnMaster = json.getString("toolsPathOnMaster");
             save();
             return super.configure(req, json);
+        }
+
+        public String getToken() {
+            return token;
+        }
+
+        public void setToken(String token) {
+            this.token = token;
         }
 
         public String getUrl() {

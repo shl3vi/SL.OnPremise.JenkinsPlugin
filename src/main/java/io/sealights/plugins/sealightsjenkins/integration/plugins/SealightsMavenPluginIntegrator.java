@@ -55,8 +55,14 @@ public class SealightsMavenPluginIntegrator extends PluginIntegrator {
             plugin.append("<enable>false</enable>");
         }
 
-        tryAppendValue(plugin, pluginInfo.getCustomerId(), "customerid");
-        tryAppendValue(plugin, pluginInfo.getServerUrl(), "server");
+        if (pluginInfo.getTokenData() != null){
+            tryAppendValue(plugin, pluginInfo.getTokenData().getToken(), "token");
+        }else{
+            tryAppendValue(plugin, pluginInfo.getCustomerId(), "customerid");
+            tryAppendValue(plugin, pluginInfo.getServerUrl(), "server");
+        }
+
+
         tryAppendValue(plugin, pluginInfo.getProxy(), "proxy");
 
 

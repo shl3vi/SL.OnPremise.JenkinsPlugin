@@ -1,15 +1,19 @@
 package io.sealights.plugins.sealightsjenkins.integration.upgrade.entities;
 
 public class UpgradeConfiguration {
-    String customerId;
-    String appName;
-    String environmentName;
-    String branchName;
-    String server;
-    String proxy;
-    String filesStorage;
+    private String token;
+    private String customerId;
+    private String appName;
+    private String environmentName;
+    private String branchName;
+    private String server;
+    private String proxy;
+    private String filesStorage;
 
-    public UpgradeConfiguration(String customerId, String appName, String environmentName, String branchName, String server, String proxy, String filesStorage) {
+    public UpgradeConfiguration(String token, String customerId, String appName,
+                                String environmentName, String branchName, String server,
+                                String proxy, String filesStorage) {
+        this.token = token;
         this.customerId = customerId;
         this.appName = appName;
         this.environmentName = environmentName;
@@ -17,6 +21,10 @@ public class UpgradeConfiguration {
         this.server = server;
         this.proxy = proxy;
         this.filesStorage = filesStorage;
+    }
+
+    public String getToken() {
+        return token;
     }
 
     public String getCustomerId() {

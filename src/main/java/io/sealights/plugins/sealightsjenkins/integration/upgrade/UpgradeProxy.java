@@ -1,9 +1,12 @@
 package io.sealights.plugins.sealightsjenkins.integration.upgrade;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.sealights.plugins.sealightsjenkins.integration.upgrade.entities.UpgradeConfiguration;
 import io.sealights.plugins.sealightsjenkins.integration.upgrade.entities.UpgradeResponse;
+import io.sealights.plugins.sealightsjenkins.services.ApacheHttpClient;
+import io.sealights.plugins.sealightsjenkins.services.HttpResponse;
+import io.sealights.plugins.sealightsjenkins.utils.JsonSerializer;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
+import io.sealights.plugins.sealightsjenkins.utils.StreamUtils;
 import io.sealights.plugins.sealightsjenkins.utils.UrlBuilder;
 import org.apache.commons.io.FileUtils;
 
@@ -23,22 +26,24 @@ public class UpgradeProxy {
     }
 
     public UpgradeResponse getRecommendedVersion(String componentName) throws IOException {
-        URL url = createUrlToGetRecommendedVersion(componentName);
-        ObjectMapper mapper = new ObjectMapper();
-        logger.debug("Sending request to get recommended version: '"+url+"'");
-        UpgradeResponse upgradeResponse = mapper.readValue(url, UpgradeResponse.class);
+        String serverUrl = createUrlToGetRecommendedVersion(componentName);
+        ApacheHttpClient client = new ApacheHttpClient();
+        HttpResponse httpResponse = client.getJson(
+                serverUrl, upgradeConfiguration.getProxy(), upgradeConfiguration.getToken());
+        String jsonOrServerError = StreamUtils.toString(httpResponse.getResponseStream());
+        UpgradeResponse upgradeResponse = JsonSerializer.deserialize(jsonOrServerError, UpgradeResponse.class);
         return upgradeResponse;
     }
 
-    private URL createUrlToGetRecommendedVersion(String componentName) throws MalformedURLException {
+    private String createUrlToGetRecommendedVersion(String componentName) throws MalformedURLException {
         UrlBuilder urlBuilder = new UrlBuilder();
         return urlBuilder.withHost(upgradeConfiguration.getServer())
-                .withPath("v1","agents",componentName,"recommended")
+                .withPath("v2", "agents", componentName, "recommended")
                 .withQueryParam("customerId", upgradeConfiguration.getCustomerId())
                 .withQueryParam("appName", upgradeConfiguration.getAppName())
                 .withQueryParam("branch", upgradeConfiguration.getBranchName())
                 .withQueryParam("envName", upgradeConfiguration.getEnvironmentName())
-                .toUrl();
+                .toString();
     }
 
     public boolean downloadAgent(String urlToAgent, String destFile) throws IOException {
