@@ -61,8 +61,8 @@ public class BeginAnalysisBuildStep extends Builder {
             return beginAnalysis.perform(build, cleanupManager, logger, pomPath, envVars);
         } catch (SeaLightsIllegalStateException e) {
             logger.error(e.getMessage());
-            //we should never fail build!
-            return true;
+            //we want to fail the build if we got SeaLightsIllegalStateException
+            return false;
         }
     }
 
