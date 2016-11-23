@@ -137,7 +137,7 @@ public class ListenerCommand extends Builder {
                     logger.info("ListenerCommand.tokenData.token: " + baseArgs.getTokenData().getToken());
                 }
                 else{
-                    logger.warn("ListenerCommand.tokenData is null.");
+                    logger.warning("ListenerCommand.tokenData is null.");
                 }
             }
             listenerCommandHandler.setBaseArgs(baseArgs);
