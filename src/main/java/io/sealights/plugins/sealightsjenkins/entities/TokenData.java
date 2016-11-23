@@ -26,7 +26,7 @@ public class TokenData {
     * */
     public final static String TokenPrefix = "eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.";
 
-    @JsonProperty("x-sl-customerId")
+    
     public void setCustomerId(String customerId) {
         this.customerId = customerId;
     }
