@@ -38,7 +38,7 @@ public class TokenData {
         if (this.getSubject() != null && this.getSubject().contains("@")) {
             String[] parts = this.getSubject().split("@");
             if (parts.length == 2) {
-                this.customerId = parts[1];
+                this.customerId = parts[0];
             }
         }
 
