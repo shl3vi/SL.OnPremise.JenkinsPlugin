@@ -18,7 +18,7 @@ public class StartCommandExecutor extends BaseCommandExecutor {
     @Override
     public String getAdditionalArguments() {
         StringBuilder sb = new StringBuilder();
-        addArgumentKeyVal(sb, "testPhase", startCommandArguments.getNewEnvironment());
+        addArgumentKeyVal(sb, "testStage", startCommandArguments.getNewEnvironment());
         return sb.toString();
     }
 }

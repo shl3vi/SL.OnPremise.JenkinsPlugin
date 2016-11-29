@@ -27,7 +27,7 @@ public class CommandExecutorTest {
         //Act
         String actualCommand = commandExecutor.createExecutionCommand();
         //Assert
-        String expectedCommand = "java -jar /fake/path/to/agent.jar start -customerid \"fake-customer\" -server \"https://fake-url/api\" -appname \"fake-app\" -branchname \"fake-branch\" -environment \"fake-env\" -buildname \"fake-build\" -testPhase \"Integration\"";
+        String expectedCommand = "java -jar /fake/path/to/agent.jar start -customerid \"fake-customer\" -server \"https://fake-url/api\" -appname \"fake-app\" -branchname \"fake-branch\" -environment \"fake-env\" -buildname \"fake-build\" -testStage \"Integration\"";
         Assert.assertEquals("execution command is not as expected", expectedCommand, actualCommand);
     }
 
@@ -70,7 +70,7 @@ public class CommandExecutorTest {
         //Act
         String actualCommand = commandExecutor.createExecutionCommand();
         //Assert
-        String expectedCommand = "path/to/java -jar /fake/path/to/agent.jar start -customerid \"fake-customer\" -server \"https://fake-url/api\" -appname \"fake-app\" -branchname \"fake-branch\" -environment \"fake-env\" -buildname \"fake-build\" -testPhase \"Integration\"";
+        String expectedCommand = "path/to/java -jar /fake/path/to/agent.jar start -customerid \"fake-customer\" -server \"https://fake-url/api\" -appname \"fake-app\" -branchname \"fake-branch\" -environment \"fake-env\" -buildname \"fake-build\" -testStage \"Integration\"";
         Assert.assertEquals("execution command is not as expected", expectedCommand, actualCommand);
     }
 
@@ -86,7 +86,7 @@ public class CommandExecutorTest {
         //Act
         String actualCommand = commandExecutor.createExecutionCommand();
         //Assert
-        String expectedCommand = "java -jar /fake/path/to/agent.jar start -token \"" + validToken + "\" -appname \"fake-app\" -branchname \"fake-branch\" -environment \"fake-env\" -buildname \"fake-build\" -testPhase \"Integration\"";
+        String expectedCommand = "java -jar /fake/path/to/agent.jar start -token \"" + validToken + "\" -appname \"fake-app\" -branchname \"fake-branch\" -environment \"fake-env\" -buildname \"fake-build\" -testStage \"Integration\"";
         Assert.assertEquals("execution command is not as expected", expectedCommand, actualCommand);
     }
 
@@ -129,7 +129,7 @@ public class CommandExecutorTest {
         //Act
         String actualCommand = commandExecutor.createExecutionCommand();
         //Assert
-        String expectedCommand = "path/to/java -jar /fake/path/to/agent.jar start -token \"" + validToken + "\" -appname \"fake-app\" -branchname \"fake-branch\" -environment \"fake-env\" -buildname \"fake-build\" -testPhase \"Integration\"";
+        String expectedCommand = "path/to/java -jar /fake/path/to/agent.jar start -token \"" + validToken + "\" -appname \"fake-app\" -branchname \"fake-branch\" -environment \"fake-env\" -buildname \"fake-build\" -testStage \"Integration\"";
         Assert.assertEquals("execution command is not as expected", expectedCommand, actualCommand);
     }
 
