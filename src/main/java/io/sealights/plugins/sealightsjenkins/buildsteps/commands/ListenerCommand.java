@@ -13,10 +13,9 @@ import hudson.util.FormValidation;
 import io.sealights.plugins.sealightsjenkins.BeginAnalysis;
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities.BaseCommandArguments;
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities.CommandBuildNamingStrategy;
-import io.sealights.plugins.sealightsjenkins.utils.JenkinsUtils;
-import io.sealights.plugins.sealightsjenkins.utils.Logger;
-import io.sealights.plugins.sealightsjenkins.utils.PropertiesUtils;
-import io.sealights.plugins.sealightsjenkins.utils.StringUtils;
+import io.sealights.plugins.sealightsjenkins.entities.TokenData;
+import io.sealights.plugins.sealightsjenkins.entities.ValidationError;
+import io.sealights.plugins.sealightsjenkins.utils.*;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -26,6 +25,7 @@ import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Properties;
 
 @ExportedBean
@@ -128,6 +128,18 @@ public class ListenerCommand extends Builder {
 
             String filesStorage = resolveFilesStorage(additionalProps, envVars);
 
+            if (baseArgs != null){
+                logger.info("ListenerCommand.serverUrl:" + baseArgs.getUrl());
+                logger.info("ListenerCommand.customerId:" + baseArgs.getCustomerId());
+                if (baseArgs.getTokenData() != null){
+                    logger.info("ListenerCommand.tokenData.serverUrl:" + baseArgs.getTokenData().getServer());
+                    logger.info("ListenerCommand.tokenData.customerId:" + baseArgs.getTokenData().getCustomerId());
+                    logger.info("ListenerCommand.tokenData.token: " + baseArgs.getTokenData().getToken());
+                }
+                else{
+                    logger.warning("ListenerCommand.tokenData is null.");
+                }
+            }
             listenerCommandHandler.setBaseArgs(baseArgs);
             listenerCommandHandler.setFilesStorage(filesStorage);
 
@@ -144,7 +156,7 @@ public class ListenerCommand extends Builder {
             Logger logger, AbstractBuild<?, ?> build, Properties additionalProps, EnvVars envVars) {
 
         BaseCommandArguments baseArgs = new BaseCommandArguments();
-        setGlobalConfiguration(baseArgs, additionalProps, envVars);
+        setGlobalConfiguration(logger, baseArgs, additionalProps, envVars);
         setConfiguration(logger, build, envVars, baseArgs);
 
         baseArgs.setAgentPath(resolveEnvVar(envVars, (String) additionalProps.get("agentpath")));
@@ -153,13 +165,13 @@ public class ListenerCommand extends Builder {
         return baseArgs;
     }
 
-    private String resolveEnvVar(EnvVars envVars, String envVarKey){
+    private String resolveEnvVar(EnvVars envVars, String envVarKey) {
         return JenkinsUtils.tryGetEnvVariable(envVars, envVarKey);
     }
 
     private String resolveFilesStorage(Properties additionalProps, EnvVars envVars) {
         String filesStorage = (String) additionalProps.get("filesstorage");
-        if (!StringUtils.isNullOrEmpty(filesStorage)){
+        if (!StringUtils.isNullOrEmpty(filesStorage)) {
             return resolveEnvVar(envVars, filesStorage);
         }
 
@@ -171,25 +183,78 @@ public class ListenerCommand extends Builder {
         return System.getProperty("java.io.tmpdir");
     }
 
-    private void setGlobalConfiguration(BaseCommandArguments baseArgs, Properties additionalProps, EnvVars envVars) {
+    private void setGlobalConfiguration(Logger logger, BaseCommandArguments baseArgs, Properties additionalProps, EnvVars envVars) {
 
-        String customer = (String) additionalProps.get("customerid");
-        if (StringUtils.isNullOrEmpty(customer)) {
-            customer = beginAnalysis.getDescriptor().getCustomerId();
-        }
-        baseArgs.setCustomerId(resolveEnvVar(envVars, customer));
+        String tokenPropertyValue = JenkinsUtils.tryGetEnvVariable(envVars, (String) additionalProps.get("token"));
+        boolean usingToken = tryUseToken(logger, baseArgs, tokenPropertyValue);
 
-        String url = (String) additionalProps.get("server");
-        if (StringUtils.isNullOrEmpty(url)) {
-            url = beginAnalysis.getDescriptor().getUrl();
+        if (!usingToken) {
+            String customer = (String) additionalProps.get("customerid");
+            if (StringUtils.isNullOrEmpty(customer)) {
+                customer = beginAnalysis.getDescriptor().getCustomerId();
+            }
+            baseArgs.setCustomerId(resolveEnvVar(envVars, customer));
+
+            String url = (String) additionalProps.get("server");
+            if (StringUtils.isNullOrEmpty(url)) {
+                url = beginAnalysis.getDescriptor().getUrl();
+            }
+            baseArgs.setUrl(resolveEnvVar(envVars, url));
         }
-        baseArgs.setUrl(resolveEnvVar(envVars, url));
 
         String proxy = (String) additionalProps.get("proxy");
         if (StringUtils.isNullOrEmpty(proxy)) {
             proxy = beginAnalysis.getDescriptor().getProxy();
         }
         baseArgs.setProxy(resolveEnvVar(envVars, proxy));
+    }
+
+    private boolean tryUseToken(
+            Logger logger, BaseCommandArguments baseArgs, String tokenPropertyValue) {
+        try {
+            String token = tokenPropertyValue;
+            if (StringUtils.isNullOrEmpty(token)) {
+                token = beginAnalysis.getDescriptor().getToken();
+                if (StringUtils.isNullOrEmpty(token)) {
+                    logger.warning("Sealights token is not set. Sealights will try to run without it.");
+                    return false;
+                }
+            }
+
+            boolean isValidToken = validateAndTryUseToken(logger, token, baseArgs);
+            if (!isValidToken) {
+                logger.error("The provided token is invalid. Sealights will try to run without it.");
+                return false;
+            }
+
+            return true;
+        } catch (Exception e) {
+            logger.error("Failed to use token. Error: ", e);
+            return false;
+        }
+    }
+
+    private boolean validateAndTryUseToken(Logger logger, String token, BaseCommandArguments baseArgs) {
+        TokenData tokenData;
+        try {
+            tokenData = TokenData.parse(token);
+        } catch (IllegalArgumentException e) {
+            logger.error("Invalid token. Error: ", e);
+            return false;
+        }
+
+        TokenValidator tokenValidator = new TokenValidator();
+        List<ValidationError> validationErrors = tokenValidator.validate(tokenData);
+        if (validationErrors.size() > 0) {
+            logger.error("Invalid token. The token contains the following errors:");
+            for (ValidationError validationError : validationErrors) {
+                logger.error("Field: '" + validationError.getName() + "', Error: '" + validationError.getProblem() + "'.");
+            }
+            return false;
+        }
+
+        baseArgs.setTokenData(tokenData);
+        return true;
     }
 
     private void setConfiguration(Logger logger, AbstractBuild<?, ?> build, EnvVars envVars, BaseCommandArguments baseArgs) {

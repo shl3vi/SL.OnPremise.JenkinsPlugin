@@ -1,5 +1,6 @@
+package io.sealights.plugins.sealightsjenkins.utils;
+
 import hudson.EnvVars;
-import io.sealights.plugins.sealightsjenkins.utils.JenkinsUtils;
 import org.junit.Assert;
 import org.junit.Test;
 

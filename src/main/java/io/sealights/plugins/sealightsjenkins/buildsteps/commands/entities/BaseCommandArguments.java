@@ -1,6 +1,7 @@
 package io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities;
 
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.CommandMode;
+import io.sealights.plugins.sealightsjenkins.entities.TokenData;
 
 /**
  * Basic arguments that is needed for the executors
@@ -11,6 +12,7 @@ public class BaseCommandArguments {
     private String appName;
     private String branchName;
     private String buildName;
+    private TokenData tokenData;
     private String customerId;
     private String url;
     private String proxy;
@@ -48,6 +50,14 @@ public class BaseCommandArguments {
 
     public void setBuildName(String buildName) {
         this.buildName = buildName;
+    }
+
+    public TokenData getTokenData() {
+        return tokenData;
+    }
+
+    public void setTokenData(TokenData tokenData) {
+        this.tokenData = tokenData;
     }
 
     public String getCustomerId() {
