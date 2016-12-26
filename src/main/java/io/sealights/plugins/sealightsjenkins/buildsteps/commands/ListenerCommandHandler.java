@@ -1,10 +1,12 @@
 package io.sealights.plugins.sealightsjenkins.buildsteps.commands;
 
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities.BaseCommandArguments;
+import io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities.CommandModes;
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.executors.CommandExecutorsFactory;
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.executors.ICommandExecutor;
 import io.sealights.plugins.sealightsjenkins.entities.TokenData;
 import io.sealights.plugins.sealightsjenkins.integration.upgrade.AbstractUpgradeManager;
+import io.sealights.plugins.sealightsjenkins.integration.upgrade.BuildScannerUpgradeManager;
 import io.sealights.plugins.sealightsjenkins.integration.upgrade.TestListenerUpgradeManager;
 import io.sealights.plugins.sealightsjenkins.integration.upgrade.UpgradeProxy;
 import io.sealights.plugins.sealightsjenkins.integration.upgrade.entities.UpgradeConfiguration;
@@ -47,6 +49,9 @@ public class ListenerCommandHandler {
     private AbstractUpgradeManager createUpgradeManager(Logger logger, BaseCommandArguments baseArgs) {
         UpgradeConfiguration upgradeConfiguration = createUpgradeConfiguration(baseArgs);
         UpgradeProxy upgradeProxy = new UpgradeProxy(upgradeConfiguration, logger);
+        if (CommandModes.Config.equals(baseArgs.getMode().getCurrentMode())){
+            return new BuildScannerUpgradeManager(upgradeProxy, upgradeConfiguration, logger);
+        }
         return new TestListenerUpgradeManager(upgradeProxy, upgradeConfiguration, logger);
     }
 

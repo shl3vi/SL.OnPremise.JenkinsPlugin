@@ -67,19 +67,20 @@ public abstract class BaseCommandExecutor implements ICommandExecutor {
     private String getBaseArgumentsLine() {
         StringBuilder sb = new StringBuilder();
 
-        if (baseArgs.getTokenData() != null){
+        if (baseArgs.getTokenData() != null) {
             addArgumentKeyVal(sb, "token", baseArgs.getTokenData().getToken());
-        }else{
+        } else {
             addArgumentKeyVal(sb, "customerid", baseArgs.getCustomerId());
             addArgumentKeyVal(sb, "server", baseArgs.getUrl());
         }
 
         addArgumentKeyVal(sb, "buildsessionid", baseArgs.getBuildSessionId());
         addArgumentKeyVal(sb, "appname", baseArgs.getAppName());
+        addArgumentKeyVal(sb, "buildname", baseArgs.getBuildName());
         addArgumentKeyVal(sb, "branchname", baseArgs.getBranchName());
+
         addArgumentKeyVal(sb, "environment", baseArgs.getEnvironment());
         addArgumentKeyVal(sb, "proxy", baseArgs.getProxy());
-        addArgumentKeyVal(sb, "buildname", baseArgs.getBuildName());
 
         return sb.toString();
     }
@@ -95,7 +96,7 @@ public abstract class BaseCommandExecutor implements ICommandExecutor {
         sb.append(" ");
     }
 
-    private String resolvedJavaPath() {
+    protected String resolvedJavaPath() {
         if (!StringUtils.isNullOrEmpty(baseArgs.getJavaPath()))
             return baseArgs.getJavaPath();
 

@@ -162,4 +162,47 @@ public class CommandMode implements Describable<CommandMode>, ExtensionPoint, Se
         }
 
     }
+
+    public static class ConfigView extends CommandMode {
+
+        private String packagesIncluded;
+        private String packagesExcluded;
+
+        @DataBoundConstructor
+        public ConfigView(String packagesIncluded, String packagesExcluded) {
+            super(CommandModes.Start);
+            this.packagesIncluded = packagesIncluded;
+            this.packagesExcluded = packagesExcluded;
+        }
+
+        public String getPackagesIncluded() {
+            return packagesIncluded;
+        }
+
+        public void setPackagesIncluded(String packagesIncluded) {
+            this.packagesIncluded = packagesIncluded;
+        }
+
+        public String getPackagesExcluded() {
+            return packagesExcluded;
+        }
+
+        public void setPackagesExcluded(String packagesExcluded) {
+            this.packagesExcluded = packagesExcluded;
+        }
+
+        @Extension
+        public static class ConfigDescriptor extends CommandModeDescriptor {
+
+            @Override
+            public boolean isDefault() {
+                return true;
+            }
+
+            public ConfigDescriptor() {
+                super(ConfigView.class, CommandModes.Config.getDisplayName());
+            }
+        }
+
+    }
 }
