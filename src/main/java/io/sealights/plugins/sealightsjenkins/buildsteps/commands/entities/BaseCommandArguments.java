@@ -9,6 +9,7 @@ import io.sealights.plugins.sealightsjenkins.entities.TokenData;
 public class BaseCommandArguments {
 
     private CommandMode mode;
+    private String buildSessionId;
     private String appName;
     private String branchName;
     private String buildName;
@@ -26,6 +27,14 @@ public class BaseCommandArguments {
 
     public void setMode(CommandMode mode) {
         this.mode = mode;
+    }
+
+    public String getBuildSessionId() {
+        return buildSessionId;
+    }
+
+    public void setBuildSessionId(String buildSessionId) {
+        this.buildSessionId = buildSessionId;
     }
 
     public String getAppName() {
