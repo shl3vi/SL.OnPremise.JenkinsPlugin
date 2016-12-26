@@ -19,6 +19,7 @@ public class BaseCommandArguments {
     private String environment;
     private String agentPath;
     private String javaPath;
+    private String buildSessionId;
 
     public CommandMode getMode() {
         return mode;
@@ -106,5 +107,13 @@ public class BaseCommandArguments {
 
     public void setJavaPath(String javaPath) {
         this.javaPath = javaPath;
+    }
+
+    public String getBuildSessionId() {
+        return buildSessionId;
+    }
+
+    public void setBuildSessionId(String buildSessionId) {
+        this.buildSessionId = buildSessionId;
     }
 }

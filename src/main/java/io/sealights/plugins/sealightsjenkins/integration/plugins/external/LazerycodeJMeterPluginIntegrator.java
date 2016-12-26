@@ -144,6 +144,7 @@ public class LazerycodeJMeterPluginIntegrator extends PluginIntegrator {
             tryAppendValue(argumentList, Commons.SERVER_PROPERTY, pluginInfo.getServerUrl());
         }
 
+        tryAppendValue(argumentList, Commons.BUILD_SESSION_ID_PROPERTY, pluginInfo.getBuildSessionId());
 
         tryAppendValue(argumentList, Commons.PROXY_PROPERTY, pluginInfo.getProxy());
 

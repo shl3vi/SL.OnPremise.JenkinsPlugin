@@ -453,6 +453,10 @@ public class BeginAnalysis extends Builder {
             }
 
             SeaLightsPluginInfo slInfo = createSeaLightsPluginInfo(build, envVars, metadata, ws, additionalProps, logger);
+            SlInfoValidator slInfoValidator = new SlInfoValidator();
+            if (!slInfoValidator.validate(slInfo, logger)){
+                return true;
+            }
 
             printFields(slInfo, logger);
 
@@ -625,7 +629,21 @@ public class BeginAnalysis extends Builder {
         slInfo.setBuildFilesFolders(foldersToSearch);
         slInfo.setBuildFilesPatterns(patternsToSearch);
 
+        setSlInfoWithAdditionalProps(slInfo, additionalProps);
         return slInfo;
+    }
+
+    private void setSlInfoWithAdditionalProps(SeaLightsPluginInfo slInfo, Properties additionalProps) {
+        boolean createBuildSessionId = Boolean.valueOf((String)additionalProps.get("createBuildSessionId"));
+        if (createBuildSessionId)
+        {
+            slInfo.setCreateBuildSessionId(true);
+        }
+
+        String buildSessionId = (String) additionalProps.get("buildSessionId");
+        if (!StringUtils.isNullOrEmpty(buildSessionId)){
+            slInfo.setBuildSessionId(buildSessionId);
+        }
     }
 
 
@@ -940,24 +958,6 @@ public class BeginAnalysis extends Builder {
 
         public void setFilesStorage(String filesStorage) {
             this.filesStorage = filesStorage;
-        }
-
-        public FormValidation doCheckPackagesIncluded(@QueryParameter String packagesIncluded) {
-            if (StringUtils.isNullOrEmpty(packagesIncluded))
-                return FormValidation.error("Monitored Application Packages is mandatory.");
-            return FormValidation.ok();
-        }
-
-        public FormValidation doCheckAppName(@QueryParameter String appName) {
-            if (StringUtils.isNullOrEmpty(appName))
-                return FormValidation.error("App Name is mandatory.");
-            return FormValidation.ok();
-        }
-
-        public FormValidation doCheckBranch(@QueryParameter String branch) {
-            if (StringUtils.isNullOrEmpty(branch))
-                return FormValidation.error("Branch Name is mandatory.");
-            return FormValidation.ok();
         }
 
         public FormValidation doCheckSlMvnPluginVersion(@QueryParameter String slMvnPluginVersion) {

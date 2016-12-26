@@ -26,5 +26,6 @@ public class Commons {
     public static final String LOG_TO_FILE_PROPERTY = "sl.log.toFile";
     public static final String LOG_FILE_NAME_PROPERTY = "sl.log.filename";
     public static final String LOG_FOLDER_PROPERTY = "sl.log.folder";
+    public static final String BUILD_SESSION_ID_PROPERTY = "sl.buildSessionId";
 
 }

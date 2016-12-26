@@ -74,6 +74,7 @@ public abstract class BaseCommandExecutor implements ICommandExecutor {
             addArgumentKeyVal(sb, "server", baseArgs.getUrl());
         }
 
+        addArgumentKeyVal(sb, "buildsessionid", baseArgs.getBuildSessionId());
         addArgumentKeyVal(sb, "appname", baseArgs.getAppName());
         addArgumentKeyVal(sb, "branchname", baseArgs.getBranchName());
         addArgumentKeyVal(sb, "environment", baseArgs.getEnvironment());

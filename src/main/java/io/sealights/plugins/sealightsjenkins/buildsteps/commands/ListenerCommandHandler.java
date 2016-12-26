@@ -66,6 +66,7 @@ public class ListenerCommandHandler {
         return new UpgradeConfiguration(
                 token,
                 customerId,
+                baseArgs.getBuildSessionId(),
                 baseArgs.getAppName(),
                 baseArgs.getEnvironment(),
                 baseArgs.getBranchName(),

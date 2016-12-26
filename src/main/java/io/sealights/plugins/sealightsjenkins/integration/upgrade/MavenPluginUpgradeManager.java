@@ -44,6 +44,7 @@ public class MavenPluginUpgradeManager {
         return new UpgradeConfiguration(
                 token,
                 customerId,
+                slInfo.getBuildSessionId(),
                 slInfo.getAppName(),
                 slInfo.getEnvironment(),
                 slInfo.getBranchName(),
