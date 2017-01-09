@@ -27,24 +27,22 @@ import java.util.List;
 import java.util.Properties;
 
 @ExportedBean
-public class ListenerCommand extends Builder {
+public class ScannerCommand extends Builder {
 
     private String buildSessionId;
     private String appName;
     private String branchName;
     private CommandBuildName buildName;
-    private String environment;
     private String additionalArguments;
     private BeginAnalysis beginAnalysis = new BeginAnalysis();
 
     @DataBoundConstructor
-    public ListenerCommand(String buildSessionId, String appName, String branchName,
-                           CommandBuildName buildName, String environment, String additionalArguments) {
+    public ScannerCommand(String buildSessionId, String appName, String branchName,
+                          CommandBuildName buildName, String additionalArguments) {
         this.buildSessionId = buildSessionId;
         this.appName = appName;
         this.branchName = branchName;
         this.buildName = buildName;
-        this.environment = environment;
         this.additionalArguments = additionalArguments;
     }
 
@@ -89,16 +87,6 @@ public class ListenerCommand extends Builder {
     }
 
     @Exported
-    public String getEnvironment() {
-        return environment;
-    }
-
-    @Exported
-    public void setEnvironment(String environment) {
-        this.environment = environment;
-    }
-
-    @Exported
     public BeginAnalysis getBeginAnalysis() {
         return beginAnalysis;
     }
@@ -124,7 +112,7 @@ public class ListenerCommand extends Builder {
     }
 
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener,
-                           CommandMode commandMode, ListenerCommandHandler listenerCommandHandler, Logger logger)
+                           ListenerCommandHandler listenerCommandHandler, Logger logger)
             throws IOException, InterruptedException {
 
         try {
@@ -134,43 +122,34 @@ public class ListenerCommand extends Builder {
             Properties additionalProps = PropertiesUtils.toProperties(additionalArguments);
             EnvVars envVars = build.getEnvironment(listener);
             BaseCommandArguments baseArgs = createBaseCommandArguments(logger, build, additionalProps, envVars);
-            baseArgs.setMode(commandMode);
 
             String filesStorage = resolveFilesStorage(additionalProps, envVars);
 
-            if (baseArgs != null){
-                logger.info("ListenerCommand.serverUrl:" + baseArgs.getUrl());
-                logger.info("ListenerCommand.customerId:" + baseArgs.getCustomerId());
-                if (baseArgs.getTokenData() != null){
-                    logger.info("ListenerCommand.tokenData.serverUrl:" + baseArgs.getTokenData().getServer());
-                    logger.info("ListenerCommand.tokenData.customerId:" + baseArgs.getTokenData().getCustomerId());
-                    logger.info("ListenerCommand.tokenData.token: " + baseArgs.getTokenData().getToken());
-                }
-                else{
-                    logger.warning("ListenerCommand.tokenData is null.");
-                }
-            }
+            TokenData tokenData = baseArgs.getTokenData();
+            logger.info("ScannerCommand.tokenData.serverUrl:" + tokenData.getServer());
+            logger.info("ScannerCommand.tokenData.customerId:" +tokenData.getCustomerId());
+            logger.info("ScannerCommand.tokenData.token: " + tokenData.getToken());
+
             listenerCommandHandler.setBaseArgs(baseArgs);
             listenerCommandHandler.setFilesStorage(filesStorage);
 
             listenerCommandHandler.handle();
 
         } catch (Exception e) {
-            logger.error("Error occurred while performing 'Sealights Listener Command'. Error: ", e);
+            logger.error("Error occurred while performing 'Sealights Scanner Command'. Error: ", e);
         }
 
         return true;
     }
 
     private BaseCommandArguments createBaseCommandArguments(
-            Logger logger, AbstractBuild<?, ?> build, Properties additionalProps, EnvVars envVars) {
+            Logger logger, AbstractBuild<?, ?> build, Properties additionalProps, EnvVars envVars) throws Exception {
 
         BaseCommandArguments baseArgs = new BaseCommandArguments();
         setGlobalConfiguration(logger, baseArgs, additionalProps, envVars);
         setConfiguration(logger, build, envVars, baseArgs);
 
         baseArgs.setAgentPath(resolveEnvVar(envVars, (String) additionalProps.get("agentpath")));
-        baseArgs.setJavaPath(resolveEnvVar(envVars, (String) additionalProps.get("javapath")));
 
         return baseArgs;
     }
@@ -193,23 +172,13 @@ public class ListenerCommand extends Builder {
         return System.getProperty("java.io.tmpdir");
     }
 
-    private void setGlobalConfiguration(Logger logger, BaseCommandArguments baseArgs, Properties additionalProps, EnvVars envVars) {
+    private void setGlobalConfiguration(Logger logger, BaseCommandArguments baseArgs, Properties additionalProps, EnvVars envVars) throws Exception {
 
         String tokenPropertyValue = JenkinsUtils.tryGetEnvVariable(envVars, (String) additionalProps.get("token"));
         boolean usingToken = tryUseToken(logger, baseArgs, tokenPropertyValue);
 
         if (!usingToken) {
-            String customer = (String) additionalProps.get("customerid");
-            if (StringUtils.isNullOrEmpty(customer)) {
-                customer = beginAnalysis.getDescriptor().getCustomerId();
-            }
-            baseArgs.setCustomerId(resolveEnvVar(envVars, customer));
-
-            String url = (String) additionalProps.get("server");
-            if (StringUtils.isNullOrEmpty(url)) {
-                url = beginAnalysis.getDescriptor().getUrl();
-            }
-            baseArgs.setUrl(resolveEnvVar(envVars, url));
+            throw new Exception("Please provide a valid token.");
         }
 
         String proxy = (String) additionalProps.get("proxy");
@@ -272,7 +241,6 @@ public class ListenerCommand extends Builder {
         baseArgs.setAppName(resolveEnvVar(envVars, appName));
         baseArgs.setBuildName(getFinalBuildName(build, logger));
         baseArgs.setBranchName(resolveEnvVar(envVars, branchName));
-        baseArgs.setEnvironment(resolveEnvVar(envVars, environment));
     }
 
     private String getFinalBuildName(AbstractBuild<?, ?> build, Logger logger) throws IllegalStateException {
@@ -345,3 +313,4 @@ public class ListenerCommand extends Builder {
 
     }
 }
+
