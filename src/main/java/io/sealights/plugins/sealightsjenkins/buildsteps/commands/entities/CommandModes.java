@@ -19,6 +19,11 @@ public enum CommandModes {
             return "Step 2 - Upload Report";
         }
     },
+    ExternalReport("externalReport") {
+        @Override public String getDisplayName() {
+            return "Send external report";
+        }
+    },
     Config("config") {
         @Override public String getDisplayName() {
             return "Config - Create build session data";

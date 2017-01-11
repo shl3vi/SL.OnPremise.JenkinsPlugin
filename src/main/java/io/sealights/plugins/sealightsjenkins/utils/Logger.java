@@ -8,12 +8,17 @@ import java.io.StringWriter;
  * Created by Nadav on 5/5/2016.
  */
 public class Logger {
-    private final String PREFIX = "[SeaLights Jenkins Plugin] ";
+    private String PREFIX;
     private PrintStream printStream;
+
+    public Logger(PrintStream printStream, String prefix){
+        this.printStream = printStream;
+        this.PREFIX = prefix;
+    }
 
     public Logger(PrintStream printStream)
     {
-        this.printStream = printStream;
+        this(printStream, "[SeaLights Jenkins Plugin] ");
     }
 
     public void debug(String message)

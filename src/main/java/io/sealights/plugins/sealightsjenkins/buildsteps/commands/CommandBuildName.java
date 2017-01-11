@@ -49,6 +49,9 @@ public class CommandBuildName implements Describable<CommandBuildName>, Extensio
         public boolean isDefault(){
             return false;
         }
+        public boolean isEmptyBuild() {
+            return false;
+        }
 
         @Override
         public String getDisplayName() {
@@ -155,6 +158,27 @@ public class CommandBuildName implements Describable<CommandBuildName>, Extensio
 
             public LatestBuildNameDescriptor() {
                 super(LatestBuildName.class, CommandBuildNamingStrategy.LATEST_BUILD.getDisplayName());
+            }
+        }
+    }
+
+    public static class EmptyBuildName extends CommandBuildName {
+
+        @DataBoundConstructor
+        public EmptyBuildName() {
+            super(CommandBuildNamingStrategy.EMPTY_BUILD);
+        }
+
+        @Extension
+        public static class EmptyBuildNameDescriptor extends CommandBuildNameDescriptor {
+
+            public EmptyBuildNameDescriptor() {
+                super(EmptyBuildName.class, CommandBuildNamingStrategy.EMPTY_BUILD.getDisplayName());
+            }
+
+            @Override
+            public boolean isEmptyBuild(){
+                return true;
             }
         }
     }
