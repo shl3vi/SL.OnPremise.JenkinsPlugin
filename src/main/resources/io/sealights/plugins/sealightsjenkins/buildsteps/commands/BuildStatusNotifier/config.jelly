@@ -1,0 +1,39 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
+         xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+
+    <f:entry title="Enable Sending report" field="enabled">
+        <f:checkbox value="${enabled}" default="true"/>
+    </f:entry>
+
+    <f:entry title="Build Session Id" field="buildSessionId">
+        <f:textbox value="${buildSessionId}"/>
+    </f:entry>
+
+    <f:advanced title="Advanced">
+        <f:entry title="App Name" field="appName" description="">
+            <f:textbox value="${appName}"/>
+        </f:entry>
+
+        <f:entry title="Branch Name" field="branchName">
+            <f:textbox value="${branch}"/>
+        </f:entry>
+
+        <f:dropdownList name="buildName" title="Build Name">
+            <j:forEach var="currentDescriptor" items="${descriptor.buildNameDescriptorList}" varStatus="loop">
+                <f:dropdownListBlock title="${currentDescriptor.displayName}" value="${loop.index}"
+                                     selected="${currentDescriptor == instance.buildName.descriptor || (instance.buildName.descriptor == null &amp;&amp; currentDescriptor.default)}"
+                                     staplerClass="${currentDescriptor.clazz.name}">
+                    <j:set var="instance" value="${instance.buildName}"/>
+                    <j:set var="descriptor" value="${instance.descriptor}"/>
+                    <st:include page="${currentDescriptor.configPage}" from="${currentDescriptor}"/>
+                </f:dropdownListBlock>
+            </j:forEach>
+        </f:dropdownList>
+
+        <f:entry title="${%Additional Arguments}" field="additionalArguments">
+            <f:expandableTextbox value="${additionalArguments}"/>
+        </f:entry>
+    </f:advanced>
+
+</j:jelly>

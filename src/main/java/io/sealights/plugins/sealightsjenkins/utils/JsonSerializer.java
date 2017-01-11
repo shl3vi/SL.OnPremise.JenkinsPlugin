@@ -71,4 +71,14 @@ public class JsonSerializer {
 
         return deserializedObject;
     }
+
+    public static void serializeToFile(File file, Object obj){
+        try {
+            ObjectMapper om = new ObjectMapper();
+            om.writeValue(file, obj);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed during JSON deserialization. Error: " + e.toString(), e);
+        }
+
+    }
 }

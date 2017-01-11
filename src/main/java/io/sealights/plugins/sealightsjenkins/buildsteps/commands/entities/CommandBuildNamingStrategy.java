@@ -23,6 +23,11 @@ public enum CommandBuildNamingStrategy {
         @Override public String getDisplayName() {
             return "Report on latest build.";
         }
+    },
+    EMPTY_BUILD() {
+        @Override public String getDisplayName() {
+            return "Leave build name field empty.";
+        }
     };
     public abstract String getDisplayName();
 }

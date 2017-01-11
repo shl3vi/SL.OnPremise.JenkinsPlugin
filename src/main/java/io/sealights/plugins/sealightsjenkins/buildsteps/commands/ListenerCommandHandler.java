@@ -1,7 +1,9 @@
 package io.sealights.plugins.sealightsjenkins.buildsteps.commands;
 
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities.BaseCommandArguments;
+import io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities.ExternalReportArguments;
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.executors.CommandExecutorsFactory;
+import io.sealights.plugins.sealightsjenkins.buildsteps.commands.executors.ExternalReportExecutor;
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.executors.ICommandExecutor;
 import io.sealights.plugins.sealightsjenkins.entities.TokenData;
 import io.sealights.plugins.sealightsjenkins.integration.upgrade.AbstractUpgradeManager;
@@ -26,6 +28,12 @@ public class ListenerCommandHandler {
         this.logger = logger;
     }
 
+    public ListenerCommandHandler(BaseCommandArguments baseArgs, String filesStorage, Logger logger) {
+        this.baseArgs = baseArgs;
+        this.filesStorage = filesStorage;
+        this.logger = logger;
+    }
+
     public boolean handle() {
         String agentPath = tryGetAgentPath(logger, baseArgs);
         baseArgs.setAgentPath(agentPath);
@@ -33,6 +41,14 @@ public class ListenerCommandHandler {
         CommandExecutorsFactory commandExecutorsFactory = new CommandExecutorsFactory();
         ICommandExecutor executor = commandExecutorsFactory.createExecutor(logger, baseArgs);
 
+        return executor.execute();
+    }
+
+    public boolean handleExternalReport(ExternalReportArguments externalReportArguments) {
+        String agentPath = tryGetAgentPath(logger, baseArgs);
+        baseArgs.setAgentPath(agentPath);
+
+        ExternalReportExecutor executor = new ExternalReportExecutor(logger, baseArgs, externalReportArguments);
         return executor.execute();
     }
 
