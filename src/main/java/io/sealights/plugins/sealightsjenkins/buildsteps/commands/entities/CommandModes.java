@@ -18,6 +18,11 @@ public enum CommandModes {
         @Override public String getDisplayName() {
             return "Step 2 - Upload Report";
         }
+    },
+    ExternalReport("externalReport") {
+        @Override public String getDisplayName() {
+            return "Send external report";
+        }
     };
 
     private final String name;

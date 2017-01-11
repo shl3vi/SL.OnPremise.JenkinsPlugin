@@ -1,8 +1,6 @@
 package io.sealights.plugins.sealightsjenkins.buildsteps.commands;
 
-import hudson.EnvVars;
-import hudson.Extension;
-import hudson.Launcher;
+import hudson.*;
 import hudson.model.*;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
@@ -64,18 +62,18 @@ public class BuildStatusNotifier extends Notifier {
 
             String filesStorage = resolveFilesStorage(additionalProps, envVars);
 
-            String reportFile = resolveReportFile(build, envVars, filesStorage, additionalProps, logger);
+            String reportFile = resolveReportFile(build, envVars, additionalProps, logger);
 
             ExternalReportArguments externalReportArguments =
                     createExternalReportArguments(envVars, build, additionalProps, reportFile, logger);
 
-            BaseCommandArguments baseCommandArguments = createBaseCommandArguments(externalReportArguments, logger);
+            BaseCommandArguments baseCommandArguments = createBaseCommandArguments(
+                    envVars, additionalProps, externalReportArguments, logger);
             externalReportArguments.setBaseArgs(baseCommandArguments);
 
             logger.info("About to report build status.");
             ListenerCommandHandler listenerCommandHandler = new ListenerCommandHandler(baseCommandArguments, filesStorage, logger);
             listenerCommandHandler.handleExternalReport(externalReportArguments);
-            logger.info("Report was successfully sent.");
 
         } catch (Exception e) {
             logger.error("Failed to send build status report. Error: ", e);
@@ -90,21 +88,37 @@ public class BuildStatusNotifier extends Notifier {
     }
 
     private String resolveReportFile(
-            final Run<?, ?> build, EnvVars envVars, String filesStorage, Properties additionalProps, Logger logger) {
+            final AbstractBuild<?, ?> build, EnvVars envVars, Properties additionalProps, Logger logger) {
 
         String reportFile = resolveEnvVar(envVars, (String) additionalProps.get("report"));
-        boolean isReportFileProvided = StringUtils.isNullOrEmpty(reportFile);
+        boolean isReportFileProvided = !StringUtils.isNullOrEmpty(reportFile);
+
+        // we are trying to create the report at the working directory
+        String workingDir = findWorkingDirPath(build);
+        if (workingDir == null){
+            // if we can't resolve the working directory, we will create the report at the temp directory
+            workingDir = System.getProperty("java.io.tmpdir");
+        }
+
         if (!isReportFileProvided) {
-            reportFile = createReportFile(build.getResult(), filesStorage);
+            reportFile = createReportFile(build.getResult(), workingDir, logger);
         }
 
         logger.info("Report file location: '" + reportFile + "'");
         return reportFile;
     }
 
-    private String createReportFile(final Result result, String filesStorage) {
+    private String findWorkingDirPath(AbstractBuild<?, ?> build) {
+        FilePath ws = build.getWorkspace();
+        if (ws == null) {
+            return null;
+        }
+        return ws.getRemote();
+    }
+
+    private String createReportFile(final Result result, String workingDir, Logger logger) {
         Map reportMap = createReportMap(result);
-        return saveReportToFS(reportMap, filesStorage);
+        return saveReportToFS(reportMap, workingDir, logger);
     }
 
     private Map createReportMap(Result result) {
@@ -131,20 +145,23 @@ public class BuildStatusNotifier extends Notifier {
 
         // possible statuses SUCCESS, UNSTABLE, FAILURE, NOT_BUILT, ABORTED
         if (Result.SUCCESS == result) {
-            return SealightsBuildStatus.SUCCESS.name();
+            return SealightsBuildStatus.SUCCESS.getName();
         } else if (Result.UNSTABLE == result || Result.FAILURE == result || Result.ABORTED == result) {
-            return SealightsBuildStatus.FAILURE.name();
+            return SealightsBuildStatus.FAILURE.getName();
         } else {
             // return empty status for every other result ('null' || NOT_BUILT)
             return null;
         }
     }
 
-    private String saveReportToFS(Map reportMap, String filesStorage) {
+    private String saveReportToFS(Map reportMap, String workingDir, Logger logger) {
         try {
-            String fileName = PathUtils.join(filesStorage, "buildStatusReport_" + UUID.randomUUID() + ".json");
+            String fileName = PathUtils.join(workingDir, "buildStatusReport_" + UUID.randomUUID() + ".json");
+            logger.info("Try to create report file at '" + fileName + "'");
             File reportFile = new File(fileName);
-
+            if (!reportFile.createNewFile()) {
+                throw new RuntimeException("Failed to create new file at '" + fileName + "' for the report.");
+            }
             JsonSerializer.serializeToFile(reportFile, reportMap);
 
             reportFile.deleteOnExit();
@@ -155,7 +172,7 @@ public class BuildStatusNotifier extends Notifier {
     }
 
     private BaseCommandArguments createBaseCommandArguments(
-            ExternalReportArguments externalReportArguments, Logger logger) {
+            EnvVars envVars, Properties additionalProps, ExternalReportArguments externalReportArguments, Logger logger) {
 
         BaseCommandArguments baseCommandArguments = new BaseCommandArguments();
 
@@ -166,6 +183,12 @@ public class BuildStatusNotifier extends Notifier {
         baseCommandArguments.setAppName(externalReportArguments.getAppName());
         baseCommandArguments.setBuildName(externalReportArguments.getBuildName());
         baseCommandArguments.setBranchName(externalReportArguments.getBranchName());
+
+        baseCommandArguments.setAgentPath(resolveEnvVar(envVars, (String) additionalProps.get("agentpath")));
+        baseCommandArguments.setJavaPath(resolveEnvVar(envVars, (String) additionalProps.get("javapath")));
+
+        CommandMode commandMode = new CommandMode.ExternalReportView();
+        baseCommandArguments.setMode(commandMode);
 
         return baseCommandArguments;
     }
@@ -187,7 +210,7 @@ public class BuildStatusNotifier extends Notifier {
         externalReportArguments.setAppName(resolveEnvVar(envVars, appName));
 
         BuildNameResolver buildNameResolver = new BuildNameResolver();
-        externalReportArguments.setBuildName(buildNameResolver.getFinalBuildName(build, buildName, logger));
+        externalReportArguments.setBuildName(buildNameResolver.getFinalBuildName(build, envVars, buildName, logger));
 
         externalReportArguments.setBranchName(resolveEnvVar(envVars, branchName));
 
@@ -345,6 +368,10 @@ public class BuildStatusNotifier extends Notifier {
         @Override
         public boolean isApplicable(Class<? extends AbstractProject> aClass) {
             return true;
+        }
+
+        public DescriptorExtensionList<CommandBuildName, CommandBuildName.CommandBuildNameDescriptor> getBuildNameDescriptorList() {
+            return Jenkins.getInstance().getDescriptorList(CommandBuildName.class);
         }
 
     }

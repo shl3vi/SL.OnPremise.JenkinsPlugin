@@ -162,4 +162,20 @@ public class CommandMode implements Describable<CommandMode>, ExtensionPoint, Se
         }
 
     }
+
+    public static class ExternalReportView extends CommandMode {
+
+        @DataBoundConstructor
+        public ExternalReportView() {
+            super(CommandModes.ExternalReport);
+        }
+
+        @Extension
+        public static class ExternalReportDescriptor extends CommandModeDescriptor {
+            public ExternalReportDescriptor() {
+                super(ExternalReportView.class, CommandModes.ExternalReport.getDisplayName());
+            }
+        }
+
+    }
 }

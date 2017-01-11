@@ -1,5 +1,6 @@
 package io.sealights.plugins.sealightsjenkins.buildsteps.commands.utils;
 
+import hudson.EnvVars;
 import hudson.model.AbstractBuild;
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.CommandBuildName;
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities.CommandBuildNamingStrategy;
@@ -9,7 +10,8 @@ import io.sealights.plugins.sealightsjenkins.utils.StringUtils;
 
 public class BuildNameResolver {
 
-    public String getFinalBuildName(AbstractBuild<?, ?> build, CommandBuildName buildName, Logger logger) throws IllegalStateException {
+    public String getFinalBuildName(
+            AbstractBuild<?, ?> build, EnvVars envVars, CommandBuildName buildName, Logger logger) throws IllegalStateException {
 
         String finalBuildName = null;
 
@@ -31,7 +33,7 @@ public class BuildNameResolver {
             return String.valueOf(build.getNumber());
         }
 
-        return finalBuildName;
+        return JenkinsUtils.tryGetEnvVariable(envVars, finalBuildName);
     }
 
     private String getManualBuildName(CommandBuildName buildName) {

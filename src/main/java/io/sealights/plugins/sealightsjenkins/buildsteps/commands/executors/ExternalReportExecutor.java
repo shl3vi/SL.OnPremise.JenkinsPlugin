@@ -9,7 +9,7 @@ import io.sealights.plugins.sealightsjenkins.utils.Logger;
  */
 public class ExternalReportExecutor extends BaseCommandExecutor {
 
-    ExternalReportArguments externalReportArguments;
+    private ExternalReportArguments externalReportArguments;
 
     public ExternalReportExecutor(
             Logger logger, BaseCommandArguments baseArgs, ExternalReportArguments externalReportArguments) {
