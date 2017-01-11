@@ -128,10 +128,12 @@ public class BuildStatusNotifier extends Notifier {
         String type = "string";
         String value = result.toString();
 
-        Map<String, String> data = new HashMap<>();
-        data.put("fieldName", fieldName);
-        data.put("type", type);
-        data.put("value", value);
+        List<Map> data = new ArrayList<>();
+        Map index0 = new HashMap();
+        index0.put("fieldName", fieldName);
+        index0.put("type", type);
+        index0.put("value", value);
+        data.add(index0);
 
         Map<String, Object> externalReport = new HashMap<>();
         externalReport.put("title", title);
