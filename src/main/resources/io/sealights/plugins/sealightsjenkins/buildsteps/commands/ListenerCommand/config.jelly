@@ -24,7 +24,7 @@
         </j:forEach>
     </f:dropdownList>
 
-    <f:advanced title="Advance">
+    <f:advanced title="Advanced">
         <f:entry title="${%Additional Arguments}" field="additionalArguments">
             <f:expandableTextbox value="${additionalArguments}"/>
         </f:entry>

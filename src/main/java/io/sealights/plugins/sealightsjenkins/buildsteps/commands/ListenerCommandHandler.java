@@ -26,6 +26,12 @@ public class ListenerCommandHandler {
         this.logger = logger;
     }
 
+    public ListenerCommandHandler(BaseCommandArguments baseArgs, String filesStorage, Logger logger) {
+        this.baseArgs = baseArgs;
+        this.filesStorage = filesStorage;
+        this.logger = logger;
+    }
+
     public boolean handle() {
         String agentPath = tryGetAgentPath(logger, baseArgs);
         baseArgs.setAgentPath(agentPath);
