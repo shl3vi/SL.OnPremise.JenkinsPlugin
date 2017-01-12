@@ -27,6 +27,9 @@ public class CommandExecutorsFactory {
             } else if (CommandModes.UploadReports.equals(mode.getCurrentMode())) {
                 UploadReportsCommandArguments uploadReportsCommandArguments = getUploadReportsCommandArguments(baseArgs);
                 executor = new UploadReportsCommandExecutor(logger, uploadReportsCommandArguments);
+            } else if (CommandModes.ExternalReport.equals(mode.getCurrentMode())) {
+                ExternalReportArguments externalReportArguments = getExternalReportArguments(baseArgs);
+                executor = new ExternalReportExecutor(logger, externalReportArguments);
             } else {
                 logger.error("Current mode is invalid! Cannot create executor.");
                 executor = new NullCommandExecutor();
@@ -52,6 +55,14 @@ public class CommandExecutorsFactory {
                 uploadReportsView.getReportsFolders(),
                 uploadReportsView.getHasMoreRequests(),
                 uploadReportsView.getSource());
+    }
+
+    private ExternalReportArguments getExternalReportArguments(BaseCommandArguments baseArgs) {
+        CommandMode.ExternalReportView externalReportView = (CommandMode.ExternalReportView) baseArgs.getMode();
+        return new ExternalReportArguments(
+                baseArgs,
+                externalReportView.getReport()
+        );
     }
 
 }

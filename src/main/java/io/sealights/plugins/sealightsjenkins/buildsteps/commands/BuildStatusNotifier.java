@@ -1,14 +1,16 @@
 package io.sealights.plugins.sealightsjenkins.buildsteps.commands;
 
 import hudson.*;
-import hudson.model.*;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
+import hudson.model.Result;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import io.sealights.plugins.sealightsjenkins.BeginAnalysis;
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities.BaseCommandArguments;
-import io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities.ExternalReportArguments;
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.entities.SealightsBuildStatus;
 import io.sealights.plugins.sealightsjenkins.buildsteps.commands.utils.BuildNameResolver;
 import io.sealights.plugins.sealightsjenkins.entities.TokenData;
@@ -64,16 +66,13 @@ public class BuildStatusNotifier extends Notifier {
 
             String reportFile = resolveReportFile(build, envVars, additionalProps, logger);
 
-            ExternalReportArguments externalReportArguments =
-                    createExternalReportArguments(envVars, build, additionalProps, reportFile, logger);
-
             BaseCommandArguments baseCommandArguments = createBaseCommandArguments(
-                    envVars, additionalProps, externalReportArguments, logger);
-            externalReportArguments.setBaseArgs(baseCommandArguments);
+                    build, envVars, additionalProps, reportFile, logger);
 
             logger.info("About to report build status.");
-            ListenerCommandHandler listenerCommandHandler = new ListenerCommandHandler(baseCommandArguments, filesStorage, logger);
-            listenerCommandHandler.handleExternalReport(externalReportArguments);
+            ListenerCommandHandler listenerCommandHandler =
+                    new ListenerCommandHandler(baseCommandArguments, filesStorage, logger);
+            listenerCommandHandler.handle();
 
         } catch (Exception e) {
             logger.error("Failed to send build status report. Error: ", e);
@@ -93,14 +92,9 @@ public class BuildStatusNotifier extends Notifier {
         String reportFile = resolveEnvVar(envVars, (String) additionalProps.get("report"));
         boolean isReportFileProvided = !StringUtils.isNullOrEmpty(reportFile);
 
-        // we are trying to create the report at the working directory
-        String workingDir = findWorkingDirPath(build);
-        if (workingDir == null){
-            // if we can't resolve the working directory, we will create the report at the temp directory
-            workingDir = System.getProperty("java.io.tmpdir");
-        }
-
         if (!isReportFileProvided) {
+            // we are trying to create the report at the working directory
+            String workingDir = findWorkingDirPath(build);
             reportFile = createReportFile(build.getResult(), workingDir, logger);
         }
 
@@ -109,11 +103,14 @@ public class BuildStatusNotifier extends Notifier {
     }
 
     private String findWorkingDirPath(AbstractBuild<?, ?> build) {
+        String workingDir;
         FilePath ws = build.getWorkspace();
-        if (ws == null) {
-            return null;
+        if (ws == null || (workingDir = ws.getRemote()) == null){
+            // if we can't resolve the working directory, we will create the report at the temp directory
+            workingDir = System.getProperty("java.io.tmpdir");
         }
-        return ws.getRemote();
+
+        return workingDir;
     }
 
     private String createReportFile(final Result result, String workingDir, Logger logger) {
@@ -174,51 +171,39 @@ public class BuildStatusNotifier extends Notifier {
     }
 
     private BaseCommandArguments createBaseCommandArguments(
-            EnvVars envVars, Properties additionalProps, ExternalReportArguments externalReportArguments, Logger logger) {
+            AbstractBuild<?, ?> build, EnvVars envVars, Properties additionalProps, String report, Logger logger) {
 
-        BaseCommandArguments baseCommandArguments = new BaseCommandArguments();
-
-        TokenData tokenData = createTokenData(externalReportArguments.getToken(), logger);
-        baseCommandArguments.setTokenData(tokenData);
-
-        baseCommandArguments.setProxy(externalReportArguments.getProxy());
-        baseCommandArguments.setAppName(externalReportArguments.getAppName());
-        baseCommandArguments.setBuildName(externalReportArguments.getBuildName());
-        baseCommandArguments.setBranchName(externalReportArguments.getBranchName());
-
-        baseCommandArguments.setAgentPath(resolveEnvVar(envVars, (String) additionalProps.get("agentpath")));
-        baseCommandArguments.setJavaPath(resolveEnvVar(envVars, (String) additionalProps.get("javapath")));
-
-        CommandMode commandMode = new CommandMode.ExternalReportView();
-        baseCommandArguments.setMode(commandMode);
-
-        return baseCommandArguments;
-    }
-
-    private ExternalReportArguments createExternalReportArguments(
-            EnvVars envVars, AbstractBuild<?, ?> build, Properties additionalProps, String reportFile, Logger logger) {
-        ExternalReportArguments externalReportArguments = new ExternalReportArguments();
+        BaseCommandArguments baseArgs = new BaseCommandArguments();
 
         String globalToken = beginAnalysis.getDescriptor().getToken();
-        externalReportArguments.setToken(resolveGlobalArgument(envVars, additionalProps, "token", globalToken));
-        externalReportArguments.setTokenFile(resolveEnvVar(envVars, (String) additionalProps.get("tokenFile")));
+        baseArgs.setToken(resolveGlobalArgument(envVars, additionalProps, "token", globalToken));
+        baseArgs.setTokenFile(resolveEnvVar(envVars, (String) additionalProps.get("tokenFile")));
+
+        // need to create tokenData for the upgrade feature (need to know to which server it should request for agents)
+        TokenData tokenData = createTokenData(baseArgs.getToken(), baseArgs.getTokenFile(), logger);
+        baseArgs.setTokenData(tokenData);
 
         String globalProxy = beginAnalysis.getDescriptor().getProxy();
-        externalReportArguments.setProxy(resolveGlobalArgument(envVars, additionalProps, "proxy", globalProxy));
+        baseArgs.setProxy(resolveGlobalArgument(envVars, additionalProps, "proxy", globalProxy));
 
-        externalReportArguments.setBuildSessionId(resolveEnvVar(envVars, buildSessionId));
-        externalReportArguments.setBuildSessionIdFile(resolveEnvVar(envVars, (String) additionalProps.get("buildSessionIdFile")));
+        baseArgs.setBuildSessionId(resolveEnvVar(envVars, buildSessionId));
+        baseArgs.setBuildSessionIdFile(resolveEnvVar(envVars, (String) additionalProps.get("buildSessionIdFile")));
 
-        externalReportArguments.setAppName(resolveEnvVar(envVars, appName));
+        baseArgs.setAppName(resolveEnvVar(envVars, appName));
 
         BuildNameResolver buildNameResolver = new BuildNameResolver();
-        externalReportArguments.setBuildName(buildNameResolver.getFinalBuildName(build, envVars, buildName, logger));
+        baseArgs.setBuildName(buildNameResolver.getFinalBuildName(build, envVars, buildName, logger));
 
-        externalReportArguments.setBranchName(resolveEnvVar(envVars, branchName));
+        baseArgs.setBranchName(resolveEnvVar(envVars, branchName));
 
-        externalReportArguments.setReport(reportFile);
+        baseArgs.setAgentPath(resolveEnvVar(envVars, (String) additionalProps.get("agentpath")));
+        baseArgs.setJavaPath(resolveEnvVar(envVars, (String) additionalProps.get("javapath")));
 
-        return externalReportArguments;
+        CommandMode commandMode = new CommandMode.ExternalReportView();
+        ((CommandMode.ExternalReportView)commandMode).setReport(report);
+        baseArgs.setMode(commandMode);
+
+        return baseArgs;
     }
 
     private String resolveGlobalArgument(EnvVars envVars, Properties additionalProps, String name, String globalValue) {
@@ -247,8 +232,12 @@ public class BuildStatusNotifier extends Notifier {
         return JenkinsUtils.tryGetEnvVariable(envVars, envVarKey);
     }
 
-    private TokenData createTokenData(String token, Logger logger) {
+    private TokenData createTokenData(String token, String tokenFile, Logger logger) {
         TokenData tokenData;
+
+        ArgumentFileResolver argumentFileResolver = new ArgumentFileResolver();
+        token = argumentFileResolver.resolve(logger, token, tokenFile);
+
         try {
             tokenData = TokenData.parse(token);
         } catch (IllegalArgumentException e) {
