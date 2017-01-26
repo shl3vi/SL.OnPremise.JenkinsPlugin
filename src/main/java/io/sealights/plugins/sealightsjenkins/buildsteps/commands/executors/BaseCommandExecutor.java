@@ -13,10 +13,12 @@ public abstract class BaseCommandExecutor implements ICommandExecutor {
 
     protected Logger logger;
     private BaseCommandArguments baseArgs;
+    private Runtime runtime;
 
     public BaseCommandExecutor(Logger logger, BaseCommandArguments baseArgs) {
         this.logger = logger;
         this.baseArgs = baseArgs;
+        this.runtime = Runtime.getRuntime();
     }
 
     public boolean execute() {
@@ -25,7 +27,7 @@ public abstract class BaseCommandExecutor implements ICommandExecutor {
 
             // Run a java app in a separate system process
             logger.info("About to execute command: " + execCommand);
-            Process proc = Runtime.getRuntime().exec(execCommand);
+            Process proc = runtime.exec(execCommand);
 
             printStreams(proc);
 
@@ -105,4 +107,7 @@ public abstract class BaseCommandExecutor implements ICommandExecutor {
         return "java";
     }
 
+    public void setRuntime(Runtime runtime) {
+        this.runtime = runtime;
+    }
 }
