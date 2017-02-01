@@ -163,8 +163,33 @@ public class CommandMode implements Describable<CommandMode>, ExtensionPoint, Se
 
     }
 
+    public static class ExternalReportView extends CommandMode {
+
+        private String report;
+
+        public String getReport() {
+            return report;
+        }
+
+        public void setReport(String report) {
+            this.report = report;
+        }
+
+        @DataBoundConstructor
+        public ExternalReportView() {
+            super(CommandModes.ExternalReport);
+        }
+
+        @Extension
+        public static class ExternalReportDescriptor extends CommandModeDescriptor {
+            public ExternalReportDescriptor() {
+                super(ExternalReportView.class, CommandModes.ExternalReport.getDisplayName());
+            }
+        }
+
+    }
+
     public static class ConfigView extends CommandMode {
-    
 
         private String packagesIncluded;
         private String packagesExcluded;
@@ -179,21 +204,6 @@ public class CommandMode implements Describable<CommandMode>, ExtensionPoint, Se
         public String getPackagesIncluded() {
             return packagesIncluded;
         }
-        }
-        public static class ExternalReportView extends CommandMode {
-        @DataBoundConstructor
-        public ExternalReportView() {
-            super(CommandModes.ExternalReport);
-        }
-
-        @Extension
-        public static class ExternalReportDescriptor extends CommandModeDescriptor {
-            public ExternalReportDescriptor() {
-                super(ExternalReportView.class, CommandModes.ExternalReport.getDisplayName());
-            }
-        }
-
-    }
 
         public void setPackagesIncluded(String packagesIncluded) {
             this.packagesIncluded = packagesIncluded;
@@ -221,4 +231,5 @@ public class CommandMode implements Describable<CommandMode>, ExtensionPoint, Se
         }
 
     }
+
 }
