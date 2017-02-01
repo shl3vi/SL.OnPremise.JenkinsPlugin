@@ -27,11 +27,13 @@ public class CommandExecutorsFactory {
             } else if (CommandModes.UploadReports.equals(mode.getCurrentMode())) {
                 UploadReportsCommandArguments uploadReportsCommandArguments = getUploadReportsCommandArguments(baseArgs);
                 executor = new UploadReportsCommandExecutor(logger, uploadReportsCommandArguments);
-            } else if (CommandModes.Config.equals(mode.getCurrentMode())){
+            } else if (CommandModes.ExternalReport.equals(mode.getCurrentMode())) {
+                ExternalReportArguments externalReportArguments = getExternalReportArguments(baseArgs);
+                executor = new ExternalReportExecutor(logger, externalReportArguments);
+            } else if (CommandModes.Config.equals(mode.getCurrentMode())) {
                 ConfigCommandArguments configCommandArguments = getConfigCommandArguments(baseArgs);
                 executor = new ConfigCommandExecutor(logger, configCommandArguments);
-            }
-            else {
+            } else {
                 logger.error("Current mode is invalid! Cannot create executor.");
                 executor = new NullCommandExecutor();
             }
@@ -58,9 +60,18 @@ public class CommandExecutorsFactory {
                 uploadReportsView.getSource());
     }
 
+    private ExternalReportArguments getExternalReportArguments(BaseCommandArguments baseArgs) {
+        CommandMode.ExternalReportView externalReportView = (CommandMode.ExternalReportView) baseArgs.getMode();
+        return new ExternalReportArguments(
+                baseArgs,
+                externalReportView.getReport()
+        );
+    }
+
     private ConfigCommandArguments getConfigCommandArguments(BaseCommandArguments baseArgs) {
         CommandMode.ConfigView configView = (CommandMode.ConfigView) baseArgs.getMode();
         return new ConfigCommandArguments(baseArgs, configView.getPackagesIncluded(), configView.getPackagesExcluded());
     }
+
 
 }

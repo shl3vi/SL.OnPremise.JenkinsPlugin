@@ -317,7 +317,7 @@ public class ListenerCommandTest {
     }
 
     private ListenerCommand createListenerCommand(String additionalArgs) {
-        return new ListenerCommand("", "", null, "", additionalArgs);
+        return new ListenerCommand("", "", null, new CommandBuildName.EmptyBuildName(), "", additionalArgs);
     }
 
     private class ListenerCommandHandlerMock extends ListenerCommandHandler {

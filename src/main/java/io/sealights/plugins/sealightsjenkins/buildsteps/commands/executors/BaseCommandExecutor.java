@@ -13,10 +13,12 @@ public abstract class BaseCommandExecutor implements ICommandExecutor {
 
     protected Logger logger;
     private BaseCommandArguments baseArgs;
+    private Runtime runtime;
 
     public BaseCommandExecutor(Logger logger, BaseCommandArguments baseArgs) {
         this.logger = logger;
         this.baseArgs = baseArgs;
+        this.runtime = Runtime.getRuntime();
     }
 
     public boolean execute() {
@@ -25,7 +27,7 @@ public abstract class BaseCommandExecutor implements ICommandExecutor {
 
             // Run a java app in a separate system process
             logger.info("About to execute command: " + execCommand);
-            Process proc = Runtime.getRuntime().exec(execCommand);
+            Process proc = runtime.exec(execCommand);
 
             printStreams(proc);
 
@@ -70,11 +72,14 @@ public abstract class BaseCommandExecutor implements ICommandExecutor {
         if (baseArgs.getTokenData() != null) {
             addArgumentKeyVal(sb, "token", baseArgs.getTokenData().getToken());
         } else {
+            addArgumentKeyVal(sb, "token", baseArgs.getToken());
+            addArgumentKeyVal(sb, "tokenfile", baseArgs.getTokenFile());
             addArgumentKeyVal(sb, "customerid", baseArgs.getCustomerId());
             addArgumentKeyVal(sb, "server", baseArgs.getUrl());
         }
 
         addArgumentKeyVal(sb, "buildsessionid", baseArgs.getBuildSessionId());
+        addArgumentKeyVal(sb, "buildsessionidfile", baseArgs.getBuildSessionIdFile());
         addArgumentKeyVal(sb, "appname", baseArgs.getAppName());
         addArgumentKeyVal(sb, "buildname", baseArgs.getBuildName());
         addArgumentKeyVal(sb, "branchname", baseArgs.getBranchName());
@@ -101,5 +106,9 @@ public abstract class BaseCommandExecutor implements ICommandExecutor {
             return baseArgs.getJavaPath();
 
         return "java";
+    }
+
+    public void setRuntime(Runtime runtime) {
+        this.runtime = runtime;
     }
 }

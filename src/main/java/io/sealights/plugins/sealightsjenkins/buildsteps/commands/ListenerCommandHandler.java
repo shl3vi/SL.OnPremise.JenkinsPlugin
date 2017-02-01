@@ -46,14 +46,6 @@ public class ListenerCommandHandler {
         return executor.execute();
     }
 
-    public boolean handleExternalReport(ExternalReportArguments externalReportArguments) {
-        String agentPath = tryGetAgentPath(logger, baseArgs);
-        baseArgs.setAgentPath(agentPath);
-
-        ExternalReportExecutor executor = new ExternalReportExecutor(logger, baseArgs, externalReportArguments);
-        return executor.execute();
-    }
-
     private String tryGetAgentPath(Logger logger, BaseCommandArguments baseArgs) {
         if (!StringUtils.isNullOrEmpty(baseArgs.getAgentPath()) && new File(baseArgs.getAgentPath()).isFile()) {
             return baseArgs.getAgentPath();

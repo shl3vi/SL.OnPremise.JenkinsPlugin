@@ -9,11 +9,14 @@ import io.sealights.plugins.sealightsjenkins.entities.TokenData;
 public class BaseCommandArguments {
 
     private CommandMode mode;
-    private String buildSessionId;
     private String appName;
     private String branchName;
     private String buildName;
+
+    private String token;
+    private String tokenFile;
     private TokenData tokenData;
+
     private String customerId;
     private String url;
     private String proxy;
@@ -21,20 +24,15 @@ public class BaseCommandArguments {
     private String agentPath;
     private String javaPath;
 
+    private String buildSessionId;
+    private String buildSessionIdFile;
+
     public CommandMode getMode() {
         return mode;
     }
 
     public void setMode(CommandMode mode) {
         this.mode = mode;
-    }
-
-    public String getBuildSessionId() {
-        return buildSessionId;
-    }
-
-    public void setBuildSessionId(String buildSessionId) {
-        this.buildSessionId = buildSessionId;
     }
 
     public String getAppName() {
@@ -115,6 +113,38 @@ public class BaseCommandArguments {
 
     public void setJavaPath(String javaPath) {
         this.javaPath = javaPath;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public String getTokenFile() {
+        return tokenFile;
+    }
+
+    public void setTokenFile(String tokenFile) {
+        this.tokenFile = tokenFile;
+    }
+
+    public String getBuildSessionId() {
+        return buildSessionId;
+    }
+
+    public void setBuildSessionId(String buildSessionId) {
+        this.buildSessionId = buildSessionId;
+    }
+
+    public String getBuildSessionIdFile() {
+        return buildSessionIdFile;
+    }
+
+    public void setBuildSessionIdFile(String buildSessionIdFile) {
+        this.buildSessionIdFile = buildSessionIdFile;
     }
 
 }
