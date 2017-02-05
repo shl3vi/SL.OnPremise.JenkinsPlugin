@@ -31,6 +31,7 @@
                 <configuration>
                     <customerid>fake-customer-id-123</customerid>
                     <server>http://fake-server-url.com</server>
+                    <createBuildSessionId>false</createBuildSessionId>
                     <appName>fake-app-name</appName>
                     <moduleName>fake-module-name</moduleName>
                     <workspacepath>c:\fake-worakpsacepath</workspacepath>
@@ -98,6 +99,7 @@
                         <configuration>
                             <customerid>fake-customer-id-123</customerid>
                             <server>http://fake-server-url.com</server>
+                            <createBuildSessionId>false</createBuildSessionId>
                             <appName>fake-app-name</appName>
                             <moduleName>fake-module-name</moduleName>
                             <workspacepath>c:\fake-worakpsacepath</workspacepath>

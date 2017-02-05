@@ -27,10 +27,10 @@ public class CLIRunnerTest {
     public void perform_overrideTokenFromAdditionalArgs_useInvalidToken_shouldNotOverride() throws IOException, InterruptedException {
         //Arrange & Act
         String additionalArguments = "token=invalid-token";
-        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest(additionalArguments);
+        CLIHandler cLIHandler = runPerformOverrideTest(additionalArguments);
 
         //Assert
-        TokenData actualToken = listenerCommandHandler.getBaseArgs().getTokenData();
+        TokenData actualToken = cLIHandler.getBaseArgs().getTokenData();
 
         Assert.assertNull("token should be 'null' as the provided token is invalid", actualToken);
     }
@@ -39,12 +39,12 @@ public class CLIRunnerTest {
     public void perform_overrideTokenWithInvalidToken_shouldPassCustomerIdAndServer() throws IOException, InterruptedException {
         //Arrange & Act
         String additionalArguments = "token=invalid-token\ncustomerid=fake-customer\nserver=fake-server";
-        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest(additionalArguments);
+        CLIHandler cLIHandler = runPerformOverrideTest(additionalArguments);
 
         //Assert
-        TokenData actualToken = listenerCommandHandler.getBaseArgs().getTokenData();
-        String actualCustomerId = listenerCommandHandler.getBaseArgs().getCustomerId();
-        String actualServer = listenerCommandHandler.getBaseArgs().getUrl();
+        TokenData actualToken = cLIHandler.getBaseArgs().getTokenData();
+        String actualCustomerId = cLIHandler.getBaseArgs().getCustomerId();
+        String actualServer = cLIHandler.getBaseArgs().getUrl();
 
         Assert.assertNull("token should be 'null' as the provided token is invalid", actualToken);
         Assert.assertNotNull("customerId should be passed due to invalid token", actualCustomerId);
@@ -55,13 +55,13 @@ public class CLIRunnerTest {
     public void perform_overrideTokenWithValidToken_shouldNotPassCustomerIdAndServer() throws IOException, InterruptedException {
         //Arrange & Act
         String additionalArguments = "token=" + validToken + "\ncustomerid=fake-customer\nserver=fake-server";
-        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest(additionalArguments);
+        CLIHandler cLIHandler = runPerformOverrideTest(additionalArguments);
 
         //Assert
         String expectedToken = validToken;
-        String actualToken = listenerCommandHandler.getBaseArgs().getTokenData().getToken();
-        String actualCustomerId = listenerCommandHandler.getBaseArgs().getCustomerId();
-        String actualServer = listenerCommandHandler.getBaseArgs().getUrl();
+        String actualToken = cLIHandler.getBaseArgs().getTokenData().getToken();
+        String actualCustomerId = cLIHandler.getBaseArgs().getCustomerId();
+        String actualServer = cLIHandler.getBaseArgs().getUrl();
 
         Assert.assertEquals("token should be override by the additional arguments", expectedToken, actualToken);
         Assert.assertNull("customerId should be 'null' because valid token has been provided", actualCustomerId);
@@ -72,11 +72,11 @@ public class CLIRunnerTest {
     public void perform_overrideTokenFromAdditionalArgs_shouldOverride() throws IOException, InterruptedException {
         //Arrange & Act
         String additionalArguments = "token=" + validToken;
-        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest(additionalArguments);
+        CLIHandler cLIHandler = runPerformOverrideTest(additionalArguments);
 
         //Assert
         String expectedToken = validToken;
-        String actualToken = listenerCommandHandler.getBaseArgs().getTokenData().getToken();
+        String actualToken = cLIHandler.getBaseArgs().getTokenData().getToken();
 
         Assert.assertEquals("token should be override by the additional arguments", expectedToken, actualToken);
     }
@@ -87,11 +87,11 @@ public class CLIRunnerTest {
         String additionalArguments = "token=${SL_TOKEN}";
         EnvVars envVars = new EnvVars();
         envVars.put("SL_TOKEN", validToken);
-        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest(additionalArguments, envVars);
+        CLIHandler cLIHandler = runPerformOverrideTest(additionalArguments, envVars);
 
         //Assert
         String expectedToken = validToken;
-        String actualToken = listenerCommandHandler.getBaseArgs().getTokenData().getToken();
+        String actualToken = cLIHandler.getBaseArgs().getTokenData().getToken();
 
         Assert.assertEquals("token should be override by the additional arguments and as environment variable", expectedToken, actualToken);
     }
@@ -100,11 +100,11 @@ public class CLIRunnerTest {
     public void perform_overrideCustomerIdFromAdditionalArgs_shouldOverride() throws IOException, InterruptedException {
         //Arrange & Act
         String additionalArguments = "customerid=fake-customer";
-        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest(additionalArguments);
+        CLIHandler cLIHandler = runPerformOverrideTest(additionalArguments);
 
         //Assert
         String expectedCustomerId = "fake-customer";
-        String actualCustomerId = listenerCommandHandler.getBaseArgs().getCustomerId();
+        String actualCustomerId = cLIHandler.getBaseArgs().getCustomerId();
 
         Assert.assertEquals("customerid should be override by the additional arguments", expectedCustomerId, actualCustomerId);
     }
@@ -115,11 +115,11 @@ public class CLIRunnerTest {
         String additionalArguments = "customerid=${TEST_CUSTOMER}";
         EnvVars envVars = new EnvVars();
         envVars.put("TEST_CUSTOMER", "fake-customer");
-        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest(additionalArguments, envVars);
+        CLIHandler cLIHandler = runPerformOverrideTest(additionalArguments, envVars);
 
         //Assert
         String expectedCustomerId = "fake-customer";
-        String actualCustomerId = listenerCommandHandler.getBaseArgs().getCustomerId();
+        String actualCustomerId = cLIHandler.getBaseArgs().getCustomerId();
 
         Assert.assertEquals("customerid should be override by the additional arguments and as environment variable", expectedCustomerId, actualCustomerId);
     }
@@ -128,11 +128,11 @@ public class CLIRunnerTest {
     public void perform_overrideServerFromAdditionalArgs_shouldOverride() throws IOException, InterruptedException {
         //Arrange & Act
         String additionalArguments = "server=fake-server";
-        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest(additionalArguments);
+        CLIHandler cLIHandler = runPerformOverrideTest(additionalArguments);
 
         //Assert
         String expectedServer = "fake-server";
-        String actualServer = listenerCommandHandler.getBaseArgs().getUrl();
+        String actualServer = cLIHandler.getBaseArgs().getUrl();
 
         Assert.assertEquals("server should be override by the additional arguments", expectedServer, actualServer);
     }
@@ -143,11 +143,11 @@ public class CLIRunnerTest {
         String additionalArguments = "server=${SERVER}";
         EnvVars envVars = new EnvVars();
         envVars.put("SERVER", "fake-server");
-        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest(additionalArguments, envVars);
+        CLIHandler cLIHandler = runPerformOverrideTest(additionalArguments, envVars);
 
         //Assert
         String expectedServer = "fake-server";
-        String actualServer = listenerCommandHandler.getBaseArgs().getUrl();
+        String actualServer = cLIHandler.getBaseArgs().getUrl();
 
         Assert.assertEquals("server should be override by the additional arguments and as environment variable", expectedServer, actualServer);
     }
@@ -156,11 +156,11 @@ public class CLIRunnerTest {
     public void perform_overrideProxyFromAdditionalArgs_shouldOverride() throws IOException, InterruptedException {
         //Arrange & Act
         String additionalArguments = "proxy=fake-proxy";
-        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest(additionalArguments);
+        CLIHandler cLIHandler = runPerformOverrideTest(additionalArguments);
 
         //Assert
         String expectedProxy = "fake-proxy";
-        String actualProxy = listenerCommandHandler.getBaseArgs().getProxy();
+        String actualProxy = cLIHandler.getBaseArgs().getProxy();
 
         Assert.assertEquals("proxy should be override by the additional arguments", expectedProxy, actualProxy);
     }
@@ -171,11 +171,11 @@ public class CLIRunnerTest {
         String additionalArguments = "proxy=${PROXY}";
         EnvVars envVars = new EnvVars();
         envVars.put("PROXY", "fake-proxy");
-        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest(additionalArguments, envVars);
+        CLIHandler cLIHandler = runPerformOverrideTest(additionalArguments, envVars);
 
         //Assert
         String expectedProxy = "fake-proxy";
-        String actualProxy = listenerCommandHandler.getBaseArgs().getProxy();
+        String actualProxy = cLIHandler.getBaseArgs().getProxy();
 
         Assert.assertEquals("proxy should be override by the additional arguments and as environment variable", expectedProxy, actualProxy);
     }
@@ -184,11 +184,11 @@ public class CLIRunnerTest {
     public void perform_overrideAgentPathFromAdditionalArgs_shouldOverride() throws IOException, InterruptedException {
         //Arrange & Act
         String additionalArguments = "agentpath=fake-agent-path";
-        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest(additionalArguments);
+        CLIHandler cLIHandler = runPerformOverrideTest(additionalArguments);
 
         //Assert
         String expectedAgentPath = "fake-agent-path";
-        String actualAgentPath = listenerCommandHandler.getBaseArgs().getAgentPath();
+        String actualAgentPath = cLIHandler.getBaseArgs().getAgentPath();
 
         Assert.assertEquals("agentpath should be override by the additional arguments", expectedAgentPath, actualAgentPath);
     }
@@ -199,11 +199,11 @@ public class CLIRunnerTest {
         String additionalArguments = "agentpath=${AGENT_PATH}";
         EnvVars envVars = new EnvVars();
         envVars.put("AGENT_PATH", "fake-agent-path");
-        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest(additionalArguments, envVars);
+        CLIHandler cLIHandler = runPerformOverrideTest(additionalArguments, envVars);
 
         //Assert
         String expectedAgentPath = "fake-agent-path";
-        String actualAgentPath = listenerCommandHandler.getBaseArgs().getAgentPath();
+        String actualAgentPath = cLIHandler.getBaseArgs().getAgentPath();
 
         Assert.assertEquals("agentpath should be override by the additional arguments and as environment variable", expectedAgentPath, actualAgentPath);
     }
@@ -212,11 +212,11 @@ public class CLIRunnerTest {
     public void perform_overrideJavaPathFromAdditionalArgs_shouldOverride() throws IOException, InterruptedException {
         //Arrange & Act
         String additionalArguments = "javapath=fake-java-path";
-        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest(additionalArguments);
+        CLIHandler cLIHandler = runPerformOverrideTest(additionalArguments);
 
         //Assert
         String expectedJavaPath = "fake-java-path";
-        String actualJavaPath = listenerCommandHandler.getBaseArgs().getJavaPath();
+        String actualJavaPath = cLIHandler.getBaseArgs().getJavaPath();
 
         Assert.assertEquals("javapath should be override by the additional arguments", expectedJavaPath, actualJavaPath);
     }
@@ -227,11 +227,11 @@ public class CLIRunnerTest {
         String additionalArguments = "javapath=${JAVA_PATH}";
         EnvVars envVars = new EnvVars();
         envVars.put("JAVA_PATH", "fake-java-path");
-        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest(additionalArguments, envVars);
+        CLIHandler cLIHandler = runPerformOverrideTest(additionalArguments, envVars);
 
         //Assert
         String expectedJavaPath = "fake-java-path";
-        String actualJavaPath = listenerCommandHandler.getBaseArgs().getJavaPath();
+        String actualJavaPath = cLIHandler.getBaseArgs().getJavaPath();
 
         Assert.assertEquals("javapath should be override by the additional arguments and as environment variable", expectedJavaPath, actualJavaPath);
     }
@@ -240,11 +240,11 @@ public class CLIRunnerTest {
     public void perform_overrideFilesStorageFromAdditionalArgs_shouldOverride() throws IOException, InterruptedException {
         //Arrange & Act
         String additionalArguments = "filesstorage=fake-files-storage";
-        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest(additionalArguments);
+        CLIHandler cLIHandler = runPerformOverrideTest(additionalArguments);
 
         //Assert
         String expectedFilesStorage = "fake-files-storage";
-        String actualFilesStorage = listenerCommandHandler.getFilesStorage();
+        String actualFilesStorage = cLIHandler.getFilesStorage();
 
         Assert.assertEquals("filesstorage should be override by the additional arguments", expectedFilesStorage, actualFilesStorage);
     }
@@ -255,31 +255,31 @@ public class CLIRunnerTest {
         String additionalArguments = "filesstorage=${FILES_STORAGE}";
         EnvVars envVars = new EnvVars();
         envVars.put("FILES_STORAGE", "fake-files-storage");
-        ListenerCommandHandler listenerCommandHandler = runPerformOverrideTest(additionalArguments, envVars);
+        CLIHandler cLIHandler = runPerformOverrideTest(additionalArguments, envVars);
 
         //Assert
         String expectedFilesStorage = "fake-files-storage";
-        String actualFilesStorage = listenerCommandHandler.getFilesStorage();
+        String actualFilesStorage = cLIHandler.getFilesStorage();
 
         Assert.assertEquals("filesstorage should be override by the additional arguments and as environment variable", expectedFilesStorage, actualFilesStorage);
     }
 
-    private ListenerCommandHandler runPerformOverrideTest(String additionalArguments)
+    private CLIHandler runPerformOverrideTest(String additionalArguments)
             throws IOException, InterruptedException {
         return runPerformOverrideTest(additionalArguments, new EnvVars());
     }
 
-    private ListenerCommandHandler runPerformOverrideTest(String additionalArguments, EnvVars envVars)
+    private CLIHandler runPerformOverrideTest(String additionalArguments, EnvVars envVars)
             throws IOException, InterruptedException {
         //Arrange
         CLIRunner cLIRunner = createListenerCommand(additionalArguments);
-        ListenerCommandHandler listenerCommandHandler = new ListenerCommandHandlerMock(nullLogger);
+        CLIHandler cliHandler = new CLIHandlerMock(nullLogger);
         AbstractBuild<?, ?> build = createJenkinsBuildObject(envVars);
 
         //Act
-        performListenerCommand(cLIRunner, listenerCommandHandler, build);
+        performListenerCommand(cLIRunner, cliHandler, build);
 
-        return listenerCommandHandler;
+        return cliHandler;
     }
 
     private String createFieldOverrideString(String field, String value, String envVar) {
@@ -300,13 +300,13 @@ public class CLIRunnerTest {
         return build;
     }
 
-    private void performListenerCommand(CLIRunner cLIRunner, ListenerCommandHandler listenerCommandHandler,
+    private void performListenerCommand(CLIRunner cLIRunner, CLIHandler cliHandler,
                                         AbstractBuild<?, ?> build)
             throws IOException, InterruptedException {
         BuildListener listener = mock(BuildListener.class);
         cLIRunner.setBeginAnalysis(createBeginAnalysis());
         CommandMode commandMode = new CommandMode.EndView();
-        cLIRunner.perform(build, null, listener, commandMode, listenerCommandHandler, nullLogger);
+        cLIRunner.perform(build, null, listener, commandMode, cliHandler, nullLogger);
     }
 
     private BeginAnalysis createBeginAnalysis() {
@@ -320,9 +320,9 @@ public class CLIRunnerTest {
         return new CLIRunner("", "", null, new CommandBuildName.EmptyBuildName(), "", additionalArgs);
     }
 
-    private class ListenerCommandHandlerMock extends ListenerCommandHandler {
+    private class CLIHandlerMock extends CLIHandler {
 
-        ListenerCommandHandlerMock(Logger logger) {
+        CLIHandlerMock(Logger logger) {
             super(logger);
         }
 

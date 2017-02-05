@@ -24,7 +24,7 @@ public class CommandExecutorsFactoryTest {
     }
 
     @Test
-    public void createExecutor_withEndMode_shouldGetStartCommandExecutor() {
+    public void createExecutor_withEndMode_shouldGetEndCommandExecutor() {
         //Arrange
         CommandExecutorsFactory factory = new CommandExecutorsFactory();
         CommandMode mode = new CommandMode.EndView();
@@ -36,7 +36,7 @@ public class CommandExecutorsFactoryTest {
     }
 
     @Test
-    public void createExecutor_withUploadReportsMode_shouldGetStartCommandExecutor() {
+    public void createExecutor_withUploadReportsMode_shouldGetUploadReportCommandExecutor() {
         //Arrange
         CommandExecutorsFactory factory = new CommandExecutorsFactory();
         CommandMode mode = new CommandMode.UploadReportsView("", "", false, "");
