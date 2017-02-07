@@ -5,10 +5,10 @@
     proxy=http://localhost:8888<br><br>
 
     <table border="1">
-        <tr>
-            <th>Argument name</th>
-            <th>Description</th>
-        </tr>
+         <tr>
+             <th>Argument name</th>
+             <th>Description</th>
+         </tr>
         <tr>
             <td>
                 token
@@ -27,10 +27,26 @@
         </tr>
         <tr>
             <td>
+                buildsessionid
+            </td>
+            <td>
+                Set build session id for this build.
+            </td>
+        </tr>
+        <tr>
+            <td>
                 buildsessionidfile
             </td>
             <td>
                 Set build session id file for this build.
+            </td>
+        </tr>
+        <tr>
+            <td>
+                createbuildsessionid
+            </td>
+            <td>
+                When set to 'true' - forces SeaLights Maven Plugin to create new build session id (true by default).
             </td>
         </tr>
         <tr>
@@ -59,11 +75,19 @@
         </tr>
         <tr>
             <td>
-                keepreport
+                filesstorage
             </td>
             <td>
-                When set to true, the report file will not be deleted after its creation.
+                A folder where sealights files for this build will be kept (override the global 'Files storage' value for this build).
             </td>
         </tr>
-    </table>
+         <tr>
+             <td>
+                 server
+             </td>
+             <td>
+                 The Sealights server. (DEPRECATED - use token)
+             </td>
+         </tr>
+     </table>
 </div>

@@ -74,11 +74,37 @@ public class BuildStatusNotifier extends Notifier {
                     new CLIHandler(baseCommandArguments, filesStorage, logger);
             cliHandler.handle();
 
+            // try delete the created report file
+            try{
+                String keepReportString = resolveEnvVar(envVars, (String) additionalProps.get("keepreport"));
+                Boolean keepReport = Boolean.valueOf(keepReportString);
+                if (!keepReport) {
+                    CommandMode.ExternalReportView commandView = (CommandMode.ExternalReportView) baseCommandArguments.getMode();
+                    String createdReport = commandView.getReport();
+                    deleteReport(createdReport);
+                }
+            }catch (Exception e){
+                logger.error("Failed to delete the created report. Error: ", e);
+            }
+
         } catch (Exception e) {
             logger.error("Failed to send build status report. Error: ", e);
         }
 
         return true;
+    }
+
+    private void deleteReport(String report){
+        if (report == null){
+            return;
+        }
+
+        File reportFile = new File(report);
+        if (!reportFile.exists()){
+            return;
+        }
+
+        reportFile.delete();
     }
 
     private void setDefaultValues() {
@@ -162,8 +188,6 @@ public class BuildStatusNotifier extends Notifier {
                 throw new RuntimeException("Failed to create new file at '" + fileName + "' for the report.");
             }
             JsonSerializer.serializeToFile(reportFile, reportMap);
-
-            reportFile.deleteOnExit();
             return fileName;
         } catch (Exception e) {
             throw new RuntimeException("Failed to create report file ", e);
@@ -177,7 +201,7 @@ public class BuildStatusNotifier extends Notifier {
 
         String globalToken = beginAnalysis.getDescriptor().getToken();
         baseArgs.setToken(resolveGlobalArgument(envVars, additionalProps, "token", globalToken));
-        baseArgs.setTokenFile(resolveEnvVar(envVars, (String) additionalProps.get("tokenFile")));
+        baseArgs.setTokenFile(resolveEnvVar(envVars, (String) additionalProps.get("tokenile")));
 
         // need to create tokenData for the upgrade feature (need to know to which server it should request for agents)
         TokenData tokenData = createTokenData(baseArgs.getToken(), baseArgs.getTokenFile(), logger);
@@ -187,7 +211,7 @@ public class BuildStatusNotifier extends Notifier {
         baseArgs.setProxy(resolveGlobalArgument(envVars, additionalProps, "proxy", globalProxy));
 
         baseArgs.setBuildSessionId(resolveEnvVar(envVars, buildSessionId));
-        baseArgs.setBuildSessionIdFile(resolveEnvVar(envVars, (String) additionalProps.get("buildSessionIdFile")));
+        baseArgs.setBuildSessionIdFile(resolveEnvVar(envVars, (String) additionalProps.get("buildsessionidfile")));
 
         baseArgs.setAppName(resolveEnvVar(envVars, appName));
 

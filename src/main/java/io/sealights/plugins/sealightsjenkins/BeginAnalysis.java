@@ -629,18 +629,25 @@ public class BeginAnalysis extends Builder {
         slInfo.setBuildFilesFolders(foldersToSearch);
         slInfo.setBuildFilesPatterns(patternsToSearch);
 
-        setSlInfoWithAdditionalProps(slInfo, additionalProps);
+        setSlInfoWithAdditionalProps(logger, slInfo, additionalProps);
         return slInfo;
     }
 
-    private void setSlInfoWithAdditionalProps(SeaLightsPluginInfo slInfo, Properties additionalProps) {
-        boolean createBuildSessionId = Boolean.valueOf((String)additionalProps.get("createBuildSessionId"));
-        if (createBuildSessionId)
+    private void setSlInfoWithAdditionalProps(Logger logger, SeaLightsPluginInfo slInfo, Properties additionalProps) {
+        String createBuildSessionIdString = (String)additionalProps.get("createbuildsessionid");
+        boolean shouldUseCreateBuildSessionId = Boolean.valueOf(createBuildSessionIdString);
+
+        if (StringUtils.isNullOrEmpty(createBuildSessionIdString) || shouldUseCreateBuildSessionId)
         {
             slInfo.setCreateBuildSessionId(true);
         }
 
-        String buildSessionId = (String) additionalProps.get("buildSessionId");
+        String buildSessionId = (String) additionalProps.get("buildsessionid");
+        String buildSessionIdFile = (String) additionalProps.get("buildsessionidfile");
+
+        ArgumentFileResolver argumentFileResolver = new ArgumentFileResolver();
+        buildSessionId = argumentFileResolver.resolve(logger, buildSessionId, buildSessionIdFile);
+
         if (!StringUtils.isNullOrEmpty(buildSessionId)){
             slInfo.setBuildSessionId(buildSessionId);
         }
@@ -650,7 +657,11 @@ public class BeginAnalysis extends Builder {
     private void setGlobalConfiguration(Logger logger, SeaLightsPluginInfo slInfo, Properties additionalProps, EnvVars envVars) {
 
         String tokenPropertyValue = JenkinsUtils.tryGetEnvVariable(envVars, (String) additionalProps.get("token"));
-        boolean usingToken = tryUseToken(logger, slInfo, tokenPropertyValue);
+        String tokenFilePropertyFile = JenkinsUtils.tryGetEnvVariable(envVars, (String) additionalProps.get("tokenfile"));
+        ArgumentFileResolver argumentFileResolver = new ArgumentFileResolver();
+
+        String token = argumentFileResolver.resolve(logger, tokenPropertyValue, tokenFilePropertyFile);
+        boolean usingToken = tryUseToken(logger, slInfo, token);
 
         if (!usingToken) {
             // set customerId

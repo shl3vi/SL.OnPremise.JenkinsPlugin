@@ -171,7 +171,7 @@ public class CLIRunner extends Builder {
 
         BaseCommandArguments baseArgs = new BaseCommandArguments();
         setGlobalConfiguration(logger, baseArgs, additionalProps, envVars);
-        setConfiguration(logger, build, envVars, baseArgs);
+        setConfiguration(logger, build, envVars, baseArgs, additionalProps);
 
         baseArgs.setAgentPath(resolveEnvVar(envVars, (String) additionalProps.get("agentpath")));
         baseArgs.setJavaPath(resolveEnvVar(envVars, (String) additionalProps.get("javapath")));
@@ -204,7 +204,11 @@ public class CLIRunner extends Builder {
     private void setGlobalConfiguration(Logger logger, BaseCommandArguments baseArgs, Properties additionalProps, EnvVars envVars) {
 
         String tokenPropertyValue = JenkinsUtils.tryGetEnvVariable(envVars, (String) additionalProps.get("token"));
-        boolean usingToken = tryUseToken(logger, baseArgs, tokenPropertyValue);
+        String tokenFilePropertyFile = JenkinsUtils.tryGetEnvVariable(envVars, (String) additionalProps.get("tokenfile"));
+        ArgumentFileResolver argumentFileResolver = new ArgumentFileResolver();
+
+        String token = argumentFileResolver.resolve(logger, tokenPropertyValue, tokenFilePropertyFile);
+        boolean usingToken = tryUseToken(logger, baseArgs, token);
 
         if (!usingToken) {
             String customer = (String) additionalProps.get("customerid");
@@ -275,14 +279,23 @@ public class CLIRunner extends Builder {
         return true;
     }
 
-    protected void setConfiguration(Logger logger, AbstractBuild<?, ?> build, EnvVars envVars, BaseCommandArguments baseArgs) {
-        baseArgs.setBuildSessionId(resolveEnvVar(envVars, buildSessionId));
+    protected void setConfiguration(Logger logger, AbstractBuild<?, ?> build, EnvVars envVars,
+                                    BaseCommandArguments baseArgs, Properties additionalProps) {
+
+        String buildSession = resolveBuildSessionId(logger, additionalProps);
+        baseArgs.setBuildSessionId(resolveEnvVar(envVars, buildSession));
+
         baseArgs.setAppName(resolveEnvVar(envVars, appName));
         baseArgs.setBuildName(getFinalBuildName(build, logger));
         baseArgs.setBranchName(resolveEnvVar(envVars, branchName));
         baseArgs.setEnvironment(resolveEnvVar(envVars, environment));
     }
 
+    private String resolveBuildSessionId(Logger logger, Properties additionalProps){
+        ArgumentFileResolver argumentFileResolver = new ArgumentFileResolver();
+        String buildSessionIdFile = (String) additionalProps.get("buildsessionidfile");
+        return argumentFileResolver.resolve(logger, buildSessionId, buildSessionIdFile);
+    }
 
     protected String getFinalBuildName(AbstractBuild<?, ?> build, Logger logger) throws IllegalStateException {
 

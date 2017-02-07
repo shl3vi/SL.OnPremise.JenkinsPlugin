@@ -6,10 +6,10 @@
             <f:textbox value="${descriptor.token}"/>
         </f:entry>
 
-        <f:entry title="Customer Id" field="customerId">
+        <f:entry title="Customer Id (Deprecated - use 'Token')" field="customerId">
             <f:textbox value="${descriptor.customerId}"/>
         </f:entry>
-        <f:entry title="SeaLights Server" field="url">
+        <f:entry title="SeaLights Server (Deprecated - use 'Token')" field="url">
             <f:textbox value="${descriptor.url}"/>
         </f:entry>
         <f:entry title="Proxy Url (Optional)" field="proxy">

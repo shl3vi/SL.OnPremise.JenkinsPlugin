@@ -2,7 +2,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 
     <f:entry field="enable" title="Enable This Step">
-        <f:checkbox checked="${it.enableSeaLights}" />
+        <f:checkbox checked="${it.enableSeaLights}" default="true"/>
     </f:entry>
 
     <f:entry field="failBuildIfStepFail" title="Fail the build if this step fails">
