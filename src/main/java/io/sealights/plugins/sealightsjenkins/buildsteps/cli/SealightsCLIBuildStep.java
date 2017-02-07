@@ -18,11 +18,16 @@ import java.io.IOException;
 
 public class SealightsCLIBuildStep extends Builder {
 
+    public boolean enable;
+    public boolean failBuildIfStepFail;
     public CommandMode commandMode;
     public CLIRunner cLIRunner;
 
     @DataBoundConstructor
-    public SealightsCLIBuildStep(CommandMode commandMode, CLIRunner cLIRunner) {
+    public SealightsCLIBuildStep(boolean enable, boolean failBuildIfStepFail,
+                                 CommandMode commandMode, CLIRunner cLIRunner) {
+        this.enable = enable;
+        this.failBuildIfStepFail = failBuildIfStepFail;
         this.commandMode = commandMode;
         this.cLIRunner = cLIRunner;
     }
@@ -43,15 +48,41 @@ public class SealightsCLIBuildStep extends Builder {
         this.cLIRunner = cLIRunner;
     }
 
+    public boolean isEnable() {
+        return enable;
+    }
+
+    public void setEnable(boolean enable) {
+        this.enable = enable;
+    }
+
+    public boolean isFailBuildIfStepFail() {
+        return failBuildIfStepFail;
+    }
+
+    public void setFailBuildIfStepFail(boolean failBuildIfStepFail) {
+        this.failBuildIfStepFail = failBuildIfStepFail;
+    }
+
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+        boolean isStepSuccessful = false;
         Logger logger = new Logger(listener.getLogger());
+
+        if (!enable){
+            logger.info("Sealights CLI step is disabled.");
+            return true;
+        }
 
         try {
             CLIHandler cliHandler = new CLIHandler(logger);
-            cLIRunner.perform(build, launcher, listener, commandMode, cliHandler, logger);
+            isStepSuccessful = cLIRunner.perform(build, launcher, listener, commandMode, cliHandler, logger);
         }catch (Exception e){
             logger.error("Error occurred while performing 'Sealights Listener Command'. Error: ", e);
+        }
+
+        if (failBuildIfStepFail){
+            return isStepSuccessful;
         }
 
         return true;

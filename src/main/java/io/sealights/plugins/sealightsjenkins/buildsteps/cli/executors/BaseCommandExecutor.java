@@ -3,8 +3,11 @@ package io.sealights.plugins.sealightsjenkins.buildsteps.cli.executors;
 
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.BaseCommandArguments;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
+import io.sealights.plugins.sealightsjenkins.utils.ProcessUtils;
 import io.sealights.plugins.sealightsjenkins.utils.StreamUtils;
 import io.sealights.plugins.sealightsjenkins.utils.StringUtils;
+
+import java.io.InputStream;
 
 /**
  * Abstract class for command executors.
@@ -27,14 +30,21 @@ public abstract class BaseCommandExecutor implements ICommandExecutor {
 
             // Run a java app in a separate system process
             logger.info("About to execute command: " + execCommand);
+
             Process proc = runtime.exec(execCommand);
+
+            // give timeout for execution
+            ProcessUtils processUtils = new ProcessUtils();
+            int procExitValue = processUtils.waitFor(proc, baseArgs.getCommandExecutionTimeoutInSeconds());
 
             printStreams(proc);
 
-            if (proc.exitValue() == 0) {
+            if (procExitValue == 0) {
                 return true;
             }
 
+        }catch (InterruptedException e){
+            logger.error("Unable to perform '" + getCommandName() + "' command. The execution was too long and was interrupted. Error: ", e);
         } catch (Exception e) {
             logger.error("Unable to perform '" + getCommandName() + "' command. Error: ", e);
         }
@@ -42,10 +52,12 @@ public abstract class BaseCommandExecutor implements ICommandExecutor {
         return false;
     }
 
-    protected void printStreams(Process proc) {
+    private void printStreams(Process proc) {
         // Receive the process output
-        String outputInfo = StreamUtils.toString(proc.getInputStream());
-        String outputErrors = StreamUtils.toString(proc.getErrorStream());
+        InputStream inputStream = proc.getInputStream();
+        InputStream errorStream = proc.getErrorStream();
+        String outputInfo = StreamUtils.toString(inputStream);
+        String outputErrors = StreamUtils.toString(errorStream);
         logger.info("Process ended with exit code: " + proc.exitValue());
         if (!StringUtils.isNullOrEmpty(outputInfo)) {
             logger.info("Process output:");
@@ -70,7 +82,7 @@ public abstract class BaseCommandExecutor implements ICommandExecutor {
 
     public abstract String getAdditionalArguments();
 
-    protected String getBaseArgumentsLine() {
+    private String getBaseArgumentsLine() {
         StringBuilder sb = new StringBuilder();
 
         if (baseArgs.getTokenData() != null) {

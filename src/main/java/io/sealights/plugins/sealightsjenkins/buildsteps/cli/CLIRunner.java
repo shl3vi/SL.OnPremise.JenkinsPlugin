@@ -146,12 +146,12 @@ public class CLIRunner extends Builder {
             cLIHandler.setBaseArgs(baseArgs);
             cLIHandler.setFilesStorage(filesStorage);
 
-            cLIHandler.handle();
+            return cLIHandler.handle();
         } catch (Exception e) {
             logger.error("Error occurred while performing 'Sealights CLI'. Error: ", e);
         }
 
-        return true;
+        return false;
     }
 
     private void printBaseArgs(BaseCommandArguments baseArgs, Logger logger) {
@@ -176,6 +176,10 @@ public class CLIRunner extends Builder {
         baseArgs.setAgentPath(resolveEnvVar(envVars, (String) additionalProps.get("agentpath")));
         baseArgs.setJavaPath(resolveEnvVar(envVars, (String) additionalProps.get("javapath")));
 
+        String timeoutAsString = resolveEnvVar(envVars, (String) additionalProps.get("timeout"));
+        if (!StringUtils.isNullOrEmpty(timeoutAsString)){
+            baseArgs.setCommandExecutionTimeoutInSeconds(Integer.parseInt(timeoutAsString));
+        }
         return baseArgs;
     }
 

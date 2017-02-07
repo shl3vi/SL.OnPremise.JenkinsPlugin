@@ -1,8 +1,10 @@
 package io.sealights.plugins.sealightsjenkins.buildsteps.cli.executors;
 
+import hudson.model.AbstractBuild;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.CommandMode;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.BaseCommandArguments;
-import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.ExternalReportArguments;
+import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.ConfigCommandArguments;
+import io.sealights.plugins.sealightsjenkins.utils.JenkinsUtils;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import io.sealights.plugins.sealightsjenkins.utils.NullLogger;
 import org.junit.Assert;
@@ -14,62 +16,72 @@ import java.io.IOException;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
-public class SendExternalReportTest {
+/**
+ * Created by shahar on 2/5/2017.
+ */
+public class ConfigTest {
 
     private Logger nullLogger = new NullLogger();
 
     @Test
-    public void execute_giveValidExternalReportArguments_shouldExecuteCorrectCommand() throws IOException {
+    public void execute_giveValidConfigArguments_shouldExecuteCorrectCommand() throws IOException {
         //Arrange
         BaseCommandArguments baseCommandArguments = createBaseCommandArguments();
-        ExternalReportArguments externalReportArguments = createExternalReportArguments(baseCommandArguments);
-        ExternalReportExecutor externalReportExecutor = new ExternalReportExecutor(nullLogger, externalReportArguments);
-
+        ConfigCommandArguments configArguments = createConfigArguments(baseCommandArguments);
+        ConfigCommandExecutor configExecutor = new ConfigCommandExecutor(nullLogger, configArguments);
+        configExecutor.setJenkinsUtils(createMockJenkinsUtils());
 
         Runtime runtimeMock = mock(Runtime.class);
 
         final ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
 
         //Act
-        externalReportExecutor.setRuntime(runtimeMock);
-        externalReportExecutor.execute();
+        configExecutor.setRuntime(runtimeMock);
+        configExecutor.execute();
         verify(runtimeMock).exec(captor.capture());
         final String actualCommandLine = captor.getValue();
-        String expectedCommandLine = "java -jar agent.jar externalReport -token \"fake-token\" -appname \"demoApp\" -buildname \"1\" -branchname \"branchy\" -report \"fake-report\"";
+        String expectedCommandLine = "java -jar agent.jar -config -token \"fake-token\" -buildsessionidfile \"/path/to/buildsessionid.txt\" -appname \"demoApp\" -buildname \"1\" -branchname \"branchy\" -buildsessionidfile \"/path/to/workspace\\buildSessionId.txt\" -packagesincluded \"io.include.*\" -packagesexcluded \"io.exclude.*\" -enableNoneZeroErrorCode";
 
         // Assert
         Assert.assertEquals(
-                "The command line that was executed for the 'external report' executor is not as expected",
+                "The command line that was executed for the 'start' executor is not as expected",
                 expectedCommandLine, actualCommandLine);
+    }
+
+    private JenkinsUtils createMockJenkinsUtils() {
+        JenkinsUtils jenkinsUtilsMock = mock(JenkinsUtils.class);
+        when(jenkinsUtilsMock.getWorkspace((AbstractBuild<?, ?>) any(Object.class))).thenReturn("/path/to/workspace");
+        return jenkinsUtilsMock;
     }
 
     @Test
     public void execute_runtimeProcessThrowsException_shouldEndQuietly() throws IOException {
         //Arrange
         BaseCommandArguments baseCommandArguments = createBaseCommandArguments();
-        ExternalReportArguments externalReportArguments = createExternalReportArguments(baseCommandArguments);
-        ExternalReportExecutor externalReportExecutor = new ExternalReportExecutor(nullLogger, externalReportArguments);
+        ConfigCommandArguments configArguments = createConfigArguments(baseCommandArguments);
+        ConfigCommandExecutor configExecutor = new ConfigCommandExecutor(nullLogger, configArguments);
 
         Runtime runtimeMock = mock(Runtime.class);
         when(runtimeMock.exec(any(String.class))).thenThrow(new IOException());
 
         //Act
-        externalReportExecutor.setRuntime(runtimeMock);
+        configExecutor.setRuntime(runtimeMock);
         try {
-            boolean result = externalReportExecutor.execute();
-            Assert.assertFalse("externalReportExecutor.execute() should be false!", result);
+            boolean result = configExecutor.execute();
+            Assert.assertFalse("configExecutor.execute() should be false!", result);
         }catch (Exception e){
-            Assert.fail("externalReportExecutor.execute() should not throw exception!");
+            Assert.fail("configExecutor.execute() should not throw exception!");
         }
     }
 
-    private ExternalReportArguments createExternalReportArguments(BaseCommandArguments baseCommandArguments) {
-        ExternalReportArguments externalReportArguments = new ExternalReportArguments(
+    private ConfigCommandArguments createConfigArguments(BaseCommandArguments baseCommandArguments) {
+        ConfigCommandArguments configArguments = new ConfigCommandArguments(
                 baseCommandArguments,
-                "fake-report"
+                "io.include.*", // packages included
+                "io.exclude.*" // packages excluded
         );
 
-        return externalReportArguments;
+        return configArguments;
     }
 
     private BaseCommandArguments createBaseCommandArguments(){
@@ -80,6 +92,7 @@ public class SendExternalReportTest {
         baseCommandArguments.setAppName("demoApp");
         baseCommandArguments.setBuildName("1");
         baseCommandArguments.setBranchName("branchy");
+        baseCommandArguments.setBuildSessionIdFile("/path/to/buildsessionid.txt");
         return baseCommandArguments;
     }
 

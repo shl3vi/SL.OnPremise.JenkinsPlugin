@@ -70,9 +70,9 @@ public class BuildStatusNotifier extends Notifier {
                     build, envVars, additionalProps, reportFile, logger);
 
             logger.info("About to report build status.");
-            ListenerCommandHandler listenerCommandHandler =
-                    new ListenerCommandHandler(baseCommandArguments, filesStorage, logger);
-            listenerCommandHandler.handle();
+            CLIHandler cliHandler =
+                    new CLIHandler(baseCommandArguments, filesStorage, logger);
+            cliHandler.handle();
 
         } catch (Exception e) {
             logger.error("Failed to send build status report. Error: ", e);

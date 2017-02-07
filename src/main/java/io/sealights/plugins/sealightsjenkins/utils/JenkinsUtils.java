@@ -105,7 +105,7 @@ public class JenkinsUtils {
         return getBuildNumberFromUpstreamBuild(cause.getUpstreamCauses(), trigger);
     }
 
-    public static String getWorkspace(AbstractBuild<?, ?> build) {
+    public String getWorkspace(AbstractBuild<?, ?> build) {
         FilePath ws = build.getWorkspace();
         if (ws == null) {
             throw new RuntimeException("Got 'null' as this build workspace");

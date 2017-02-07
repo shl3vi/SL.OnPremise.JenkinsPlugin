@@ -1,6 +1,14 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 
+    <f:entry field="enable" title="Enable This Step">
+        <f:checkbox checked="${it.enableSeaLights}" />
+    </f:entry>
+
+    <f:entry field="failBuildIfStepFail" title="Fail the build if this step fails">
+        <f:checkbox checked="${it.failBuildIfStepFail}" />
+    </f:entry>
+
     <f:dropdownList name="commandMode" title="Action">
         <j:forEach var="currentDescriptor" items="${descriptor.commandModeDescriptorList}" varStatus="loop">
             <f:dropdownListBlock title="${currentDescriptor.displayName}" value="${loop.index}"

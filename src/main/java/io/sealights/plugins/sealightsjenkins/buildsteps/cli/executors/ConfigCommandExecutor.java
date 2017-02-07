@@ -16,6 +16,7 @@ public class ConfigCommandExecutor extends BaseCommandExecutor {
     private BaseCommandArguments baseArgs = null;
     private String buildSessionIdFile = null;
     private ConfigCommandArguments configCommandArguments;
+    private JenkinsUtils jenkinsUtils = new JenkinsUtils();
 
     public ConfigCommandExecutor(Logger logger, ConfigCommandArguments configCommandArguments) {
         super(logger, configCommandArguments.getBaseArgs());
@@ -26,18 +27,23 @@ public class ConfigCommandExecutor extends BaseCommandExecutor {
     @Override
     public boolean execute() {
 
-        String workingDir = JenkinsUtils.getWorkspace(baseArgs.getBuild());
-        buildSessionIdFile = PathUtils.join(workingDir, "buildSessionId.txt");
+        try {
+            String workingDir = jenkinsUtils.getWorkspace(baseArgs.getBuild());
+            buildSessionIdFile = PathUtils.join(workingDir, "buildSessionId.txt");
 
-        boolean isSuccess = super.execute();
-        if (isSuccess) {
-            // update environment variables
-            injectBuildSessionIdEnvVars(baseArgs.getBuild(), logger);
-            logger.info("Created SeaLights Build Session Id successfully");
-            return true;
-        } else {
-            logger.error("Failed to create SeaLights Build Session Id");
+            boolean isSuccess = super.execute();
+            if (isSuccess) {
+                // update environment variables
+                injectBuildSessionIdEnvVars(baseArgs.getBuild(), logger);
+                logger.info("Created SeaLights Build Session Id successfully");
+                return true;
+            } else {
+                logger.error("Failed to create SeaLights Build Session Id");
+            }
+        } catch (Exception e) {
+            logger.error("Failed to create SeaLights Build Session Id due to an error. Error:", e);
         }
+
         return false;
     }
 
@@ -61,11 +67,17 @@ public class ConfigCommandExecutor extends BaseCommandExecutor {
         addArgumentKeyVal(sb, "buildsessionidfile", buildSessionIdFile);
         addArgumentKeyVal(sb, "packagesincluded", configCommandArguments.getPackagesIncluded());
         addArgumentKeyVal(sb, "packagesexcluded", configCommandArguments.getPackagesExcluded());
+        sb.append("-enableNoneZeroErrorCode");
+
         return sb.toString();
     }
 
     @Override
     protected String getCommandName() {
         return "-config";
+    }
+
+    public void setJenkinsUtils(JenkinsUtils jenkinsUtils) {
+        this.jenkinsUtils = jenkinsUtils;
     }
 }

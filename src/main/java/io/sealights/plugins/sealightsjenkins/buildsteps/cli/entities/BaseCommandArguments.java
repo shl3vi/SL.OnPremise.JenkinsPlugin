@@ -31,6 +31,7 @@ public class BaseCommandArguments {
 
     private AbstractBuild<?, ?> build;
     private Logger logger;
+    private int commandExecutionTimeoutInSeconds = 60;
 
     public CommandMode getMode() {
         return mode;
@@ -166,5 +167,13 @@ public class BaseCommandArguments {
 
     public void setLogger(Logger logger) {
         this.logger = logger;
+    }
+
+    public int getCommandExecutionTimeoutInSeconds() {
+        return commandExecutionTimeoutInSeconds;
+    }
+
+    public void setCommandExecutionTimeoutInSeconds(int commandExecutionTimeoutInSeconds) {
+        this.commandExecutionTimeoutInSeconds = commandExecutionTimeoutInSeconds;
     }
 }
