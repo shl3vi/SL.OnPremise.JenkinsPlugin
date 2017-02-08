@@ -124,7 +124,7 @@ public class CLIRunner extends Builder {
     }
 
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener,
-                           CommandMode commandMode, CLIHandler cLIHandler, Logger logger)
+                           CommandMode commandMode, CLIHandler cliHandler, Logger logger)
             throws IOException, InterruptedException {
 
         try {
@@ -141,10 +141,10 @@ public class CLIRunner extends Builder {
 
             String filesStorage = resolveFilesStorage(additionalProps, envVars);
 
-            cLIHandler.setBaseArgs(baseArgs);
-            cLIHandler.setFilesStorage(filesStorage);
+            cliHandler.setBaseArgs(baseArgs);
+            cliHandler.setFilesStorage(filesStorage);
 
-            return cLIHandler.handle();
+            return cliHandler.handle();
         } catch (Exception e) {
             logger.error("Error occurred while performing 'Sealights CLI'. Error: ", e);
         }
