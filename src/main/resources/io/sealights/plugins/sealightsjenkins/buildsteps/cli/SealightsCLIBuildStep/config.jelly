@@ -23,7 +23,7 @@
 
     <f:advanced title="SeaLights">
         <f:entry>
-            <f:property field="cLIRunner"/>
+            <f:property field="cliRunner"/>
         </f:entry>
     </f:advanced>
 </j:jelly>

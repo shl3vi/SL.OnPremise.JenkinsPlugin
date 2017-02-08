@@ -21,15 +21,15 @@ public class SealightsCLIBuildStep extends Builder {
     public boolean enable;
     public boolean failBuildIfStepFail;
     public CommandMode commandMode;
-    public CLIRunner cLIRunner;
+    public CLIRunner cliRunner;
 
     @DataBoundConstructor
     public SealightsCLIBuildStep(boolean enable, boolean failBuildIfStepFail,
-                                 CommandMode commandMode, CLIRunner cLIRunner) {
+                                 CommandMode commandMode, CLIRunner cliRunner) {
         this.enable = enable;
         this.failBuildIfStepFail = failBuildIfStepFail;
         this.commandMode = commandMode;
-        this.cLIRunner = cLIRunner;
+        this.cliRunner = cliRunner;
     }
 
     public CommandMode getCommandMode() {
@@ -40,12 +40,12 @@ public class SealightsCLIBuildStep extends Builder {
         this.commandMode = commandMode;
     }
 
-    public CLIRunner getcLIRunner() {
-        return cLIRunner;
+    public CLIRunner getCliRunner() {
+        return cliRunner;
     }
 
-    public void setcLIRunner(CLIRunner cLIRunner) {
-        this.cLIRunner = cLIRunner;
+    public void setCliRunner(CLIRunner cliRunner) {
+        this.cliRunner = cliRunner;
     }
 
     public boolean isEnable() {
@@ -69,19 +69,19 @@ public class SealightsCLIBuildStep extends Builder {
         boolean isStepSuccessful = false;
         Logger logger = new Logger(listener.getLogger());
 
-        if (!enable){
-            logger.info("Sealights CLI step is disabled.");
-            return true;
-        }
-
         try {
+            if (!enable) {
+                logger.info("Sealights CLI step is disabled.");
+                return true;
+            }
+
             CLIHandler cliHandler = new CLIHandler(logger);
-            isStepSuccessful = cLIRunner.perform(build, launcher, listener, commandMode, cliHandler, logger);
-        }catch (Exception e){
+            isStepSuccessful = cliRunner.perform(build, launcher, listener, commandMode, cliHandler, logger);
+        } catch (Exception e) {
             logger.error("Error occurred while performing 'Sealights Listener Command'. Error: ", e);
         }
 
-        if (failBuildIfStepFail){
+        if (failBuildIfStepFail) {
             return isStepSuccessful;
         }
 

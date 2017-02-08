@@ -272,12 +272,12 @@ public class CLIRunnerTest {
     private CLIHandler runPerformOverrideTest(String additionalArguments, EnvVars envVars)
             throws IOException, InterruptedException {
         //Arrange
-        CLIRunner cLIRunner = createListenerCommand(additionalArguments);
+        CLIRunner cliRunner = createListenerCommand(additionalArguments);
         CLIHandler cliHandler = new CLIHandlerMock(nullLogger);
         AbstractBuild<?, ?> build = createJenkinsBuildObject(envVars);
 
         //Act
-        performListenerCommand(cLIRunner, cliHandler, build);
+        performListenerCommand(cliRunner, cliHandler, build);
 
         return cliHandler;
     }
@@ -300,13 +300,13 @@ public class CLIRunnerTest {
         return build;
     }
 
-    private void performListenerCommand(CLIRunner cLIRunner, CLIHandler cliHandler,
+    private void performListenerCommand(CLIRunner cliRunner, CLIHandler cliHandler,
                                         AbstractBuild<?, ?> build)
             throws IOException, InterruptedException {
         BuildListener listener = mock(BuildListener.class);
-        cLIRunner.setBeginAnalysis(createBeginAnalysis());
+        cliRunner.setBeginAnalysis(createBeginAnalysis());
         CommandMode commandMode = new CommandMode.EndView();
-        cLIRunner.perform(build, null, listener, commandMode, cliHandler, nullLogger);
+        cliRunner.perform(build, null, listener, commandMode, cliHandler, nullLogger);
     }
 
     private BeginAnalysis createBeginAnalysis() {
