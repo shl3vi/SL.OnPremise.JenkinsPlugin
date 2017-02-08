@@ -35,7 +35,7 @@ public class SendExternalReportTest {
         externalReportExecutor.execute();
         verify(runtimeMock).exec(captor.capture());
         final String actualCommandLine = captor.getValue();
-        String expectedCommandLine = "java -jar agent.jar externalReport -token \"fake-token\" -appname \"demoApp\" -buildname \"1\" -branchname \"branchy\" -report \"fake-report\"";
+        String expectedCommandLine = "path/to/java -jar agent.jar externalReport -token \"fake-token\" -appname \"demoApp\" -buildname \"1\" -branchname \"branchy\" -report \"fake-report\"";
 
         // Assert
         Assert.assertEquals(
@@ -75,6 +75,7 @@ public class SendExternalReportTest {
     private BaseCommandArguments createBaseCommandArguments(){
         BaseCommandArguments baseCommandArguments = new BaseCommandArguments();
         baseCommandArguments.setMode(createExternalReportViewCommandMode());
+        baseCommandArguments.setJavaPath("path/to/java");
         baseCommandArguments.setAgentPath("agent.jar");
         baseCommandArguments.setToken("fake-token");
         baseCommandArguments.setAppName("demoApp");

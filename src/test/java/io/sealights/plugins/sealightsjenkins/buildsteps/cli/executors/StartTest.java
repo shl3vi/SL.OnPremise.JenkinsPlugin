@@ -37,7 +37,7 @@ public class StartTest {
         startExecutor.execute();
         verify(runtimeMock).exec(captor.capture());
         final String actualCommandLine = captor.getValue();
-        String expectedCommandLine = "java -jar agent.jar start -token \"fake-token\" -buildsessionidfile \"/path/to/buildsessionid.txt\" -appname \"demoApp\" -buildname \"1\" -branchname \"branchy\" -environment \"someEnv\" -testStage \"newEnv\"";
+        String expectedCommandLine = "path/to/java -jar agent.jar start -token \"fake-token\" -buildsessionidfile \"/path/to/buildsessionid.txt\" -appname \"demoApp\" -buildname \"1\" -branchname \"branchy\" -environment \"someEnv\" -testStage \"newEnv\"";
 
         // Assert
         Assert.assertEquals(
@@ -68,6 +68,7 @@ public class StartTest {
     private BaseCommandArguments createBaseCommandArguments(){
         BaseCommandArguments baseCommandArguments = new BaseCommandArguments();
         baseCommandArguments.setMode(createStartViewCommandMode());
+        baseCommandArguments.setJavaPath("path/to/java");
         baseCommandArguments.setAgentPath("agent.jar");
         baseCommandArguments.setToken("fake-token");
         baseCommandArguments.setAppName("demoApp");

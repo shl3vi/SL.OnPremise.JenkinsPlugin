@@ -3,6 +3,7 @@ package io.sealights.plugins.sealightsjenkins.buildsteps.cli.executors;
 
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.BaseCommandArguments;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
+import io.sealights.plugins.sealightsjenkins.utils.PathUtils;
 import io.sealights.plugins.sealightsjenkins.utils.StreamUtils;
 import io.sealights.plugins.sealightsjenkins.utils.StringUtils;
 
@@ -114,7 +115,8 @@ public abstract class AbstractCommandExecutor implements ICommandExecutor {
         if (!StringUtils.isNullOrEmpty(baseArgs.getJavaPath()))
             return baseArgs.getJavaPath();
 
-        return "java";
+        String localJava = PathUtils.join(System.getProperty("java.home"), "bin", "java");
+        return localJava;
     }
 
     public void setRuntime(Runtime runtime) {
