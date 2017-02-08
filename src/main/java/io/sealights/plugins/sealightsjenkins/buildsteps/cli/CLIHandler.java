@@ -35,6 +35,8 @@ public class CLIHandler {
     }
 
     public boolean handle() {
+        logger.info(baseArgs.toString());
+
         String agentPath = tryGetAgentPath(logger, baseArgs);
         baseArgs.setAgentPath(agentPath);
 

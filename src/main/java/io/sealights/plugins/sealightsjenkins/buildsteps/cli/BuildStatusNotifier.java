@@ -201,7 +201,7 @@ public class BuildStatusNotifier extends Notifier {
 
         String globalToken = beginAnalysis.getDescriptor().getToken();
         baseArgs.setToken(resolveGlobalArgument(envVars, additionalProps, "token", globalToken));
-        baseArgs.setTokenFile(resolveEnvVar(envVars, (String) additionalProps.get("tokenile")));
+        baseArgs.setTokenFile(resolveEnvVar(envVars, (String) additionalProps.get("tokenfile")));
 
         // need to create tokenData for the upgrade feature (need to know to which server it should request for agents)
         TokenData tokenData = createTokenData(baseArgs.getToken(), baseArgs.getTokenFile(), logger);

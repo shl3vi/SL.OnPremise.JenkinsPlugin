@@ -23,7 +23,7 @@ public class CommandExecutorTest {
         CommandMode mode = new CommandMode.StartView(newEnvironment);
         BaseCommandArguments baseArguments = createBaseCommandArgumentsWithoutToken(mode);
         StartCommandArguments startArguments = new StartCommandArguments(baseArguments, newEnvironment);
-        BaseCommandExecutor commandExecutor = new StartCommandExecutor(nullLogger, startArguments);
+        AbstractCommandExecutor commandExecutor = new StartCommandExecutor(nullLogger, startArguments);
         //Act
         String actualCommand = commandExecutor.createExecutionCommand();
         //Assert
@@ -37,7 +37,7 @@ public class CommandExecutorTest {
         CommandMode mode = new CommandMode.EndView();
         BaseCommandArguments baseArguments = createBaseCommandArgumentsWithoutToken(mode);
         EndCommandArguments endArguments = new EndCommandArguments(baseArguments);
-        BaseCommandExecutor commandExecutor = new EndCommandExecutor(nullLogger, endArguments);
+        AbstractCommandExecutor commandExecutor = new EndCommandExecutor(nullLogger, endArguments);
         //Act
         String actualCommand = commandExecutor.createExecutionCommand();
         //Assert
@@ -51,7 +51,7 @@ public class CommandExecutorTest {
         CommandMode mode = new CommandMode.UploadReportsView(null, null, false, null);
         BaseCommandArguments baseArguments = createBaseCommandArgumentsWithoutToken(mode);
         UploadReportsCommandArguments uploadReportsArguments = new UploadReportsCommandArguments(baseArguments, null, null, false, null);
-        BaseCommandExecutor commandExecutor = new UploadReportsCommandExecutor(nullLogger, uploadReportsArguments);
+        AbstractCommandExecutor commandExecutor = new UploadReportsCommandExecutor(nullLogger, uploadReportsArguments);
         //Act
         String actualCommand = commandExecutor.createExecutionCommand();
         //Assert
@@ -66,7 +66,7 @@ public class CommandExecutorTest {
         CommandMode mode = new CommandMode.StartView(newEnvironment);
         BaseCommandArguments baseArguments = createBaseCommandArgumentsWithoutToken(mode, "path/to/java");
         StartCommandArguments startArguments = new StartCommandArguments(baseArguments, newEnvironment);
-        BaseCommandExecutor commandExecutor = new StartCommandExecutor(nullLogger, startArguments);
+        AbstractCommandExecutor commandExecutor = new StartCommandExecutor(nullLogger, startArguments);
         //Act
         String actualCommand = commandExecutor.createExecutionCommand();
         //Assert
@@ -82,7 +82,7 @@ public class CommandExecutorTest {
         CommandMode mode = new CommandMode.StartView(newEnvironment);
         BaseCommandArguments baseArguments = createBaseCommandArguments(mode);
         StartCommandArguments startArguments = new StartCommandArguments(baseArguments, newEnvironment);
-        BaseCommandExecutor commandExecutor = new StartCommandExecutor(nullLogger, startArguments);
+        AbstractCommandExecutor commandExecutor = new StartCommandExecutor(nullLogger, startArguments);
         //Act
         String actualCommand = commandExecutor.createExecutionCommand();
         //Assert
@@ -96,7 +96,7 @@ public class CommandExecutorTest {
         CommandMode mode = new CommandMode.EndView();
         BaseCommandArguments baseArguments = createBaseCommandArguments(mode);
         EndCommandArguments endArguments = new EndCommandArguments(baseArguments);
-        BaseCommandExecutor commandExecutor = new EndCommandExecutor(nullLogger, endArguments);
+        AbstractCommandExecutor commandExecutor = new EndCommandExecutor(nullLogger, endArguments);
         //Act
         String actualCommand = commandExecutor.createExecutionCommand();
         //Assert
@@ -110,7 +110,7 @@ public class CommandExecutorTest {
         CommandMode mode = new CommandMode.UploadReportsView(null, null, false, null);
         BaseCommandArguments baseArguments = createBaseCommandArguments(mode);
         UploadReportsCommandArguments uploadReportsArguments = new UploadReportsCommandArguments(baseArguments, null, null, false, null);
-        BaseCommandExecutor commandExecutor = new UploadReportsCommandExecutor(nullLogger, uploadReportsArguments);
+        AbstractCommandExecutor commandExecutor = new UploadReportsCommandExecutor(nullLogger, uploadReportsArguments);
         //Act
         String actualCommand = commandExecutor.createExecutionCommand();
         //Assert
@@ -125,7 +125,7 @@ public class CommandExecutorTest {
         CommandMode mode = new CommandMode.StartView(newEnvironment);
         BaseCommandArguments baseArguments = createBaseCommandArguments(mode, "path/to/java");
         StartCommandArguments startArguments = new StartCommandArguments(baseArguments, newEnvironment);
-        BaseCommandExecutor commandExecutor = new StartCommandExecutor(nullLogger, startArguments);
+        AbstractCommandExecutor commandExecutor = new StartCommandExecutor(nullLogger, startArguments);
         //Act
         String actualCommand = commandExecutor.createExecutionCommand();
         //Assert

@@ -8,10 +8,11 @@ import io.sealights.plugins.sealightsjenkins.utils.*;
 /**
  * Executor for the 'config' command.
  */
-public class ConfigCommandExecutor extends BaseCommandExecutor {
+public class ConfigCommandExecutor extends AbstractCommandExecutor {
 
     private static String BUILD_SESSION_ID_ENV_VAR = "SL_BUILD_SESSION_ID";
     private static String BUILD_SESSION_ID_FILE_ENV_VAR = "SL_BUILD_SESSION_ID_FILE";
+    private static String BUILD_SESSION_ID_FILE_NAME = "buildSessionId.txt";
 
     private BaseCommandArguments baseArgs = null;
     private String buildSessionIdFile = null;
@@ -29,7 +30,7 @@ public class ConfigCommandExecutor extends BaseCommandExecutor {
 
         try {
             String workingDir = jenkinsUtils.getWorkspace(baseArgs.getBuild());
-            buildSessionIdFile = PathUtils.join(workingDir, "buildSessionId.txt");
+            this.buildSessionIdFile = PathUtils.join(workingDir, BUILD_SESSION_ID_FILE_NAME);
 
             boolean isSuccess = super.execute();
             if (isSuccess) {
@@ -64,7 +65,7 @@ public class ConfigCommandExecutor extends BaseCommandExecutor {
     @Override
     public String getAdditionalArguments() {
         StringBuilder sb = new StringBuilder();
-        addArgumentKeyVal(sb, "buildsessionidfile", buildSessionIdFile);
+        addArgumentKeyVal(sb, "buildsessionidfile", this.buildSessionIdFile);
         addArgumentKeyVal(sb, "packagesincluded", configCommandArguments.getPackagesIncluded());
         addArgumentKeyVal(sb, "packagesexcluded", configCommandArguments.getPackagesExcluded());
         sb.append("-enableNoneZeroErrorCode");

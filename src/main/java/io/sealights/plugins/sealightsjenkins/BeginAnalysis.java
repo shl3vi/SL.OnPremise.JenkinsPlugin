@@ -453,8 +453,8 @@ public class BeginAnalysis extends Builder {
             }
 
             SeaLightsPluginInfo slInfo = createSeaLightsPluginInfo(build, envVars, metadata, ws, additionalProps, logger);
-            SlInfoValidator slInfoValidator = new SlInfoValidator();
-            if (!slInfoValidator.validate(slInfo, logger)){
+            SlInfoValidator slInfoValidator = new SlInfoValidator(logger);
+            if (!slInfoValidator.validate(slInfo)){
                 return true;
             }
 
@@ -683,6 +683,14 @@ public class BeginAnalysis extends Builder {
                 }
             }
             slInfo.setServerUrl(JenkinsUtils.tryGetEnvVariable(envVars, server));
+
+            boolean noCustomerOrServer = StringUtils.isNullOrEmpty(customer) || StringUtils.isNullOrEmpty(server);
+            if (noCustomerOrServer) {
+                throw new RuntimeException(
+                        "Invalid configuration. " +
+                                "Should provide 'server url' and 'customer id' when token is not provided. " +
+                                "'customerId': '" + customer + "', 'server': '" + server + "'");
+            }
         }
 
         // set proxy

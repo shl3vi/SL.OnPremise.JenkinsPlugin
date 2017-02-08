@@ -6,7 +6,7 @@ import io.sealights.plugins.sealightsjenkins.utils.Logger;
 /**
  * Executor for the 'externalReport' command.
  */
-public class ExternalReportExecutor extends BaseCommandExecutor {
+public class ExternalReportExecutor extends AbstractCommandExecutor {
 
     private ExternalReportArguments externalReportArguments;
 

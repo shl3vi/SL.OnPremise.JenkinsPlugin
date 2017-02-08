@@ -9,44 +9,35 @@ import io.sealights.plugins.sealightsjenkins.utils.StringUtils;
  */
 public class SlInfoValidator {
 
-    public boolean validate(SeaLightsPluginInfo slInfo, Logger logger){
+    private Logger logger;
+
+    public SlInfoValidator(Logger logger) {
+        this.logger = logger;
+    }
+
+    public boolean validate(SeaLightsPluginInfo slInfo) {
         boolean isValid = true;
-        boolean isBuildSessionIdMentioned = StringUtils.isNullOrEmpty(slInfo.getBuildSessionId());
-        if (slInfo.isCreateBuildSessionId() || !isBuildSessionIdMentioned){
+        boolean hasBuildSessionId = StringUtils.isNullOrEmpty(slInfo.getBuildSessionId());
+        if (slInfo.isCreateBuildSessionId() || !hasBuildSessionId) {
             // make sure we have properties to create build session id.
-            if (StringUtils.isNullOrEmpty(slInfo.getAppName())){
-                if (!isBuildSessionIdMentioned) {
-                    logger.info("Please provide 'App Name' when 'createBuildSessionId' is set to 'true'.");
-                }else{
-                    logger.info("'App Name' is mandatory when 'buildSessionId' is not provided.");
-                }
-                isValid = false;
-            }
-            if (StringUtils.isNullOrEmpty(slInfo.getBuildName())){
-                if (!isBuildSessionIdMentioned) {
-                    logger.info("Please provide 'Build Name' when 'createBuildSessionId' is set to 'true'");
-                }else{
-                    logger.info("'Build Name' is mandatory when 'buildSessionId' is not provided.");
-                }
-                isValid = false;
-            }
-            if (StringUtils.isNullOrEmpty(slInfo.getBranchName())){
-                if (!isBuildSessionIdMentioned) {
-                    logger.info("Please provide 'Branch Name' when 'createBuildSessionId' is set to 'true'");
-                }else{
-                    logger.info("'Branch Name' is mandatory when 'buildSessionId' is not provided.");
-                }
-                isValid = false;
-            }
-            if (StringUtils.isNullOrEmpty(slInfo.getPackagesIncluded())){
-                if (!isBuildSessionIdMentioned) {
-                    logger.info("Please provide 'Monitored packages' when 'CreateBuildSessionId' is set to 'true'");
-                }else{
-                    logger.info("'Monitored packages' is mandatory when 'buildSessionId' is not provided.");
-                }
-                isValid = false;
-            }
+            isValid = validateField(slInfo.getAppName(), !hasBuildSessionId, "App Name");
+            isValid = isValid && validateField(slInfo.getBuildName(), !hasBuildSessionId, "Build Name");
+            isValid = isValid && validateField(slInfo.getBranchName(), !hasBuildSessionId, "Branch Name");
+            isValid = isValid && validateField(slInfo.getPackagesIncluded(), !hasBuildSessionId, "Monitored packages");
         }
+
         return isValid;
+    }
+
+    private boolean validateField(String value, boolean hasBuildSessionId, String name) {
+        if (StringUtils.isNullOrEmpty(value)) {
+            if (!hasBuildSessionId) {
+                logger.info("Please provide '" + name + "' when 'createBuildSessionId' is set to 'true'.");
+            } else {
+                logger.info("'" + name + "' is mandatory when 'buildSessionId' is not provided.");
+            }
+            return false;
+        }
+        return true;
     }
 }

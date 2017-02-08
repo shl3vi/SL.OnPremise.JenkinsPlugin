@@ -141,8 +141,6 @@ public class CLIRunner extends Builder {
 
             String filesStorage = resolveFilesStorage(additionalProps, envVars);
 
-            printBaseArgs(baseArgs, logger);
-
             cLIHandler.setBaseArgs(baseArgs);
             cLIHandler.setFilesStorage(filesStorage);
 
@@ -152,18 +150,6 @@ public class CLIRunner extends Builder {
         }
 
         return false;
-    }
-
-    private void printBaseArgs(BaseCommandArguments baseArgs, Logger logger) {
-        logger.debug("[CLI arguments] - serverUrl:" + baseArgs.getUrl());
-        logger.debug("[CLI arguments] - customerId:" + baseArgs.getCustomerId());
-        if (baseArgs.getTokenData() != null) {
-            logger.debug("[CLI arguments] - tokenData.serverUrl:" + baseArgs.getTokenData().getServer());
-            logger.debug("[CLI arguments] - tokenData.customerId:" + baseArgs.getTokenData().getCustomerId());
-            logger.debug("[CLI arguments] - tokenData.token: " + baseArgs.getTokenData().getToken());
-        } else {
-            logger.debug("[CLI arguments] - tokenData is null.");
-        }
     }
 
     private BaseCommandArguments createBaseCommandArguments(
@@ -176,10 +162,6 @@ public class CLIRunner extends Builder {
         baseArgs.setAgentPath(resolveEnvVar(envVars, (String) additionalProps.get("agentpath")));
         baseArgs.setJavaPath(resolveEnvVar(envVars, (String) additionalProps.get("javapath")));
 
-        String timeoutAsString = resolveEnvVar(envVars, (String) additionalProps.get("timeout"));
-        if (!StringUtils.isNullOrEmpty(timeoutAsString)){
-            baseArgs.setCommandExecutionTimeoutInSeconds(Integer.parseInt(timeoutAsString));
-        }
         return baseArgs;
     }
 
@@ -217,11 +199,19 @@ public class CLIRunner extends Builder {
             }
             baseArgs.setCustomerId(resolveEnvVar(envVars, customer));
 
-            String url = (String) additionalProps.get("server");
-            if (StringUtils.isNullOrEmpty(url)) {
-                url = beginAnalysis.getDescriptor().getUrl();
+            String server = (String) additionalProps.get("server");
+            if (StringUtils.isNullOrEmpty(server)) {
+                server = beginAnalysis.getDescriptor().getUrl();
             }
-            baseArgs.setUrl(resolveEnvVar(envVars, url));
+            baseArgs.setUrl(resolveEnvVar(envVars, server));
+
+            boolean noCustomerOrServer = StringUtils.isNullOrEmpty(customer) || StringUtils.isNullOrEmpty(server);
+            if (noCustomerOrServer) {
+                throw new RuntimeException(
+                        "Invalid configuration. " +
+                                "Should provide 'server url' and 'customer id' when token is not provided. " +
+                                "'customerId': '" + customer + "', 'server': '" + server + "'");
+            }
         }
 
         String proxy = (String) additionalProps.get("proxy");
@@ -291,7 +281,7 @@ public class CLIRunner extends Builder {
         baseArgs.setEnvironment(resolveEnvVar(envVars, environment));
     }
 
-    private String resolveBuildSessionId(Logger logger, Properties additionalProps){
+    private String resolveBuildSessionId(Logger logger, Properties additionalProps) {
         ArgumentFileResolver argumentFileResolver = new ArgumentFileResolver();
         String buildSessionIdFile = (String) additionalProps.get("buildsessionidfile");
         return argumentFileResolver.resolve(logger, buildSessionId, buildSessionIdFile);

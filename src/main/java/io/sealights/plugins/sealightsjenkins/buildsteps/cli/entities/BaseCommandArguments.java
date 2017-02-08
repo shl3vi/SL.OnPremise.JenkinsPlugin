@@ -31,7 +31,6 @@ public class BaseCommandArguments {
 
     private AbstractBuild<?, ?> build;
     private Logger logger;
-    private int commandExecutionTimeoutInSeconds = 60;
 
     public CommandMode getMode() {
         return mode;
@@ -169,11 +168,26 @@ public class BaseCommandArguments {
         this.logger = logger;
     }
 
-    public int getCommandExecutionTimeoutInSeconds() {
-        return commandExecutionTimeoutInSeconds;
-    }
-
-    public void setCommandExecutionTimeoutInSeconds(int commandExecutionTimeoutInSeconds) {
-        this.commandExecutionTimeoutInSeconds = commandExecutionTimeoutInSeconds;
+    @Override
+    public String toString() {
+        return "BaseCommandArguments{" +
+                "mode=" + mode +
+                ", appName='" + appName + '\'' +
+                ", branchName='" + branchName + '\'' +
+                ", buildName='" + buildName + '\'' +
+                ", token='" + token + '\'' +
+                ", tokenFile='" + tokenFile + '\'' +
+                ", tokenData=" + tokenData +
+                ", customerId='" + customerId + '\'' +
+                ", url='" + url + '\'' +
+                ", proxy='" + proxy + '\'' +
+                ", environment='" + environment + '\'' +
+                ", agentPath='" + agentPath + '\'' +
+                ", javaPath='" + javaPath + '\'' +
+                ", buildSessionId='" + buildSessionId + '\'' +
+                ", buildSessionIdFile='" + buildSessionIdFile + '\'' +
+                ", build=" + build +
+                ", logger=" + logger +
+                '}';
     }
 }

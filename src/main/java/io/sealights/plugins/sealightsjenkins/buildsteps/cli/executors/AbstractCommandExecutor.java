@@ -3,7 +3,6 @@ package io.sealights.plugins.sealightsjenkins.buildsteps.cli.executors;
 
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.BaseCommandArguments;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
-import io.sealights.plugins.sealightsjenkins.utils.ProcessUtils;
 import io.sealights.plugins.sealightsjenkins.utils.StreamUtils;
 import io.sealights.plugins.sealightsjenkins.utils.StringUtils;
 
@@ -12,13 +11,13 @@ import java.io.InputStream;
 /**
  * Abstract class for command executors.
  */
-public abstract class BaseCommandExecutor implements ICommandExecutor {
+public abstract class AbstractCommandExecutor implements ICommandExecutor {
 
     protected Logger logger;
     private BaseCommandArguments baseArgs;
     private Runtime runtime;
 
-    public BaseCommandExecutor(Logger logger, BaseCommandArguments baseArgs) {
+    public AbstractCommandExecutor(Logger logger, BaseCommandArguments baseArgs) {
         this.logger = logger;
         this.baseArgs = baseArgs;
         this.runtime = Runtime.getRuntime();
@@ -33,18 +32,12 @@ public abstract class BaseCommandExecutor implements ICommandExecutor {
 
             Process proc = runtime.exec(execCommand);
 
-            // give timeout for execution
-            ProcessUtils processUtils = new ProcessUtils();
-            int procExitValue = processUtils.waitFor(proc, baseArgs.getCommandExecutionTimeoutInSeconds());
-
             printStreams(proc);
 
-            if (procExitValue == 0) {
+            if (proc.exitValue() == 0) {
                 return true;
             }
 
-        }catch (InterruptedException e){
-            logger.error("Unable to perform '" + getCommandName() + "' command. The execution was too long and was interrupted. Error: ", e);
         } catch (Exception e) {
             logger.error("Unable to perform '" + getCommandName() + "' command. Error: ", e);
         }

@@ -13,7 +13,7 @@ public class CommandExecutorsFactory {
         ICommandExecutor executor;
 
         if (baseArgs == null || baseArgs.getMode() == null) {
-            logger.error("BaseCommandArguments or mode is 'null'");
+            logger.error("BaseCommandArguments or mode is 'null'. baseArgs: '" + baseArgs + "'");
             executor = new NullCommandExecutor();
         } else {
             CommandMode mode = baseArgs.getMode();
