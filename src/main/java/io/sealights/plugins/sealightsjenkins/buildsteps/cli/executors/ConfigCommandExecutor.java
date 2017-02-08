@@ -53,10 +53,10 @@ public class ConfigCommandExecutor extends AbstractCommandExecutor {
             ArgumentFileResolver argumentFileResolver = new ArgumentFileResolver();
             String buildSessionId = argumentFileResolver.resolve(logger, null/*force get from file*/, buildSessionIdFile);
 
-            EnvVarsInjector envVarsInjector = new EnvVarsInjector();
+            EnvVarsInjector envVarsInjector = new EnvVarsInjector(build, logger);
             envVarsInjector.addEnvVariableToBuild(BUILD_SESSION_ID_ENV_VAR, buildSessionId);
             envVarsInjector.addEnvVariableToBuild(BUILD_SESSION_ID_FILE_ENV_VAR, buildSessionIdFile);
-            envVarsInjector.inject(build);
+            envVarsInjector.inject();
         } catch (Exception e) {
             throw new RuntimeException("Failed during Build Session Id environment variables injection", e);
         }
