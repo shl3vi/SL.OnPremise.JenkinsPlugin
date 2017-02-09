@@ -10,6 +10,7 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import io.sealights.plugins.sealightsjenkins.BeginAnalysis;
+import io.sealights.plugins.sealightsjenkins.CleanupManager;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.BaseCommandArguments;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.SealightsBuildStatus;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.utils.BuildNameResolver;
@@ -21,6 +22,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.export.Exported;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -35,6 +37,16 @@ public class BuildStatusNotifier extends Notifier {
     private CommandBuildName buildName;
     private String additionalArguments;
     private BeginAnalysis beginAnalysis = new BeginAnalysis();
+
+    /*
+    * For when working on slave
+    * */
+    private boolean isSlaveMachine = false;
+    private String reportPathOnSlave = null;
+    /*
+    * For when working on slave
+    * */
+
 
     @DataBoundConstructor
     public BuildStatusNotifier(boolean enabled, String buildSessionId, String appName, String branchName,
@@ -59,12 +71,14 @@ public class BuildStatusNotifier extends Notifier {
                 return true;
             }
 
+            this.isSlaveMachine = build.getWorkspace().isRemote();
+
             Properties additionalProps = PropertiesUtils.toProperties(additionalArguments);
             EnvVars envVars = build.getEnvironment(listener);
 
             String filesStorage = resolveFilesStorage(additionalProps, envVars);
 
-            String reportFile = resolveReportFile(build, envVars, additionalProps, logger);
+            String reportFile = resolveReportFile(build, logger);
 
             BaseCommandArguments baseCommandArguments = createBaseCommandArguments(
                     build, envVars, additionalProps, reportFile, logger);
@@ -72,35 +86,63 @@ public class BuildStatusNotifier extends Notifier {
             logger.info("About to report build status.");
             CLIHandler cliHandler =
                     new CLIHandler(baseCommandArguments, filesStorage, logger);
-            cliHandler.handle();
 
-            // try delete the created report file
-            try{
-                String keepReportString = resolveEnvVar(envVars, (String) additionalProps.get("keepreport"));
-                Boolean keepReport = Boolean.valueOf(keepReportString);
-                if (!keepReport) {
-                    CommandMode.ExternalReportView commandView = (CommandMode.ExternalReportView) baseCommandArguments.getMode();
-                    String createdReport = commandView.getReport();
-                    deleteReport(createdReport);
+            boolean isSuccess = cliHandler.handle();
+
+            if (isSuccess) {
+                CommandMode.ExternalReportView commandView = (CommandMode.ExternalReportView) baseCommandArguments.getMode();
+                String createdReport = commandView.getReport();
+
+                onSuccess(envVars, additionalProps, createdReport, logger);
+
+                if (isSlaveMachine) {
+                    // Now we can delete the temp file that is on the master machine
+                    deleteReportOnMaster(createdReport);
                 }
-            }catch (Exception e){
-                logger.error("Failed to delete the created report. Error: ", e);
             }
 
         } catch (Exception e) {
             logger.error("Failed to send build status report. Error: ", e);
         }
-
         return true;
     }
 
-    private void deleteReport(String report){
-        if (report == null){
+    private void onSuccess(
+            EnvVars envVars, Properties additionalProps, String createdReport, Logger logger)
+            throws IOException, InterruptedException {
+
+        String keepReportString = resolveEnvVar(envVars, (String) additionalProps.get("keepreport"));
+        Boolean keepReport = Boolean.valueOf(keepReportString);
+
+        if (keepReport && isSlaveMachine) {
+            CleanupManager cleanupManager = new CleanupManager(logger);
+            CustomFile reportOnMaster = new CustomFile(logger, cleanupManager, createdReport);
+            reportOnMaster.copyToSlave(this.reportPathOnSlave);
+        } else {
+            // should not keep the report. For slave machine the report is never created
+            if (!isSlaveMachine) {
+                deleteReportOnMaster(createdReport);
+            }
+        }
+    }
+
+    private void deleteReportOnMaster(String createdReport) {
+        deleteReport(createdReport);
+    }
+
+    private String createTempPathToFileOnMaster() {
+        String tempFolder = System.getProperty("java.io.tmpdir");
+        String fileName = "reportStatus_" + System.currentTimeMillis() + ".txt";
+        return PathUtils.join(tempFolder, fileName);
+    }
+
+    private void deleteReport(String report) {
+        if (report == null) {
             return;
         }
 
         File reportFile = new File(report);
-        if (!reportFile.exists()){
+        if (!reportFile.exists()) {
             return;
         }
 
@@ -112,17 +154,21 @@ public class BuildStatusNotifier extends Notifier {
             this.buildName = new CommandBuildName.EmptyBuildName();
     }
 
-    private String resolveReportFile(
-            final AbstractBuild<?, ?> build, EnvVars envVars, Properties additionalProps, Logger logger) {
+    private String resolveReportFile(final AbstractBuild<?, ?> build, Logger logger) {
 
-        String reportFile = resolveEnvVar(envVars, (String) additionalProps.get("report"));
-        boolean isReportFileProvided = !StringUtils.isNullOrEmpty(reportFile);
+        String reportFile;
+        String fileName;
+        String workingDir = findWorkingDirPath(build);
 
-        if (!isReportFileProvided) {
+        if (isSlaveMachine) {
+            fileName = createTempPathToFileOnMaster();
             // we are trying to create the report at the working directory
-            String workingDir = findWorkingDirPath(build);
-            reportFile = createReportFile(build.getResult(), workingDir, logger);
+            this.reportPathOnSlave = PathUtils.join(workingDir, "buildStatusReport_" + UUID.randomUUID() + ".json");
+        } else {
+            // we are trying to create the report at the working directory
+            fileName = PathUtils.join(workingDir, "buildStatusReport_" + UUID.randomUUID() + ".json");
         }
+        reportFile = createReportFile(build.getResult(), fileName, logger);
 
         logger.info("Report file location: '" + reportFile + "'");
         return reportFile;
@@ -131,7 +177,7 @@ public class BuildStatusNotifier extends Notifier {
     private String findWorkingDirPath(AbstractBuild<?, ?> build) {
         String workingDir;
         FilePath ws = build.getWorkspace();
-        if (ws == null || (workingDir = ws.getRemote()) == null){
+        if (ws == null || (workingDir = ws.getRemote()) == null) {
             // if we can't resolve the working directory, we will create the report at the temp directory
             workingDir = System.getProperty("java.io.tmpdir");
         }
@@ -139,9 +185,9 @@ public class BuildStatusNotifier extends Notifier {
         return workingDir;
     }
 
-    private String createReportFile(final Result result, String workingDir, Logger logger) {
+    private String createReportFile(final Result result, String fileName, Logger logger) {
         Map reportMap = createReportMap(result);
-        return saveReportToFS(reportMap, workingDir, logger);
+        return saveReportToFS(reportMap, fileName, logger);
     }
 
     private Map createReportMap(Result result) {
@@ -179,9 +225,8 @@ public class BuildStatusNotifier extends Notifier {
         }
     }
 
-    private String saveReportToFS(Map reportMap, String workingDir, Logger logger) {
+    private String saveReportToFS(Map reportMap, String fileName, Logger logger) {
         try {
-            String fileName = PathUtils.join(workingDir, "buildStatusReport_" + UUID.randomUUID() + ".json");
             logger.info("Try to create report file at '" + fileName + "'");
             File reportFile = new File(fileName);
             if (!reportFile.createNewFile()) {
@@ -224,7 +269,7 @@ public class BuildStatusNotifier extends Notifier {
         baseArgs.setJavaPath(resolveEnvVar(envVars, (String) additionalProps.get("javapath")));
 
         CommandMode commandMode = new CommandMode.ExternalReportView();
-        ((CommandMode.ExternalReportView)commandMode).setReport(report);
+        ((CommandMode.ExternalReportView) commandMode).setReport(report);
         baseArgs.setMode(commandMode);
 
         return baseArgs;

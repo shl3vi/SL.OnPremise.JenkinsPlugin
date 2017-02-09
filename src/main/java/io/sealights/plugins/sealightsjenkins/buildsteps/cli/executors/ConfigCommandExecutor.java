@@ -59,14 +59,14 @@ public class ConfigCommandExecutor extends AbstractCommandExecutor {
         boolean isSlaveMachine = workspace.isRemote();
 
         if (isSlaveMachine) {
-            this.buildSessionIdFileOnMaster = createTempPathToFile();
+            this.buildSessionIdFileOnMaster = createTempPathToFileOnMaster();
         } else {
             String workingDir = jenkinsUtils.getWorkspace(baseArgs.getBuild());
             this.buildSessionIdFileOnMaster = PathUtils.join(workingDir, BUILD_SESSION_ID_FILE_NAME);
         }
     }
 
-    private String createTempPathToFile(){
+    private String createTempPathToFileOnMaster(){
         String tempFolder = System.getProperty("java.io.tmpdir");
         String fileName = "buildSession_" + System.currentTimeMillis() + ".txt";
         return PathUtils.join(tempFolder, fileName);
