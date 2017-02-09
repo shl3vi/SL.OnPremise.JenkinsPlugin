@@ -38,15 +38,15 @@ public class VariableInjectionAction implements EnvironmentContributingAction {
     /************************
     *  Making sure to add nothing to the task bar at the UI's left side.
     * **********************/
-    public String getIconFileName() {
+    public final String getIconFileName() {
         return null;
     }
 
-    public String getDisplayName() {
+    public final String getDisplayName() {
         return null;
     }
 
-    public String getUrlName() {
+    public final String getUrlName() {
         return null;
     }
     /************************

@@ -637,7 +637,7 @@ public class BeginAnalysis extends Builder {
         String createBuildSessionIdString = (String)additionalProps.get("createbuildsessionid");
         boolean shouldUseCreateBuildSessionId = Boolean.valueOf(createBuildSessionIdString);
 
-        if (StringUtils.isNullOrEmpty(createBuildSessionIdString) || shouldUseCreateBuildSessionId)
+        if (shouldUseCreateBuildSessionId)
         {
             slInfo.setCreateBuildSessionId(true);
         }

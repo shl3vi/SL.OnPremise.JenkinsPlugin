@@ -32,6 +32,7 @@ public abstract class AbstractCommandExecutor implements ICommandExecutor {
             logger.info("About to execute command: " + execCommand);
 
             Process proc = runtime.exec(execCommand);
+            proc.waitFor();
 
             printStreams(proc);
 
