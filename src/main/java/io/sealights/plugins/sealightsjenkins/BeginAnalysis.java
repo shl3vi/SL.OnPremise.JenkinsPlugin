@@ -595,9 +595,9 @@ public class BeginAnalysis extends Builder {
         else
             slInfo.setWorkspacepath(workingDir);
 
-        slInfo.setAppName(JenkinsUtils.tryGetEnvVariable(envVars, appName));
+        slInfo.setAppName(JenkinsUtils.resolveEnvVarsInString(envVars, appName));
         slInfo.setModuleName(moduleName);
-        slInfo.setBranchName(JenkinsUtils.tryGetEnvVariable(envVars, branch));
+        slInfo.setBranchName(JenkinsUtils.resolveEnvVarsInString(envVars, branch));
         slInfo.setFilesIncluded(filesIncluded);
         slInfo.setFilesExcluded(filesExcluded);
         slInfo.setRecursive(recursive);
@@ -608,7 +608,7 @@ public class BeginAnalysis extends Builder {
         slInfo.setListenerConfigFile(testListenerConfigFile);
         slInfo.setScannerJar(buildScannerJar);
         slInfo.setBuildStrategy(buildStrategy);
-        slInfo.setEnvironment(JenkinsUtils.tryGetEnvVariable(envVars, environment));
+        slInfo.setEnvironment(JenkinsUtils.resolveEnvVarsInString(envVars, environment));
         slInfo.setLogEnabled(!(LogLevel.OFF.equals(logLevel)));
         slInfo.setLogLevel(logLevel);
         slInfo.setLogDestination(logDestination);
@@ -656,8 +656,8 @@ public class BeginAnalysis extends Builder {
 
     private void setGlobalConfiguration(Logger logger, SeaLightsPluginInfo slInfo, Properties additionalProps, EnvVars envVars) {
 
-        String tokenPropertyValue = JenkinsUtils.tryGetEnvVariable(envVars, (String) additionalProps.get("token"));
-        String tokenFilePropertyFile = JenkinsUtils.tryGetEnvVariable(envVars, (String) additionalProps.get("tokenfile"));
+        String tokenPropertyValue = JenkinsUtils.resolveEnvVarsInString(envVars, (String) additionalProps.get("token"));
+        String tokenFilePropertyFile = JenkinsUtils.resolveEnvVarsInString(envVars, (String) additionalProps.get("tokenfile"));
         ArgumentFileResolver argumentFileResolver = new ArgumentFileResolver();
 
         String token = argumentFileResolver.resolve(logger, tokenPropertyValue, tokenFilePropertyFile);
@@ -672,7 +672,7 @@ public class BeginAnalysis extends Builder {
                     customer = getDescriptor().getCustomerId();
                 }
             }
-            slInfo.setCustomerId(JenkinsUtils.tryGetEnvVariable(envVars, customer));
+            slInfo.setCustomerId(JenkinsUtils.resolveEnvVarsInString(envVars, customer));
 
             // set url
             String server = (String) additionalProps.get("server");
@@ -682,7 +682,7 @@ public class BeginAnalysis extends Builder {
                     server = getDescriptor().getUrl();
                 }
             }
-            slInfo.setServerUrl(JenkinsUtils.tryGetEnvVariable(envVars, server));
+            slInfo.setServerUrl(JenkinsUtils.resolveEnvVarsInString(envVars, server));
 
             boolean noCustomerOrServer = StringUtils.isNullOrEmpty(customer) || StringUtils.isNullOrEmpty(server);
             if (noCustomerOrServer) {
@@ -710,7 +710,7 @@ public class BeginAnalysis extends Builder {
     private String resolveFilesStorage(Properties additionalProps, EnvVars envVars) {
         String filesStorage = (String) additionalProps.get("filesstorage");
         if (!StringUtils.isNullOrEmpty(filesStorage)) {
-            return JenkinsUtils.tryGetEnvVariable(envVars, filesStorage);
+            return JenkinsUtils.resolveEnvVarsInString(envVars, filesStorage);
         }
 
         filesStorage = getDescriptor().getFilesStorage();

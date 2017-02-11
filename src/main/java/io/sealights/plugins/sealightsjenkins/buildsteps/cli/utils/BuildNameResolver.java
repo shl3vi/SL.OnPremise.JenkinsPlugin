@@ -33,7 +33,7 @@ public class BuildNameResolver {
             return String.valueOf(build.getNumber());
         }
 
-        return JenkinsUtils.tryGetEnvVariable(envVars, finalBuildName);
+        return JenkinsUtils.resolveEnvVarsInString(envVars, finalBuildName);
     }
 
     private String getManualBuildName(CommandBuildName buildName) {

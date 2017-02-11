@@ -1,6 +1,7 @@
 package io.sealights.plugins.sealightsjenkins.buildsteps.cli.executors;
 
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.ExternalReportArguments;
+import io.sealights.plugins.sealightsjenkins.utils.JenkinsUtils;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 
 /**
@@ -19,7 +20,7 @@ public class ExternalReportExecutor extends AbstractCommandExecutor {
     @Override
     public String getAdditionalArguments() {
         StringBuilder sb = new StringBuilder();
-        addArgumentKeyVal(sb, "report", externalReportArguments.getReport());
+        addArgumentKeyVal(sb, "report", JenkinsUtils.resolveEnvVarsInString(baseArgs.getEnvVars(), externalReportArguments.getReport()));
         return sb.toString();
     }
 

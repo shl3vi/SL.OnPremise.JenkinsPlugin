@@ -38,4 +38,12 @@ public class UploadReportsCommandArguments extends BaseCommandArguments {
     public String getSource() {
         return source;
     }
+
+    public void setReportFiles(String reportFiles) {
+        this.reportFiles = reportFiles;
+    }
+
+    public void setReportsFolders(String reportsFolders) {
+        this.reportsFolders = reportsFolders;
+    }
 }

@@ -46,7 +46,7 @@ public class JenkinsUtilsTest {
 
     private void performTest(String var, String expected){
         EnvVars envVars = createEnvVars();
-        String actual = JenkinsUtils.tryGetEnvVariable(envVars, var);
+        String actual = JenkinsUtils.resolveEnvVarsInString(envVars, var);
         Assert.assertEquals(expected, actual);
     }
 

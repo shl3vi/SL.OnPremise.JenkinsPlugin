@@ -15,7 +15,7 @@ import java.io.InputStream;
 public abstract class AbstractCommandExecutor implements ICommandExecutor {
 
     protected Logger logger;
-    private BaseCommandArguments baseArgs;
+    protected BaseCommandArguments baseArgs;
     private Runtime runtime;
 
     public AbstractCommandExecutor(Logger logger, BaseCommandArguments baseArgs) {

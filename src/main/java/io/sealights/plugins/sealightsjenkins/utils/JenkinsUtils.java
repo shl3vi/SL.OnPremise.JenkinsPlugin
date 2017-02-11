@@ -49,28 +49,8 @@ public class JenkinsUtils {
         return metadata;
     }
 
-    /**
-     * @param envVarKey a potential environment variable
-     * @return true if its jenkins environment variable in the format of '${<some_key>}'
-     */
-    private static boolean isEnvVariable(String envVarKey) {
-        return envVarKey != null && envVarKey.startsWith("${") && envVarKey.endsWith("}");
-    }
-
-    public static String tryGetEnvVariable(EnvVars envVars, String envVarKey) {
-        if (envVarKey == null)
-            return "";
-
-        if (isEnvVariable(envVarKey)) {
-            // get '<some_key>' from '${<some_key>}'
-            String resolvedEnvKey = envVarKey.substring(2, envVarKey.length() - 1);
-
-            resolvedEnvKey = envVars.get(resolvedEnvKey);
-            if (!StringUtils.isNullOrEmpty(resolvedEnvKey)) {
-                return resolvedEnvKey;
-            }
-        }
-        return envVarKey;
+    public static String resolveEnvVarsInString(EnvVars envVars, String envVarKey) {
+        return envVars.expand(envVarKey);
     }
 
     public static String getUpstreamBuildName(AbstractBuild<?, ?> build, String upstreamProjectName, Logger logger) {

@@ -137,6 +137,7 @@ public class CLIRunner extends Builder {
 
             baseArgs.setMode(commandMode);
             baseArgs.setBuild(build);
+            baseArgs.setEnvVars(envVars);
             baseArgs.setLogger(logger);
 
             String filesStorage = resolveFilesStorage(additionalProps, envVars);
@@ -166,7 +167,7 @@ public class CLIRunner extends Builder {
     }
 
     protected String resolveEnvVar(EnvVars envVars, String envVarKey) {
-        return JenkinsUtils.tryGetEnvVariable(envVars, envVarKey);
+        return JenkinsUtils.resolveEnvVarsInString(envVars, envVarKey);
     }
 
     private String resolveFilesStorage(Properties additionalProps, EnvVars envVars) {
@@ -185,8 +186,8 @@ public class CLIRunner extends Builder {
 
     private void setGlobalConfiguration(Logger logger, BaseCommandArguments baseArgs, Properties additionalProps, EnvVars envVars) {
 
-        String tokenPropertyValue = JenkinsUtils.tryGetEnvVariable(envVars, (String) additionalProps.get("token"));
-        String tokenFilePropertyFile = JenkinsUtils.tryGetEnvVariable(envVars, (String) additionalProps.get("tokenfile"));
+        String tokenPropertyValue = JenkinsUtils.resolveEnvVarsInString(envVars, (String) additionalProps.get("token"));
+        String tokenFilePropertyFile = JenkinsUtils.resolveEnvVarsInString(envVars, (String) additionalProps.get("tokenfile"));
         ArgumentFileResolver argumentFileResolver = new ArgumentFileResolver();
 
         String token = argumentFileResolver.resolve(logger, tokenPropertyValue, tokenFilePropertyFile);

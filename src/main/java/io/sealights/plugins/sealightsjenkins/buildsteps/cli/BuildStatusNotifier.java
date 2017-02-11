@@ -276,7 +276,7 @@ public class BuildStatusNotifier extends Notifier {
     }
 
     private String resolveGlobalArgument(EnvVars envVars, Properties additionalProps, String name, String globalValue) {
-        String global = JenkinsUtils.tryGetEnvVariable(envVars, (String) additionalProps.get(name));
+        String global = JenkinsUtils.resolveEnvVarsInString(envVars, (String) additionalProps.get(name));
         if (StringUtils.isNullOrEmpty(global)) {
             global = globalValue;
         }
@@ -298,7 +298,7 @@ public class BuildStatusNotifier extends Notifier {
     }
 
     private String resolveEnvVar(EnvVars envVars, String envVarKey) {
-        return JenkinsUtils.tryGetEnvVariable(envVars, envVarKey);
+        return JenkinsUtils.resolveEnvVarsInString(envVars, envVarKey);
     }
 
     private TokenData createTokenData(String token, String tokenFile, Logger logger) {

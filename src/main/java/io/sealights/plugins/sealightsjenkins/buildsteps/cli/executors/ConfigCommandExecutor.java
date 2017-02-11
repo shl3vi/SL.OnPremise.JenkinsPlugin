@@ -7,7 +7,7 @@ import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.BaseCommand
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.ConfigCommandArguments;
 import io.sealights.plugins.sealightsjenkins.utils.*;
 
-import java.io.File;
+import java.io.IOException;
 
 /**
  * Executor for the 'config' command.
@@ -22,11 +22,13 @@ public class ConfigCommandExecutor extends AbstractCommandExecutor {
     private String buildSessionIdFileOnMaster = null;
     private ConfigCommandArguments configCommandArguments;
     private JenkinsUtils jenkinsUtils = new JenkinsUtils();
+    private CleanupManager cleanupManager;
 
     public ConfigCommandExecutor(Logger logger, ConfigCommandArguments configCommandArguments) {
         super(logger, configCommandArguments.getBaseArgs());
         this.configCommandArguments = configCommandArguments;
         this.baseArgs = configCommandArguments.getBaseArgs();
+        this.cleanupManager = new CleanupManager(logger);
     }
 
     @Override
@@ -74,8 +76,6 @@ public class ConfigCommandExecutor extends AbstractCommandExecutor {
 
     private String copyBuildSessionFileToSlave(FilePath workspace) {
         try {
-            CleanupManager cleanupManager = new CleanupManager(logger);
-
             CustomFile fileOnMaster = new CustomFile(logger, cleanupManager, this.buildSessionIdFileOnMaster);
             String fileOnSlave = PathUtils.join(workspace.getRemote(), BUILD_SESSION_ID_FILE_NAME);
             fileOnMaster.copyToSlave(fileOnSlave);
@@ -85,7 +85,8 @@ public class ConfigCommandExecutor extends AbstractCommandExecutor {
         }
     }
 
-    private void onSuccess(AbstractBuild<?, ?> build, FilePath workspace, Logger logger) {
+    private void onSuccess(
+            AbstractBuild<?, ?> build, FilePath workspace, Logger logger) throws IOException, InterruptedException {
 
         // get the buildSessionId from the created file
         ArgumentFileResolver argumentFileResolver = new ArgumentFileResolver();
@@ -96,7 +97,7 @@ public class ConfigCommandExecutor extends AbstractCommandExecutor {
             String fileOnSlave = copyBuildSessionFileToSlave(workspace);
 
             // delete the created temp file
-            new File(this.buildSessionIdFileOnMaster).delete();
+            cleanupManager.clean();
 
             injectBuildSessionIdEnvVars(build, buildSessionId, fileOnSlave, logger);
 

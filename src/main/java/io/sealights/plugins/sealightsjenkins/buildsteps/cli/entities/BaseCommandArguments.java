@@ -1,5 +1,6 @@
 package io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities;
 
+import hudson.EnvVars;
 import hudson.model.AbstractBuild;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.CommandMode;
 import io.sealights.plugins.sealightsjenkins.entities.TokenData;
@@ -30,6 +31,7 @@ public class BaseCommandArguments {
     private String buildSessionIdFile;
 
     private AbstractBuild<?, ?> build;
+    private EnvVars envVars;
     private Logger logger;
 
     public CommandMode getMode() {
@@ -158,6 +160,14 @@ public class BaseCommandArguments {
 
     public void setBuild(AbstractBuild<?, ?> build) {
         this.build = build;
+    }
+
+    public EnvVars getEnvVars() {
+        return envVars;
+    }
+
+    public void setEnvVars(EnvVars envVars) {
+        this.envVars = envVars;
     }
 
     public Logger getLogger() {
