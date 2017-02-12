@@ -634,13 +634,8 @@ public class BeginAnalysis extends Builder {
     }
 
     private void setSlInfoWithAdditionalProps(Logger logger, SeaLightsPluginInfo slInfo, Properties additionalProps) {
-        String createBuildSessionIdString = (String)additionalProps.get("createbuildsessionid");
-        boolean shouldUseCreateBuildSessionId = Boolean.valueOf(createBuildSessionIdString);
 
-        if (shouldUseCreateBuildSessionId)
-        {
-            slInfo.setCreateBuildSessionId(true);
-        }
+        resolveCreateBuildSessionIdProperty(slInfo, additionalProps);
 
         String buildSessionId = (String) additionalProps.get("buildsessionid");
         String buildSessionIdFile = (String) additionalProps.get("buildsessionidfile");
@@ -653,6 +648,21 @@ public class BeginAnalysis extends Builder {
         }
     }
 
+    private void resolveCreateBuildSessionIdProperty(
+            SeaLightsPluginInfo slInfo, Properties additionalProps){
+
+        String createBuildSessionIdString = (String)additionalProps.get("createbuildsessionid");
+        boolean globalCreateBuildSessionId = getDescriptor().isCreateBuildSessionId();
+
+        if (StringUtils.isNullOrEmpty(createBuildSessionIdString)){
+            // use createBuildSessionId checkbox from global settings
+            slInfo.setCreateBuildSessionId(globalCreateBuildSessionId);
+        }else{
+            // use override value for this step
+            boolean shouldUseCreateBuildSessionId = Boolean.valueOf(createBuildSessionIdString);
+            slInfo.setCreateBuildSessionId(shouldUseCreateBuildSessionId);
+        }
+    }
 
     private void setGlobalConfiguration(Logger logger, SeaLightsPluginInfo slInfo, Properties additionalProps, EnvVars envVars) {
 
@@ -881,6 +891,7 @@ public class BeginAnalysis extends Builder {
         private String url;
         private String proxy;
         private String filesStorage;
+        private boolean createBuildSessionId;
         private String toolsPathOnMaster;
         private final String DEFAULT_TOOLS_PATH = "/var/lib/jenkins/tools";
 
@@ -934,6 +945,7 @@ public class BeginAnalysis extends Builder {
             url = json.getString("url");
             proxy = json.getString("proxy");
             filesStorage = json.getString("filesStorage");
+            createBuildSessionId = json.getBoolean("createBuildSessionId");
             toolsPathOnMaster = json.getString("toolsPathOnMaster");
             save();
             return super.configure(req, json);
@@ -977,6 +989,14 @@ public class BeginAnalysis extends Builder {
 
         public void setFilesStorage(String filesStorage) {
             this.filesStorage = filesStorage;
+        }
+
+        public boolean isCreateBuildSessionId() {
+            return createBuildSessionId;
+        }
+
+        public void setCreateBuildSessionId(boolean createBuildSessionId) {
+            this.createBuildSessionId = createBuildSessionId;
         }
 
         public FormValidation doCheckSlMvnPluginVersion(@QueryParameter String slMvnPluginVersion) {

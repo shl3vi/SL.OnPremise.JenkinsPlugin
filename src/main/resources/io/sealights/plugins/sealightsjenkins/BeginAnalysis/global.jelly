@@ -5,7 +5,6 @@
         <f:entry title="Token" field="token">
             <f:textbox value="${descriptor.token}"/>
         </f:entry>
-
         <f:entry title="Customer Id (Deprecated - use 'Token')" field="customerId">
             <f:textbox value="${descriptor.customerId}"/>
         </f:entry>
@@ -18,6 +17,10 @@
         <f:entry title="Files Storage Folder" field="filesStorage"
                  description="Overrides the default location which Sealights stores files. By default this is the temp folder.">
             <f:textbox value="${descriptor.filesStorage}"/>
+        </f:entry>
+        <f:entry title="Create Build Session Id" field="createBuildSessionId"
+                 description="For When running maven with sealights plugin. When checked, SeaLights plugin will create Build Session Id before running.">
+            <f:checkbox default="false"/>
         </f:entry>
         <f:entry title="'Tools' folder path on Master Jenkins" field="toolsPathOnMaster"
                  description="Absolute path to the jenkins 'tools' folder on the master Jenkins node. Leave empty to use '/var/lib/jenkins/tools'.">
