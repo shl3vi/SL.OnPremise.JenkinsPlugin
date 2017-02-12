@@ -2,6 +2,7 @@ package io.sealights.plugins.sealightsjenkins.buildsteps.cli.executors;
 
 import hudson.FilePath;
 import io.sealights.plugins.sealightsjenkins.CleanupManager;
+import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.BaseCommandArguments;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.UploadReportsCommandArguments;
 import io.sealights.plugins.sealightsjenkins.utils.*;
 
@@ -19,8 +20,9 @@ public class UploadReportsCommandExecutor extends AbstractCommandExecutor {
     private List<String> reportFilesFolders;
     private CleanupManager cleanupManager;
 
-    public UploadReportsCommandExecutor(Logger logger, UploadReportsCommandArguments uploadReportsCommandArguments) {
-        super(logger, uploadReportsCommandArguments.getBaseArgs());
+    public UploadReportsCommandExecutor(
+            Logger logger, BaseCommandArguments baseCommandArguments, UploadReportsCommandArguments uploadReportsCommandArguments) {
+        super(logger, baseCommandArguments);
         this.uploadReportsCommandArguments = uploadReportsCommandArguments;
         this.cleanupManager = new CleanupManager(logger);
     }
@@ -129,5 +131,10 @@ public class UploadReportsCommandExecutor extends AbstractCommandExecutor {
         addArgumentKeyVal(sb, "source", uploadReportsCommandArguments.getSource());
 
         return sb.toString();
+    }
+
+    @Override
+    protected String getCommandName() {
+        return "uploadReports";
     }
 }

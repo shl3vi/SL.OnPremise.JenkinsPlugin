@@ -12,6 +12,7 @@ import hudson.tasks.Publisher;
 import io.sealights.plugins.sealightsjenkins.BeginAnalysis;
 import io.sealights.plugins.sealightsjenkins.CleanupManager;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.BaseCommandArguments;
+import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.ExternalReportArguments;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.SealightsBuildStatus;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.utils.BuildNameResolver;
 import io.sealights.plugins.sealightsjenkins.entities.TokenData;
@@ -81,23 +82,23 @@ public class BuildStatusNotifier extends Notifier {
             String reportFile = resolveReportFile(build, logger);
 
             BaseCommandArguments baseCommandArguments = createBaseCommandArguments(
-                    build, envVars, additionalProps, reportFile, logger);
+                    build, envVars, additionalProps, logger);
+
+
+            ExternalReportArguments externalReportArguments = new ExternalReportArguments(reportFile);
 
             logger.info("About to report build status.");
             CLIHandler cliHandler =
-                    new CLIHandler(baseCommandArguments, filesStorage, logger);
+                    new CLIHandler(baseCommandArguments, externalReportArguments, filesStorage, logger);
 
             boolean isSuccess = cliHandler.handle();
 
             if (isSuccess) {
-                CommandMode.ExternalReportView commandView = (CommandMode.ExternalReportView) baseCommandArguments.getMode();
-                String createdReport = commandView.getReport();
-
-                onSuccess(envVars, additionalProps, createdReport, logger);
+                onSuccess(envVars, additionalProps, reportFile, logger);
 
                 if (isSlaveMachine) {
                     // Now we can delete the temp file that is on the master machine
-                    deleteReportOnMaster(createdReport);
+                    deleteReportOnMaster(logger, reportFile);
                 }
             }
 
@@ -118,35 +119,23 @@ public class BuildStatusNotifier extends Notifier {
             CleanupManager cleanupManager = new CleanupManager(logger);
             CustomFile reportOnMaster = new CustomFile(logger, cleanupManager, createdReport);
             reportOnMaster.copyToSlave(this.reportPathOnSlave);
+            cleanupManager.clean();
         } else {
             // should not keep the report. For slave machine the report is never created
             if (!isSlaveMachine) {
-                deleteReportOnMaster(createdReport);
+                deleteReportOnMaster(logger, createdReport);
             }
         }
     }
 
-    private void deleteReportOnMaster(String createdReport) {
-        deleteReport(createdReport);
+    private void deleteReportOnMaster(Logger logger, String createdReport) throws IOException, InterruptedException {
+        FileUtils.tryDeleteFile(logger, createdReport);
     }
 
     private String createTempPathToFileOnMaster() {
         String tempFolder = System.getProperty("java.io.tmpdir");
         String fileName = "reportStatus_" + System.currentTimeMillis() + ".txt";
         return PathUtils.join(tempFolder, fileName);
-    }
-
-    private void deleteReport(String report) {
-        if (report == null) {
-            return;
-        }
-
-        File reportFile = new File(report);
-        if (!reportFile.exists()) {
-            return;
-        }
-
-        reportFile.delete();
     }
 
     private void setDefaultValues() {
@@ -240,7 +229,7 @@ public class BuildStatusNotifier extends Notifier {
     }
 
     private BaseCommandArguments createBaseCommandArguments(
-            AbstractBuild<?, ?> build, EnvVars envVars, Properties additionalProps, String report, Logger logger) {
+            AbstractBuild<?, ?> build, EnvVars envVars, Properties additionalProps, Logger logger) {
 
         BaseCommandArguments baseArgs = new BaseCommandArguments();
 
@@ -268,9 +257,9 @@ public class BuildStatusNotifier extends Notifier {
         baseArgs.setAgentPath(resolveEnvVar(envVars, (String) additionalProps.get("agentpath")));
         baseArgs.setJavaPath(resolveEnvVar(envVars, (String) additionalProps.get("javapath")));
 
-        CommandMode commandMode = new CommandMode.ExternalReportView();
-        ((CommandMode.ExternalReportView) commandMode).setReport(report);
-        baseArgs.setMode(commandMode);
+        baseArgs.setBuild(build);
+        baseArgs.setEnvVars(envVars);
+        baseArgs.setLogger(logger);
 
         return baseArgs;
     }

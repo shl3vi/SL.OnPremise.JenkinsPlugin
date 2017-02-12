@@ -11,7 +11,8 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import io.sealights.plugins.sealightsjenkins.BeginAnalysis;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.BaseCommandArguments;
-import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.CommandBuildNamingStrategy;
+import io.sealights.plugins.sealightsjenkins.buildsteps.cli.utils.BuildNameResolver;
+import io.sealights.plugins.sealightsjenkins.buildsteps.cli.utils.ModeToArgumentsConverter;
 import io.sealights.plugins.sealightsjenkins.entities.TokenData;
 import io.sealights.plugins.sealightsjenkins.entities.ValidationError;
 import io.sealights.plugins.sealightsjenkins.utils.*;
@@ -135,14 +136,16 @@ public class CLIRunner extends Builder {
             EnvVars envVars = build.getEnvironment(listener);
             BaseCommandArguments baseArgs = createBaseCommandArguments(logger, build, additionalProps, envVars);
 
-            baseArgs.setMode(commandMode);
             baseArgs.setBuild(build);
             baseArgs.setEnvVars(envVars);
             baseArgs.setLogger(logger);
 
             String filesStorage = resolveFilesStorage(additionalProps, envVars);
 
+
             cliHandler.setBaseArgs(baseArgs);
+            ModeToArgumentsConverter modeToArgumentsConverter = new ModeToArgumentsConverter();
+            cliHandler.setCommandArgument(modeToArgumentsConverter.convert(commandMode));
             cliHandler.setFilesStorage(filesStorage);
 
             return cliHandler.handle();
@@ -166,7 +169,7 @@ public class CLIRunner extends Builder {
         return baseArgs;
     }
 
-    protected String resolveEnvVar(EnvVars envVars, String envVarKey) {
+    private String resolveEnvVar(EnvVars envVars, String envVarKey) {
         return JenkinsUtils.resolveEnvVarsInString(envVars, envVarKey);
     }
 
@@ -270,14 +273,17 @@ public class CLIRunner extends Builder {
         return true;
     }
 
-    protected void setConfiguration(Logger logger, AbstractBuild<?, ?> build, EnvVars envVars,
+    private void setConfiguration(Logger logger, AbstractBuild<?, ?> build, EnvVars envVars,
                                     BaseCommandArguments baseArgs, Properties additionalProps) {
 
         String buildSession = resolveBuildSessionId(logger, additionalProps);
         baseArgs.setBuildSessionId(resolveEnvVar(envVars, buildSession));
 
         baseArgs.setAppName(resolveEnvVar(envVars, appName));
-        baseArgs.setBuildName(getFinalBuildName(build, logger));
+
+        BuildNameResolver buildNameResolver = new BuildNameResolver();
+        baseArgs.setBuildName(buildNameResolver.getFinalBuildName(build, envVars, buildName, logger));
+
         baseArgs.setBranchName(resolveEnvVar(envVars, branchName));
         baseArgs.setEnvironment(resolveEnvVar(envVars, environment));
     }
@@ -288,40 +294,10 @@ public class CLIRunner extends Builder {
         return argumentFileResolver.resolve(logger, buildSessionId, buildSessionIdFile);
     }
 
-    protected String getFinalBuildName(AbstractBuild<?, ?> build, Logger logger) throws IllegalStateException {
-
-        String finalBuildName = null;
-
-        if (CommandBuildNamingStrategy.LATEST_BUILD.equals(buildName.getBuildNamingStrategy())) {
-            return null;
-        }
-
-        if (CommandBuildNamingStrategy.MANUAL.equals(buildName.getBuildNamingStrategy())) {
-            finalBuildName = getManualBuildName();
-
-        } else if (CommandBuildNamingStrategy.JENKINS_UPSTREAM.equals(buildName.getBuildNamingStrategy())) {
-            CommandBuildName.UpstreamBuildName upstream = (CommandBuildName.UpstreamBuildName) buildName;
-            String upstreamProjectName = upstream.getUpstreamProjectName();
-            finalBuildName = JenkinsUtils.getUpstreamBuildName(build, upstreamProjectName, logger);
-        }
-
-        if (StringUtils.isNullOrEmpty(finalBuildName)) {
-            return String.valueOf(build.getNumber());
-        }
-
-        return finalBuildName;
-    }
-
     private void setDefaultValues() {
 
         if (this.buildName == null)
             this.buildName = new CommandBuildName.DefaultBuildName();
-    }
-
-    private String getManualBuildName() {
-        CommandBuildName.ManualBuildName manual = (CommandBuildName.ManualBuildName) buildName;
-        String insertedBuildName = manual.getInsertedBuildName();
-        return insertedBuildName;
     }
 
     @Extension

@@ -18,16 +18,15 @@ public class ConfigCommandExecutor extends AbstractCommandExecutor {
     private static String BUILD_SESSION_ID_FILE_ENV_VAR = "SL_BUILD_SESSION_ID_FILE";
     private static String BUILD_SESSION_ID_FILE_NAME = "buildSessionId.txt";
 
-    private BaseCommandArguments baseArgs = null;
     private String buildSessionIdFileOnMaster = null;
     private ConfigCommandArguments configCommandArguments;
     private JenkinsUtils jenkinsUtils = new JenkinsUtils();
     private CleanupManager cleanupManager;
 
-    public ConfigCommandExecutor(Logger logger, ConfigCommandArguments configCommandArguments) {
-        super(logger, configCommandArguments.getBaseArgs());
+    public ConfigCommandExecutor(
+            Logger logger, BaseCommandArguments baseCommandArguments, ConfigCommandArguments configCommandArguments) {
+        super(logger, baseCommandArguments);
         this.configCommandArguments = configCommandArguments;
-        this.baseArgs = configCommandArguments.getBaseArgs();
         this.cleanupManager = new CleanupManager(logger);
     }
 

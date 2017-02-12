@@ -1,5 +1,6 @@
 package io.sealights.plugins.sealightsjenkins.buildsteps.cli;
 
+import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.AbstractCommandArgument;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.BaseCommandArguments;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.CommandModes;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.executors.CommandExecutorsFactory;
@@ -23,13 +24,15 @@ public class CLIHandler {
     private Logger logger;
     private String filesStorage;
     private BaseCommandArguments baseArgs;
+    private AbstractCommandArgument commandArgument;
 
     public CLIHandler(Logger logger) {
         this.logger = logger;
     }
 
-    public CLIHandler(BaseCommandArguments baseArgs, String filesStorage, Logger logger) {
+    public CLIHandler(BaseCommandArguments baseArgs, AbstractCommandArgument commandArgument, String filesStorage, Logger logger) {
         this.baseArgs = baseArgs;
+        this.commandArgument = commandArgument;
         this.filesStorage = filesStorage;
         this.logger = logger;
     }
@@ -41,7 +44,7 @@ public class CLIHandler {
         baseArgs.setAgentPath(agentPath);
 
         CommandExecutorsFactory commandExecutorsFactory = new CommandExecutorsFactory();
-        ICommandExecutor executor = commandExecutorsFactory.createExecutor(logger, baseArgs);
+        ICommandExecutor executor = commandExecutorsFactory.createExecutor(logger, baseArgs, commandArgument);
 
         return executor.execute();
     }
@@ -102,10 +105,14 @@ public class CLIHandler {
         this.baseArgs = baseArgs;
     }
 
-    public AbstractUpgradeManager getRelevantUpgradeManager(
+    public void setCommandArgument(AbstractCommandArgument commandArgument) {
+        this.commandArgument = commandArgument;
+    }
+
+    private AbstractUpgradeManager getRelevantUpgradeManager(
             UpgradeProxy upgradeProxy, UpgradeConfiguration upgradeConfiguration) {
 
-        boolean useScannerUpgradeManager = CommandModes.Config.equals(baseArgs.getMode().getCurrentMode());
+        boolean useScannerUpgradeManager = CommandModes.Config.equals(commandArgument.getMode());
 
         if (useScannerUpgradeManager) {
             return new BuildScannerUpgradeManager(upgradeProxy, upgradeConfiguration, logger);

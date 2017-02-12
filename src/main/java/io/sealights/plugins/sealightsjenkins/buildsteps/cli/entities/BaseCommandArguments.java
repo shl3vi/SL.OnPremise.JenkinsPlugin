@@ -2,7 +2,6 @@ package io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities;
 
 import hudson.EnvVars;
 import hudson.model.AbstractBuild;
-import io.sealights.plugins.sealightsjenkins.buildsteps.cli.CommandMode;
 import io.sealights.plugins.sealightsjenkins.entities.TokenData;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 
@@ -11,7 +10,6 @@ import io.sealights.plugins.sealightsjenkins.utils.Logger;
  */
 public class BaseCommandArguments {
 
-    private CommandMode mode;
     private String appName;
     private String branchName;
     private String buildName;
@@ -33,14 +31,6 @@ public class BaseCommandArguments {
     private AbstractBuild<?, ?> build;
     private EnvVars envVars;
     private Logger logger;
-
-    public CommandMode getMode() {
-        return mode;
-    }
-
-    public void setMode(CommandMode mode) {
-        this.mode = mode;
-    }
 
     public String getAppName() {
         return appName;
@@ -181,8 +171,7 @@ public class BaseCommandArguments {
     @Override
     public String toString() {
         return "BaseCommandArguments{" +
-                "mode=" + mode +
-                ", appName='" + appName + '\'' +
+                "appName='" + appName + '\'' +
                 ", branchName='" + branchName + '\'' +
                 ", buildName='" + buildName + '\'' +
                 ", token='" + token + '\'' +
@@ -197,6 +186,7 @@ public class BaseCommandArguments {
                 ", buildSessionId='" + buildSessionId + '\'' +
                 ", buildSessionIdFile='" + buildSessionIdFile + '\'' +
                 ", build=" + build +
+                ", envVars=" + envVars +
                 ", logger=" + logger +
                 '}';
     }

@@ -71,9 +71,7 @@ public abstract class AbstractCommandExecutor implements ICommandExecutor {
         return execCommand.trim();
     }
 
-    protected String getCommandName() {
-        return baseArgs.getMode().getCurrentMode().getName();
-    }
+    protected abstract String getCommandName();
 
     public abstract String getAdditionalArguments();
 

@@ -50,6 +50,9 @@ public class JenkinsUtils {
     }
 
     public static String resolveEnvVarsInString(EnvVars envVars, String envVarKey) {
+        if (envVarKey == null || envVars == null){
+            return "";
+        }
         return envVars.expand(envVarKey);
     }
 

@@ -3,24 +3,18 @@ package io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities;
 /**
  * Arguments for the 'uploadReports' command.
  */
-public class UploadReportsCommandArguments extends BaseCommandArguments {
+public class UploadReportsCommandArguments extends AbstractCommandArgument {
 
-    private BaseCommandArguments baseArgs;
     private String reportFiles;
     private String reportsFolders;
     private boolean hasMoreRequests;
     private String source;
 
-    public UploadReportsCommandArguments(BaseCommandArguments baseArgs, String reportFiles, String reportsFolders, boolean hasMoreRequests, String source) {
-        this.baseArgs = baseArgs;
+    public UploadReportsCommandArguments(String reportFiles, String reportsFolders, boolean hasMoreRequests, String source) {
         this.reportFiles = reportFiles;
         this.reportsFolders = reportsFolders;
         this.hasMoreRequests = hasMoreRequests;
         this.source = source;
-    }
-
-    public BaseCommandArguments getBaseArgs() {
-        return baseArgs;
     }
 
     public String getReportFiles() {
@@ -45,5 +39,10 @@ public class UploadReportsCommandArguments extends BaseCommandArguments {
 
     public void setReportsFolders(String reportsFolders) {
         this.reportsFolders = reportsFolders;
+    }
+
+    @Override
+    public CommandModes getMode() {
+        return CommandModes.UploadReports;
     }
 }
