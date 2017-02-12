@@ -67,7 +67,7 @@ public class SealightsCLIBuildStep extends Builder {
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         boolean isStepSuccessful = false;
-        Logger logger = new Logger(listener.getLogger());
+        Logger logger = new Logger(listener.getLogger(), "SeaLights CLI - " + commandMode.getCurrentMode().getName());
 
         try {
             if (!enable) {

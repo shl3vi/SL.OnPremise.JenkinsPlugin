@@ -63,7 +63,7 @@ public class BuildStatusNotifier extends Notifier {
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
-        Logger logger = new Logger(listener.getLogger(), "[SeaLights Build Status Notifier] ");
+        Logger logger = new Logger(listener.getLogger(), "SeaLights Build Status Notifier");
         try {
             // This step must be first
             setDefaultValues();

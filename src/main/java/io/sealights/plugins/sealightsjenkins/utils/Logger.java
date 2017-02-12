@@ -11,38 +11,32 @@ public class Logger {
     private String PREFIX;
     private PrintStream printStream;
 
-    public Logger(PrintStream printStream, String prefix){
+    public Logger(PrintStream printStream, String prefix) {
         this.printStream = printStream;
         this.PREFIX = prefix;
     }
 
-    public Logger(PrintStream printStream)
-    {
-        this(printStream, "[SeaLights Jenkins Plugin] ");
+    public Logger(PrintStream printStream) {
+        this(printStream, "SeaLights Jenkins Plugin");
     }
 
-    public void debug(String message)
-    {
+    public void debug(String message) {
         log("DEBUG", message);
     }
 
-    public void info(String message)
-    {
+    public void info(String message) {
         log("INFO", message);
     }
 
-    public void warning(String message)
-    {
+    public void warning(String message) {
         log("WARNING", message);
     }
 
-    public void error(String message)
-    {
+    public void error(String message) {
         log("ERROR", message);
     }
 
-    public void error(String message, Throwable throwable)
-    {
+    public void error(String message, Throwable throwable) {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         throwable.printStackTrace(pw);
@@ -50,9 +44,8 @@ public class Logger {
         error(message);
     }
 
-    private void log(String level, String message)
-    {
-        this.printStream.println(PREFIX + "[" + level + "]" + " " + message);
+    private void log(String level, String message) {
+        this.printStream.println("[" + PREFIX + "] " + "[" + level + "]" + " " + message);
     }
 
 }

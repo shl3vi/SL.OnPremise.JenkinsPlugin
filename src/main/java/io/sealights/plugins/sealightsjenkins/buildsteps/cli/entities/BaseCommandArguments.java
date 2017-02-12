@@ -185,9 +185,6 @@ public class BaseCommandArguments {
                 ", javaPath='" + javaPath + '\'' +
                 ", buildSessionId='" + buildSessionId + '\'' +
                 ", buildSessionIdFile='" + buildSessionIdFile + '\'' +
-                ", build=" + build +
-                ", envVars=" + envVars +
-                ", logger=" + logger +
                 '}';
     }
 }
