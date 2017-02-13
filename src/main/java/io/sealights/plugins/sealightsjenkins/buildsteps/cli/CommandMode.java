@@ -59,20 +59,20 @@ public class CommandMode implements Describable<CommandMode>, ExtensionPoint, Se
 
     public static class StartView extends CommandMode {
 
-        private String newEnvironment;
+        private String testStage;
 
         @DataBoundConstructor
-        public StartView(String newEnvironment) {
+        public StartView(String testStage) {
             super(CommandModes.Start);
-            this.newEnvironment = newEnvironment;
+            this.testStage = testStage;
         }
 
-        public String getNewEnvironment() {
-            return newEnvironment;
+        public String getTestStage() {
+            return testStage;
         }
 
-        public void setNewEnvironment(String newEnvironment) {
-            this.newEnvironment = newEnvironment;
+        public void setTestStage(String testStage) {
+            this.testStage = testStage;
         }
 
         @Extension

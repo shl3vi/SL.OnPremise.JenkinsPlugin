@@ -41,12 +41,12 @@ public class BuildStatusNotifier extends Notifier {
     private BeginAnalysis beginAnalysis = new BeginAnalysis();
 
     /*
-    * For when working on slave
+    * Start - For when working on slave
     * */
     private boolean isSlaveMachine = false;
     private String reportPathOnMaster = null;
     /*
-    * For when working on slave
+    * End - For when working on slave
     * */
 
 

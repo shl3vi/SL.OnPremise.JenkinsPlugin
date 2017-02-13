@@ -10,6 +10,7 @@ import hudson.model.BuildListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import io.sealights.plugins.sealightsjenkins.BeginAnalysis;
+import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.AbstractCommandArgument;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.BaseCommandArguments;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.utils.BuildNameResolver;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.utils.ModeToArgumentsConverter;
@@ -145,7 +146,8 @@ public class CLIRunner extends Builder {
 
             cliHandler.setBaseArgs(baseArgs);
             ModeToArgumentsConverter modeToArgumentsConverter = new ModeToArgumentsConverter();
-            cliHandler.setCommandArgument(modeToArgumentsConverter.convert(commandMode));
+            AbstractCommandArgument commandArguments = modeToArgumentsConverter.convert(commandMode);
+            cliHandler.setCommandArgument(commandArguments);
             cliHandler.setFilesStorage(filesStorage);
 
             return cliHandler.handle();

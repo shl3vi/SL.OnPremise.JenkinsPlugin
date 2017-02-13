@@ -25,7 +25,7 @@ public class ModeToArgumentsConverter {
     }
 
     private StartCommandArguments toStartCommandArguments(CommandMode.StartView startView){
-        return new StartCommandArguments(startView.getNewEnvironment());
+        return new StartCommandArguments(startView.getTestStage());
     }
 
     private EndCommandArguments toEndCommandArguments(){

@@ -8,6 +8,7 @@ import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.ConfigComma
 import io.sealights.plugins.sealightsjenkins.utils.*;
 
 import java.io.IOException;
+import java.util.UUID;
 
 /**
  * Executor for the 'config' command.
@@ -75,14 +76,16 @@ public class ConfigCommandExecutor extends AbstractCommandExecutor {
 
     private String createTempPathToFileOnMaster() {
         String tempFolder = System.getProperty("java.io.tmpdir");
-        String fileName = "buildSession_" + System.currentTimeMillis() + ".txt";
+        String fileName = "buildsession_" + UUID.randomUUID() + ".txt";
         return PathUtils.join(tempFolder, fileName);
     }
 
     private void copyBuildSessionFileToSlave() {
         try {
             CustomFile fileOnMaster = new CustomFile(logger, cleanupManager, this.buildSessionIdFileOnMaster);
-            fileOnMaster.copyToSlave(this.buildSessionIdFileOnSlave);
+
+            boolean deleteFileOnSlave = true, deleteFileOnMaster = true;
+            fileOnMaster.copyToSlave(this.buildSessionIdFileOnSlave, deleteFileOnMaster, !deleteFileOnSlave);
         } catch (Exception e) {
             throw new RuntimeException("Failed to copy the build session id file to the remote node.", e);
         }

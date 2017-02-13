@@ -38,7 +38,7 @@ public class CLIHandler {
     }
 
     public boolean handle() {
-        logger.info(baseArgs.toString());
+        logger.info("Base Arguments Provided for the cli execution: " + baseArgs.toString());
 
         String agentPath = tryGetAgentPath(logger, baseArgs);
         baseArgs.setAgentPath(agentPath);

@@ -6,6 +6,7 @@ import hudson.model.EnvironmentContributingAction;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import io.sealights.plugins.sealightsjenkins.utils.StringUtils;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -54,7 +55,7 @@ public class VariableInjectionAction implements EnvironmentContributingAction {
      * **********************/
 
     private Map<String, String> cleanNullPairs() {
-        Set<String> entries = additionalEnvVars.keySet();
+        Set<String> entries = new HashSet<>(additionalEnvVars.keySet());
         for (String key : entries) {
             if (StringUtils.isNullOrEmpty(key))
                 additionalEnvVars.remove(key);

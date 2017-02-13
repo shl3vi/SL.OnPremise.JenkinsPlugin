@@ -110,7 +110,7 @@ public class FileUtils {
     }
 
     public static void tryDeleteFile(Logger logger, String filename) throws IOException, InterruptedException {
-        logger.info("Try deleting temp file: " + filename);
+        logger.info("Try deleting file: " + filename);
         FilePath fpOnMaster = new FilePath(new File(filename));
         if (fpOnMaster.exists()) {
             fpOnMaster.delete();

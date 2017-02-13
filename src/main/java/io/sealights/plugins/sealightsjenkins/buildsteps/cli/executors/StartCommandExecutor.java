@@ -21,7 +21,7 @@ public class StartCommandExecutor extends AbstractCommandExecutor {
     @Override
     public String getAdditionalArguments() {
         StringBuilder sb = new StringBuilder();
-        addArgumentKeyVal(sb, "testStage", JenkinsUtils.resolveEnvVarsInString(baseArgs.getEnvVars(), startCommandArguments.getNewEnvironment()));
+        addArgumentKeyVal(sb, "testStage", JenkinsUtils.resolveEnvVarsInString(baseArgs.getEnvVars(), startCommandArguments.getTestStage()));
         return sb.toString();
     }
 

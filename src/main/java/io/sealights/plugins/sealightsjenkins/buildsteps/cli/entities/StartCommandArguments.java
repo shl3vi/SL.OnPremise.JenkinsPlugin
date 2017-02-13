@@ -5,14 +5,14 @@ package io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities;
  */
 public class StartCommandArguments extends AbstractCommandArgument {
 
-    private String newEnvironment;
+    private String testStage;
 
-    public StartCommandArguments(String newEnvironment) {
-        this.newEnvironment = newEnvironment;
+    public StartCommandArguments(String testStage) {
+        this.testStage = testStage;
     }
 
-    public String getNewEnvironment() {
-        return newEnvironment;
+    public String getTestStage() {
+        return testStage;
     }
 
     @Override
