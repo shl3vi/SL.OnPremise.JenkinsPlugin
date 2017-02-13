@@ -36,7 +36,7 @@ public class VariableInjectionAction implements EnvironmentContributingAction {
     }
 
     /************************
-    *  Making sure to add nothing to the task bar at the UI's left side.
+    *  START - Making sure to add nothing to the task bar at the UI's left side.
     * **********************/
     public final String getIconFileName() {
         return null;
@@ -50,7 +50,7 @@ public class VariableInjectionAction implements EnvironmentContributingAction {
         return null;
     }
     /************************
-     *  Making sure to add nothing to the task bar at the UI's left side.
+     *  END - Making sure to add nothing to the task bar at the UI's left side.
      * **********************/
 
     private Map<String, String> cleanNullPairs() {

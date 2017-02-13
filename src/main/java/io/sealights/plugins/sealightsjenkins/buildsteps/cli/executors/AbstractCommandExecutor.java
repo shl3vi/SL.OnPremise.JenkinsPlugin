@@ -31,12 +31,12 @@ public abstract class AbstractCommandExecutor implements ICommandExecutor {
             // Run a java app in a separate system process
             logger.info("About to execute command: " + execCommand);
 
-            Process proc = runtime.exec(execCommand);
-            proc.waitFor();
+            Process process = runtime.exec(execCommand);
+            process.waitFor();
 
-            printStreams(proc);
+            printStreams(process);
 
-            if (proc.exitValue() == 0) {
+            if (process.exitValue() == 0) {
                 return true;
             }
 
@@ -47,13 +47,13 @@ public abstract class AbstractCommandExecutor implements ICommandExecutor {
         return false;
     }
 
-    private void printStreams(Process proc) {
+    private void printStreams(Process process) {
         // Receive the process output
-        InputStream inputStream = proc.getInputStream();
-        InputStream errorStream = proc.getErrorStream();
+        InputStream inputStream = process.getInputStream();
+        InputStream errorStream = process.getErrorStream();
         String outputInfo = StreamUtils.toString(inputStream);
         String outputErrors = StreamUtils.toString(errorStream);
-        logger.info("Process ended with exit code: " + proc.exitValue());
+        logger.info("Process ended with exit code: " + process.exitValue());
         if (!StringUtils.isNullOrEmpty(outputInfo)) {
             logger.info("Process output:");
             logger.info(outputInfo);

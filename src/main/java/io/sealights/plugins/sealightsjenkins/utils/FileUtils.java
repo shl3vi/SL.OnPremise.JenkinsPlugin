@@ -49,8 +49,8 @@ public class FileUtils {
     }
 
     public static boolean tryCopyFolderFromSlaveToLocal(
-            Logger logger, String fileOnMaster, String fileOnSlave) throws IOException, InterruptedException{
-        return tryCopyFromSlaveToLocal(logger, fileOnMaster, fileOnSlave, true);
+            Logger logger, String folderOnMaster, String folderOnSlave) throws IOException, InterruptedException{
+        return tryCopyFromSlaveToLocal(logger, folderOnMaster, folderOnSlave, true);
     }
 
     public static boolean tryCopyFileFromSlaveToLocal(

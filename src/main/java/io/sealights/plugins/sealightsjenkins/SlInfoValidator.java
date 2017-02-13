@@ -17,7 +17,7 @@ public class SlInfoValidator {
 
     public boolean validate(SeaLightsPluginInfo slInfo) {
         boolean isValid = true;
-        boolean hasBuildSessionId = StringUtils.isNullOrEmpty(slInfo.getBuildSessionId());
+        boolean hasBuildSessionId = !StringUtils.isNullOrEmpty(slInfo.getBuildSessionId());
         if (slInfo.isCreateBuildSessionId() || !hasBuildSessionId) {
             // make sure we have properties to create build session id.
             isValid = validateField(slInfo.getAppName(), !hasBuildSessionId, "App Name");

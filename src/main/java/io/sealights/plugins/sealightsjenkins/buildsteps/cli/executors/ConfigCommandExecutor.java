@@ -19,6 +19,9 @@ public class ConfigCommandExecutor extends AbstractCommandExecutor {
     private static String BUILD_SESSION_ID_FILE_NAME = "buildSessionId.txt";
 
     private String buildSessionIdFileOnMaster = null;
+    private String buildSessionIdFileOnSlave = null;
+    private boolean isSlaveMachine = false;
+
     private ConfigCommandArguments configCommandArguments;
     private JenkinsUtils jenkinsUtils = new JenkinsUtils();
     private CleanupManager cleanupManager;
@@ -35,7 +38,7 @@ public class ConfigCommandExecutor extends AbstractCommandExecutor {
 
         try {
             FilePath workspace = baseArgs.getBuild().getWorkspace();
-
+            this.isSlaveMachine = workspace.isRemote();
             // Resolving on master, even when workspace is remote, since this jar is running on master
             // After the execution, we will copy the file to the slave
             resolveBuildSessionIdFileOnMaster(workspace);
@@ -44,7 +47,11 @@ public class ConfigCommandExecutor extends AbstractCommandExecutor {
 
             if (isSuccess) {
                 onSuccess(baseArgs.getBuild(), workspace, logger);
-                logger.info("Created SeaLights Build Session Id successfully");
+                String buildSessionIdFinalPath = this.buildSessionIdFileOnMaster;
+                if (this.isSlaveMachine) {
+                    buildSessionIdFinalPath = this.buildSessionIdFileOnSlave;
+                }
+                logger.info("File with SeaLights Build Session Id was successfully created at '" + buildSessionIdFinalPath + "'");
                 return true;
             } else {
                 logger.error("Failed to create SeaLights Build Session Id");
@@ -56,29 +63,26 @@ public class ConfigCommandExecutor extends AbstractCommandExecutor {
         return false;
     }
 
-    private void resolveBuildSessionIdFileOnMaster(FilePath workspace){
-        boolean isSlaveMachine = workspace.isRemote();
-
+    private void resolveBuildSessionIdFileOnMaster(FilePath workspace) {
         if (isSlaveMachine) {
             this.buildSessionIdFileOnMaster = createTempPathToFileOnMaster();
+            this.buildSessionIdFileOnSlave = PathUtils.join(workspace.getRemote(), BUILD_SESSION_ID_FILE_NAME);
         } else {
             String workingDir = jenkinsUtils.getWorkspace(baseArgs.getBuild());
             this.buildSessionIdFileOnMaster = PathUtils.join(workingDir, BUILD_SESSION_ID_FILE_NAME);
         }
     }
 
-    private String createTempPathToFileOnMaster(){
+    private String createTempPathToFileOnMaster() {
         String tempFolder = System.getProperty("java.io.tmpdir");
         String fileName = "buildSession_" + System.currentTimeMillis() + ".txt";
         return PathUtils.join(tempFolder, fileName);
     }
 
-    private String copyBuildSessionFileToSlave(FilePath workspace) {
+    private void copyBuildSessionFileToSlave() {
         try {
             CustomFile fileOnMaster = new CustomFile(logger, cleanupManager, this.buildSessionIdFileOnMaster);
-            String fileOnSlave = PathUtils.join(workspace.getRemote(), BUILD_SESSION_ID_FILE_NAME);
-            fileOnMaster.copyToSlave(fileOnSlave);
-            return fileOnSlave;
+            fileOnMaster.copyToSlave(this.buildSessionIdFileOnSlave);
         } catch (Exception e) {
             throw new RuntimeException("Failed to copy the build session id file to the remote node.", e);
         }
@@ -93,14 +97,14 @@ public class ConfigCommandExecutor extends AbstractCommandExecutor {
 
         if (workspace.isRemote()) {
             // copy the created temp file from master to the slave
-            String fileOnSlave = copyBuildSessionFileToSlave(workspace);
+            copyBuildSessionFileToSlave();
 
             // delete the created temp file
             cleanupManager.clean();
 
-            injectBuildSessionIdEnvVars(build, buildSessionId, fileOnSlave, logger);
+            injectBuildSessionIdEnvVars(build, buildSessionId, this.buildSessionIdFileOnSlave, logger);
 
-        }else {
+        } else {
             injectBuildSessionIdEnvVars(build, buildSessionId, this.buildSessionIdFileOnMaster, logger);
         }
     }

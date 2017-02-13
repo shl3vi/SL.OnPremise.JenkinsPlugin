@@ -18,15 +18,15 @@ import java.io.IOException;
 
 public class SealightsCLIBuildStep extends Builder {
 
-    public boolean enable;
+    public boolean enabled;
     public boolean failBuildIfStepFail;
     public CommandMode commandMode;
     public CLIRunner cliRunner;
 
     @DataBoundConstructor
-    public SealightsCLIBuildStep(boolean enable, boolean failBuildIfStepFail,
+    public SealightsCLIBuildStep(boolean enabled, boolean failBuildIfStepFail,
                                  CommandMode commandMode, CLIRunner cliRunner) {
-        this.enable = enable;
+        this.enabled = enabled;
         this.failBuildIfStepFail = failBuildIfStepFail;
         this.commandMode = commandMode;
         this.cliRunner = cliRunner;
@@ -49,11 +49,11 @@ public class SealightsCLIBuildStep extends Builder {
     }
 
     public boolean isEnable() {
-        return enable;
+        return enabled;
     }
 
-    public void setEnable(boolean enable) {
-        this.enable = enable;
+    public void setEnable(boolean enabled) {
+        this.enabled = enabled;
     }
 
     public boolean isFailBuildIfStepFail() {
@@ -70,7 +70,7 @@ public class SealightsCLIBuildStep extends Builder {
         Logger logger = new Logger(listener.getLogger(), "SeaLights CLI - " + commandMode.getCurrentMode().getName());
 
         try {
-            if (!enable) {
+            if (!enabled) {
                 logger.info("Sealights CLI step is disabled.");
                 return true;
             }
@@ -78,7 +78,7 @@ public class SealightsCLIBuildStep extends Builder {
             CLIHandler cliHandler = new CLIHandler(logger);
             isStepSuccessful = cliRunner.perform(build, launcher, listener, commandMode, cliHandler, logger);
         } catch (Exception e) {
-            logger.error("Error occurred while performing 'Sealights Listener Command'. Error: ", e);
+            logger.error("Error occurred while performing 'Sealights CLI Build Step'. Error: ", e);
         }
 
         if (failBuildIfStepFail) {
