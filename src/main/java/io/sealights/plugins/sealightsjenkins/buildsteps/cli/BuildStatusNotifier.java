@@ -27,7 +27,8 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Created by shahar on 1/9/2017.
+ * This class creates build status report file on the file system and then
+ * sends it to the server using the 'externalReport' CLI command.
  */
 public class BuildStatusNotifier extends Notifier {
 
@@ -43,7 +44,7 @@ public class BuildStatusNotifier extends Notifier {
     * For when working on slave
     * */
     private boolean isSlaveMachine = false;
-    private String reportPathOnSlave = null;
+    private String reportPathOnMaster = null;
     /*
     * For when working on slave
     * */
@@ -79,27 +80,26 @@ public class BuildStatusNotifier extends Notifier {
 
             String filesStorage = resolveFilesStorage(additionalProps, envVars);
 
-            String reportFile = resolveReportFile(build, logger);
-
             BaseCommandArguments baseCommandArguments = createBaseCommandArguments(
                     build, envVars, additionalProps, logger);
 
+            String workingDir = findWorkingDirPath(build);
 
-            ExternalReportArguments externalReportArguments = new ExternalReportArguments(reportFile);
+            // we creates a report file on the file system
+            String reportFilePath = resolveReportFilePath(workingDir, logger);
+            createReportFile(build.getResult(), reportFilePath, logger);
 
             logger.info("About to report build status.");
+
+            // we sends the created report file to the server using SeaLights cli
+            ExternalReportArguments externalReportArguments = new ExternalReportArguments(reportFilePath);
             CLIHandler cliHandler =
                     new CLIHandler(baseCommandArguments, externalReportArguments, filesStorage, logger);
 
             boolean isSuccess = cliHandler.handle();
 
             if (isSuccess) {
-                onSuccess(envVars, additionalProps, reportFile, logger);
-
-                if (isSlaveMachine) {
-                    // Now we can delete the temp file that is on the master machine
-                    deleteReportOnMaster(logger, reportFile);
-                }
+                onSuccess(envVars, additionalProps, reportFilePath, workingDir, logger);
             }
 
         } catch (Exception e) {
@@ -109,32 +109,49 @@ public class BuildStatusNotifier extends Notifier {
     }
 
     private void onSuccess(
-            EnvVars envVars, Properties additionalProps, String createdReport, Logger logger)
+            EnvVars envVars, Properties additionalProps, String createdReport, String workingDir, Logger logger)
             throws IOException, InterruptedException {
 
         String keepReportString = resolveEnvVar(envVars, (String) additionalProps.get("keepreport"));
         Boolean keepReport = Boolean.valueOf(keepReportString);
 
-        if (keepReport && isSlaveMachine) {
-            CleanupManager cleanupManager = new CleanupManager(logger);
-            CustomFile reportOnMaster = new CustomFile(logger, cleanupManager, createdReport);
-            reportOnMaster.copyToSlave(this.reportPathOnSlave);
-            cleanupManager.clean();
+        if (keepReport) {
+            keepReportFile(createdReport, workingDir, logger);
         } else {
-            // should not keep the report. For slave machine the report is never created
-            if (!isSlaveMachine) {
-                deleteReportOnMaster(logger, createdReport);
-            }
+            dontKeepReportFile(createdReport, logger);
         }
     }
 
-    private void deleteReportOnMaster(Logger logger, String createdReport) throws IOException, InterruptedException {
+    private void keepReportFile(String createdReport, String workingDir, Logger logger)
+            throws IOException, InterruptedException {
+
+        if (!isSlaveMachine) {
+            return; // the report is already on the master machine so do nothing
+        }
+
+        CleanupManager cleanupManager = new CleanupManager(logger);
+        CustomFile reportOnMaster = new CustomFile(logger, cleanupManager, createdReport);
+
+        // we are copying the report file from temp location at the master to the slave working directory
+        String reportPathOnSlave = PathUtils.join(workingDir, "buildStatusReport_" + UUID.randomUUID() + ".json");
+        boolean deleteFileOnSlave = true, deleteFileOnMaster = true;
+        reportOnMaster.copyToSlave(reportPathOnSlave, deleteFileOnMaster, !deleteFileOnSlave);
+
+        cleanupManager.clean();
+
+    }
+
+    private void dontKeepReportFile(String createdReport, Logger logger) throws IOException, InterruptedException {
+        if (isSlaveMachine) {
+            return; // the report wasn't created on the slave machine
+        }
+
         FileUtils.tryDeleteFile(logger, createdReport);
     }
 
     private String createTempPathToFileOnMaster() {
         String tempFolder = System.getProperty("java.io.tmpdir");
-        String fileName = "reportStatus_" + System.currentTimeMillis() + ".txt";
+        String fileName = "reportStatus_" + UUID.randomUUID() + ".txt";
         return PathUtils.join(tempFolder, fileName);
     }
 
@@ -143,24 +160,20 @@ public class BuildStatusNotifier extends Notifier {
             this.buildName = new CommandBuildName.EmptyBuildName();
     }
 
-    private String resolveReportFile(final AbstractBuild<?, ?> build, Logger logger) {
-
-        String reportFile;
+    private String resolveReportFilePath(String workingDir, Logger logger) {
         String fileName;
-        String workingDir = findWorkingDirPath(build);
 
         if (isSlaveMachine) {
-            fileName = createTempPathToFileOnMaster();
-            // we are trying to create the report at the working directory
-            this.reportPathOnSlave = PathUtils.join(workingDir, "buildStatusReport_" + UUID.randomUUID() + ".json");
+            // create a copy of the file at the master machine because the file will be reported from the master machine.
+            this.reportPathOnMaster = createTempPathToFileOnMaster();
+            fileName = this.reportPathOnMaster;
         } else {
             // we are trying to create the report at the working directory
             fileName = PathUtils.join(workingDir, "buildStatusReport_" + UUID.randomUUID() + ".json");
         }
-        reportFile = createReportFile(build.getResult(), fileName, logger);
 
-        logger.info("Report file location: '" + reportFile + "'");
-        return reportFile;
+        logger.info("Report file location: '" + fileName + "'");
+        return fileName;
     }
 
     private String findWorkingDirPath(AbstractBuild<?, ?> build) {
@@ -174,9 +187,9 @@ public class BuildStatusNotifier extends Notifier {
         return workingDir;
     }
 
-    private String createReportFile(final Result result, String fileName, Logger logger) {
+    private void createReportFile(final Result result, String fileName, Logger logger) {
         Map reportMap = createReportMap(result);
-        return saveReportToFS(reportMap, fileName, logger);
+        saveReportToFS(reportMap, fileName, logger);
     }
 
     private Map createReportMap(Result result) {
@@ -214,17 +227,16 @@ public class BuildStatusNotifier extends Notifier {
         }
     }
 
-    private String saveReportToFS(Map reportMap, String fileName, Logger logger) {
+    private void saveReportToFS(Map reportMap, String reportFilePath, Logger logger) {
         try {
-            logger.info("Try to create report file at '" + fileName + "'");
-            File reportFile = new File(fileName);
+            logger.info("Try to create report file at '" + reportFilePath + "'");
+            File reportFile = new File(reportFilePath);
             if (!reportFile.createNewFile()) {
-                throw new RuntimeException("Failed to create new file at '" + fileName + "' for the report.");
+                throw new RuntimeException("Failed to create new file at '" + reportFilePath + "' for the report.");
             }
             JsonSerializer.serializeToFile(reportFile, reportMap);
-            return fileName;
         } catch (Exception e) {
-            throw new RuntimeException("Failed to create report file ", e);
+            throw new RuntimeException("Failed to create report file at '" + reportFilePath + "'", e);
         }
     }
 
