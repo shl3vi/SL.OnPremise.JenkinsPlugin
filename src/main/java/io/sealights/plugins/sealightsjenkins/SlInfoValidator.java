@@ -16,6 +16,10 @@ public class SlInfoValidator {
     }
 
     public boolean validate(SeaLightsPluginInfo slInfo) {
+        if (slInfo == null){
+            return false;
+        }
+
         boolean isValid = true;
         boolean hasBuildSessionId = !StringUtils.isNullOrEmpty(slInfo.getBuildSessionId());
         if (slInfo.isCreateBuildSessionId() || !hasBuildSessionId) {
