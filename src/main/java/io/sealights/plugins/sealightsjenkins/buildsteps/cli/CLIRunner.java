@@ -133,7 +133,7 @@ public class CLIRunner extends Builder {
             throws IOException, InterruptedException {
 
         try {
-            setupValidation(commandMode);
+            validateCommandMode(commandMode);
 
             // This step must be first
             setDefaultValues();
@@ -167,9 +167,9 @@ public class CLIRunner extends Builder {
         return false;
     }
 
-    private void setupValidation(CommandMode commandMode) {
+    private void validateCommandMode(CommandMode commandMode) {
         if (CommandModes.Config.equals(commandMode.getCurrentMode())) {
-            configCommandSetupValidation();
+            validateConfigMode();
             return;
         }
         if (!StringUtils.isNullOrEmpty(buildSessionId)){
@@ -183,7 +183,7 @@ public class CLIRunner extends Builder {
         }
     }
 
-    private void configCommandSetupValidation() {
+    private void validateConfigMode() {
         if (StringUtils.isNullOrEmpty(appName) || StringUtils.isNullOrEmpty(branchName) ||
                 CommandBuildNamingStrategy.EMPTY_BUILD.equals(buildName.getBuildNamingStrategy()) ||
                 CommandBuildNamingStrategy.LATEST_BUILD.equals(buildName.getBuildNamingStrategy())) {

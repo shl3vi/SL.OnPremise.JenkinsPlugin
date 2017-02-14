@@ -84,7 +84,8 @@ public class ConfigCommandExecutor extends AbstractCommandExecutor {
         try {
             CustomFile fileOnMaster = new CustomFile(logger, cleanupManager, this.buildSessionIdFileOnMaster);
 
-            boolean deleteFileOnSlave = true, deleteFileOnMaster = true;
+            boolean deleteFileOnSlave = true;
+            boolean deleteFileOnMaster = true;
             fileOnMaster.copyToSlave(this.buildSessionIdFileOnSlave, deleteFileOnMaster, !deleteFileOnSlave);
         } catch (Exception e) {
             throw new RuntimeException("Failed to copy the build session id file to the remote node.", e);

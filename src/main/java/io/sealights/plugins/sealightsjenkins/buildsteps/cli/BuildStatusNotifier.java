@@ -44,7 +44,6 @@ public class BuildStatusNotifier extends Notifier {
     * Start - For when working on slave
     * */
     private boolean isSlaveMachine = false;
-    private String reportPathOnMaster = null;
     /*
     * End - For when working on slave
     * */
@@ -118,7 +117,7 @@ public class BuildStatusNotifier extends Notifier {
         if (keepReport) {
             keepReportFile(createdReport, workingDir, logger);
         } else {
-            dontKeepReportFile(createdReport, logger);
+            FileUtils.tryDeleteFile(logger, createdReport);
         }
     }
 
@@ -126,27 +125,24 @@ public class BuildStatusNotifier extends Notifier {
             throws IOException, InterruptedException {
 
         if (!isSlaveMachine) {
-            return; // the report is already on the master machine so do nothing
+            // when working on master, the report is created in the workspace.
+            // in order to keep it, we just won't delete it (do nothing...).
+            return;
         }
+
+        // when working on slave machine, the report is first created as temp file in the master machine.
+        // in order to keep the report (on slave machine workspace),
+        // we will copy the report from the master's temp folder to the slave's workspace.
+        // after copying, the temp file on the master will be deleted.
 
         CleanupManager cleanupManager = new CleanupManager(logger);
         CustomFile reportOnMaster = new CustomFile(logger, cleanupManager, createdReport);
-
-        // we are copying the report file from temp location at the master to the slave working directory
         String reportPathOnSlave = PathUtils.join(workingDir, "buildStatusReport_" + UUID.randomUUID() + ".json");
         boolean deleteFileOnSlave = true, deleteFileOnMaster = true;
         reportOnMaster.copyToSlave(reportPathOnSlave, deleteFileOnMaster, !deleteFileOnSlave);
 
         cleanupManager.clean();
 
-    }
-
-    private void dontKeepReportFile(String createdReport, Logger logger) throws IOException, InterruptedException {
-        if (isSlaveMachine) {
-            return; // the report wasn't created on the slave machine
-        }
-
-        FileUtils.tryDeleteFile(logger, createdReport);
     }
 
     private String createTempPathToFileOnMaster() {
@@ -165,8 +161,8 @@ public class BuildStatusNotifier extends Notifier {
 
         if (isSlaveMachine) {
             // create a copy of the file at the master machine because the file will be reported from the master machine.
-            this.reportPathOnMaster = createTempPathToFileOnMaster();
-            fileName = this.reportPathOnMaster;
+            String reportPathOnMaster = createTempPathToFileOnMaster();
+            fileName = reportPathOnMaster;
         } else {
             // we are trying to create the report at the working directory
             fileName = PathUtils.join(workingDir, "buildStatusReport_" + UUID.randomUUID() + ".json");

@@ -1001,25 +1001,23 @@ public class BeginAnalysis extends Builder {
         }
 
         public FormValidation doCheckPackagesIncluded(@QueryParameter String packagesIncluded, @QueryParameter String additionalArguments) {
-
-            boolean buildSessionIdProvided = isBuildSessionIdProvided(additionalArguments);
-            if (!buildSessionIdProvided && StringUtils.isNullOrEmpty(packagesIncluded))
-                return FormValidation.error("Monitored Application Packages is mandatory when Build Session Id is not provided.");
-            return FormValidation.ok();
+            return validateBuildSessionDataParameter("Monitored Application Packages", packagesIncluded, additionalArguments);
         }
 
         public FormValidation doCheckAppName(@QueryParameter String appName, @QueryParameter String additionalArguments) {
-            boolean buildSessionIdProvided = isBuildSessionIdProvided(additionalArguments);
-            if (!buildSessionIdProvided && StringUtils.isNullOrEmpty(appName))
-                return FormValidation.error("App Name is mandatory when Build Session Id is not provided.");
-            return FormValidation.ok();
+            return validateBuildSessionDataParameter("App Name", appName, additionalArguments);
         }
 
         public FormValidation doCheckBranch(@QueryParameter String branch, @QueryParameter String additionalArguments) {
+            return validateBuildSessionDataParameter("Branch Name", branch, additionalArguments);
+        }
+
+        private FormValidation validateBuildSessionDataParameter(
+                String parameterName, String parameterValue, String additionalArguments){
             boolean buildSessionIdProvided = isBuildSessionIdProvided(additionalArguments);
-            if (!buildSessionIdProvided && StringUtils.isNullOrEmpty(branch))
-                return FormValidation.error("Branch Name is mandatory when Build Session Id is not provided.");
-            return FormValidation.ok();
+            if (buildSessionIdProvided || !StringUtils.isNullOrEmpty(parameterValue))
+                return FormValidation.ok();
+            return FormValidation.error(parameterName + " is mandatory when Build Session Id is not provided.");
         }
 
         public FormValidation doCheckSlMvnPluginVersion(@QueryParameter String slMvnPluginVersion) {
@@ -1046,10 +1044,10 @@ public class BeginAnalysis extends Builder {
 
         public boolean isBuildSessionIdProvided(String additionalArguments) {
             Properties additionalProps = PropertiesUtils.toProperties(additionalArguments);
+            boolean hasBuildSessionId = !StringUtils.isNullOrEmpty((String) additionalProps.get("buildsessionid"));
+            boolean hasBuildSessionIdFile = !StringUtils.isNullOrEmpty((String) additionalProps.get("buildsessionidfile"));
 
-            return !StringUtils.isNullOrEmpty((String) additionalProps.get("buildsessionid"))
-                    ||
-                    !StringUtils.isNullOrEmpty((String) additionalProps.get("buildsessionidfile"));
+            return hasBuildSessionId || hasBuildSessionIdFile;
         }
     }
 }
