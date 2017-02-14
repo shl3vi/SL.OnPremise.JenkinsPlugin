@@ -1,4 +1,4 @@
-package io.sealights.plugins.sealightsjenkins.buildsteps.cli.executors;
+package io.sealights.plugins.sealightsjenkins;
 
 import hudson.FilePath;
 import hudson.Launcher;
@@ -26,7 +26,7 @@ public class TestHelper {
         return new BuildMock(mock(FreeStyleProject.class));
     }
 
-    class BuildMock extends FreeStyleBuild {
+    public class BuildMock extends FreeStyleBuild {
 
         public BuildMock(FreeStyleProject project) throws IOException {
             super(project);
