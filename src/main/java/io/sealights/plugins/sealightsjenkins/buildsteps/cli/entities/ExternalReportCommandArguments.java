@@ -3,11 +3,11 @@ package io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities;
 /**
  * Arguments for the 'externalReport' command.
  */
-public class ExternalReportArguments extends AbstractCommandArgument {
+public class ExternalReportCommandArguments extends AbstractCommandArgument {
 
     private String report;
 
-    public ExternalReportArguments(String report) {
+    public ExternalReportCommandArguments(String report) {
         this.report = report;
     }
 

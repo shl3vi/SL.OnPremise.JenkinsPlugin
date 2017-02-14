@@ -57,8 +57,8 @@ public class CommandExecutorsFactoryTest {
         //Act
         ICommandExecutor executor = factory.createExecutor(nullLogger, createBaseCommandArguments(), createAbstractCommandArguments(mode));
         //Assert
-        boolean isUploadReportsExecutor = executor instanceof ExternalReportExecutor;
-        Assert.assertTrue("The created executor is not an instance of 'ExternalReportExecutor'", isUploadReportsExecutor);
+        boolean isUploadReportsExecutor = executor instanceof ExternalReportCommandExecutor;
+        Assert.assertTrue("The created executor is not an instance of 'ExternalReportCommandExecutor'", isUploadReportsExecutor);
     }
 
     @Test

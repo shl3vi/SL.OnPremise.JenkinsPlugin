@@ -44,8 +44,8 @@ public class ModeToArgumentsConverter {
                 uploadReportsView.getSource());
     }
 
-    private ExternalReportArguments toExternalReportArguments(CommandMode.ExternalReportView externalReportView){
-        return new ExternalReportArguments(externalReportView.getReport());
+    private ExternalReportCommandArguments toExternalReportArguments(CommandMode.ExternalReportView externalReportView){
+        return new ExternalReportCommandArguments(externalReportView.getReport());
     }
 
     private ConfigCommandArguments toConfigCommandArguments(CommandMode.ConfigView configView){

@@ -126,6 +126,12 @@ public class ConfigCommandExecutor extends AbstractCommandExecutor {
     }
 
     @Override
+    protected String getBaseArgumentsLine() {
+        baseArgs.setLabId(null); // make sure to ignore this value
+        return super.getBaseArgumentsLine();
+    }
+
+    @Override
     public String getAdditionalArguments() {
         StringBuilder sb = new StringBuilder();
         addArgumentKeyVal(sb, "buildsessionidfile", this.buildSessionIdFileOnMaster);

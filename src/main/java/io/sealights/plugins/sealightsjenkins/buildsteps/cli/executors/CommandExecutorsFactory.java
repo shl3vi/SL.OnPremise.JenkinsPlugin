@@ -23,7 +23,7 @@ public class CommandExecutorsFactory {
             } else if (CommandModes.UploadReports.equals(commandArgument.getMode())) {
                 executor = new UploadReportsCommandExecutor(logger, baseArgs, (UploadReportsCommandArguments) commandArgument);
             } else if (CommandModes.ExternalReport.equals(commandArgument.getMode())) {
-                executor = new ExternalReportExecutor(logger, baseArgs, (ExternalReportArguments) commandArgument);
+                executor = new ExternalReportCommandExecutor(logger, baseArgs, (ExternalReportCommandArguments) commandArgument);
             } else if (CommandModes.Config.equals(commandArgument.getMode())) {
                 executor = new ConfigCommandExecutor(logger, baseArgs, (ConfigCommandArguments) commandArgument);
             } else {

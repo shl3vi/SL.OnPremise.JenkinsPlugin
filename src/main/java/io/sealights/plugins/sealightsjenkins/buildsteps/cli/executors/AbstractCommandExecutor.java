@@ -75,7 +75,7 @@ public abstract class AbstractCommandExecutor implements ICommandExecutor {
 
     public abstract String getAdditionalArguments();
 
-    private String getBaseArgumentsLine() {
+    protected String getBaseArgumentsLine() {
         StringBuilder sb = new StringBuilder();
 
         if (baseArgs.getTokenData() != null) {
