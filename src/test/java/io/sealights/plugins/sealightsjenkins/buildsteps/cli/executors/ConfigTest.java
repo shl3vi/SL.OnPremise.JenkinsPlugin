@@ -1,7 +1,6 @@
 package io.sealights.plugins.sealightsjenkins.buildsteps.cli.executors;
 
 import hudson.model.AbstractBuild;
-import io.sealights.plugins.sealightsjenkins.buildsteps.cli.CommandMode;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.BaseCommandArguments;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.ConfigCommandArguments;
 import io.sealights.plugins.sealightsjenkins.utils.JenkinsUtils;
@@ -21,14 +20,15 @@ import static org.mockito.Mockito.*;
  */
 public class ConfigTest {
 
+    private TestHelper testHelper = new TestHelper();
     private Logger nullLogger = new NullLogger();
 
     @Test
     public void execute_giveValidConfigArguments_shouldExecuteCorrectCommand() throws IOException {
         //Arrange
         BaseCommandArguments baseCommandArguments = createBaseCommandArguments();
-        ConfigCommandArguments configArguments = createConfigArguments(baseCommandArguments);
-        ConfigCommandExecutor configExecutor = new ConfigCommandExecutor(nullLogger, configArguments);
+        ConfigCommandArguments configArguments = createConfigArguments();
+        ConfigCommandExecutor configExecutor = new ConfigCommandExecutor(nullLogger, baseCommandArguments, configArguments);
         configExecutor.setJenkinsUtils(createMockJenkinsUtils());
 
         Runtime runtimeMock = mock(Runtime.class);
@@ -58,8 +58,8 @@ public class ConfigTest {
     public void execute_runtimeProcessThrowsException_shouldEndQuietly() throws IOException {
         //Arrange
         BaseCommandArguments baseCommandArguments = createBaseCommandArguments();
-        ConfigCommandArguments configArguments = createConfigArguments(baseCommandArguments);
-        ConfigCommandExecutor configExecutor = new ConfigCommandExecutor(nullLogger, configArguments);
+        ConfigCommandArguments configArguments = createConfigArguments();
+        ConfigCommandExecutor configExecutor = new ConfigCommandExecutor(nullLogger, baseCommandArguments, configArguments);
 
         Runtime runtimeMock = mock(Runtime.class);
         when(runtimeMock.exec(any(String.class))).thenThrow(new IOException());
@@ -74,9 +74,8 @@ public class ConfigTest {
         }
     }
 
-    private ConfigCommandArguments createConfigArguments(BaseCommandArguments baseCommandArguments) {
+    private ConfigCommandArguments createConfigArguments() {
         ConfigCommandArguments configArguments = new ConfigCommandArguments(
-                baseCommandArguments,
                 "io.include.*", // packages included
                 "io.exclude.*" // packages excluded
         );
@@ -84,9 +83,8 @@ public class ConfigTest {
         return configArguments;
     }
 
-    private BaseCommandArguments createBaseCommandArguments(){
+    private BaseCommandArguments createBaseCommandArguments() throws IOException {
         BaseCommandArguments baseCommandArguments = new BaseCommandArguments();
-        baseCommandArguments.setMode(createExternalReportViewCommandMode());
         baseCommandArguments.setJavaPath("path/to/java");
         baseCommandArguments.setAgentPath("agent.jar");
         baseCommandArguments.setToken("fake-token");
@@ -94,13 +92,10 @@ public class ConfigTest {
         baseCommandArguments.setBuildName("1");
         baseCommandArguments.setBranchName("branchy");
         baseCommandArguments.setBuildSessionIdFile("/path/to/buildsessionid.txt");
+
+        TestHelper.BuildMock build = testHelper.createBuildMock();
+        baseCommandArguments.setBuild(build);
+
         return baseCommandArguments;
     }
-
-    private CommandMode.ExternalReportView createExternalReportViewCommandMode(){
-        CommandMode.ExternalReportView externalReportView = new CommandMode.ExternalReportView();
-        externalReportView.setReport("fakeReport.json");
-        return externalReportView;
-    }
-
 }

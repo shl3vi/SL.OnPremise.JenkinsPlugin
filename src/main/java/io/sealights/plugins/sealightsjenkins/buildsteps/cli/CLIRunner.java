@@ -38,18 +38,18 @@ public class CLIRunner extends Builder {
     private String appName;
     private String branchName;
     private CommandBuildName buildName;
-    private String environment;
+    private String labId;
     private String additionalArguments;
     private BeginAnalysis beginAnalysis = new BeginAnalysis();
 
     @DataBoundConstructor
     public CLIRunner(String buildSessionId, String appName, String branchName,
-                     CommandBuildName buildName, String environment, String additionalArguments) {
+                     CommandBuildName buildName, String labId, String additionalArguments) {
         this.buildSessionId = buildSessionId;
         this.appName = appName;
         this.branchName = branchName;
         this.buildName = buildName;
-        this.environment = environment;
+        this.labId = labId;
         this.additionalArguments = additionalArguments;
     }
 
@@ -94,13 +94,13 @@ public class CLIRunner extends Builder {
     }
 
     @Exported
-    public String getEnvironment() {
-        return environment;
+    public String getLabId() {
+        return labId;
     }
 
     @Exported
-    public void setEnvironment(String environment) {
-        this.environment = environment;
+    public void setLabId(String labId) {
+        this.labId = labId;
     }
 
     @Exported
@@ -321,7 +321,7 @@ public class CLIRunner extends Builder {
         baseArgs.setBuildName(buildNameResolver.getFinalBuildName(build, envVars, buildName, logger));
 
         baseArgs.setBranchName(resolveEnvVar(envVars, branchName));
-        baseArgs.setEnvironment(resolveEnvVar(envVars, environment));
+        baseArgs.setLabId(resolveEnvVar(envVars, labId));
     }
 
     private String resolveBuildSessionId(Logger logger, Properties additionalProps) {

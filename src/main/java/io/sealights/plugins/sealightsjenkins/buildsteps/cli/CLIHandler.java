@@ -81,7 +81,7 @@ public class CLIHandler {
                 customerId,
                 baseArgs.getBuildSessionId(),
                 baseArgs.getAppName(),
-                baseArgs.getEnvironment(),
+                baseArgs.getLabId(),
                 baseArgs.getBranchName(),
                 server,
                 baseArgs.getProxy(),

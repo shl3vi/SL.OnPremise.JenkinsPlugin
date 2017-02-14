@@ -1,15 +1,16 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 
-
     <f:entry title="Build Session Id" field="buildSessionId">
         <f:textbox value="${buildSessionId}"/>
     </f:entry>
+
     <f:entry title="App Name" field="appName">
         <f:textbox value="${appName}"/>
     </f:entry>
-    <f:entry title="Environment" field="environment">
-        <f:textbox value="${environment}"/>
+
+    <f:entry title="Lab Id" field="labId">
+        <f:textbox value="${labId}"/>
     </f:entry>
 
     <f:entry title="Branch Name" field="branchName">

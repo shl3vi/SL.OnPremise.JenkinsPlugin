@@ -9,6 +9,10 @@ import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.*;
 public class ModeToArgumentsConverter {
 
     public AbstractCommandArgument convert(CommandMode mode){
+        if (mode == null){
+            return null;
+        }
+
         if (CommandModes.Start.equals(mode.getCurrentMode())) {
             return toStartCommandArguments((CommandMode.StartView) mode);
         } else if (CommandModes.End.equals(mode.getCurrentMode())) {

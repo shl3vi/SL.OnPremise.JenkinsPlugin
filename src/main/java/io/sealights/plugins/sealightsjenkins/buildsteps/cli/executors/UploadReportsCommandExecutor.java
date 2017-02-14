@@ -137,4 +137,12 @@ public class UploadReportsCommandExecutor extends AbstractCommandExecutor {
     protected String getCommandName() {
         return "uploadReports";
     }
+
+    public void setReportFiles(List<String> reportFiles) {
+        this.reportFiles = reportFiles;
+    }
+
+    public void setReportFilesFolders(List<String> reportFilesFolders) {
+        this.reportFilesFolders = reportFilesFolders;
+    }
 }

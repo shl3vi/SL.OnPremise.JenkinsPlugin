@@ -93,7 +93,7 @@ public abstract class AbstractCommandExecutor implements ICommandExecutor {
         addArgumentKeyVal(sb, "buildname", baseArgs.getBuildName());
         addArgumentKeyVal(sb, "branchname", baseArgs.getBranchName());
 
-        addArgumentKeyVal(sb, "environment", baseArgs.getEnvironment());
+        addArgumentKeyVal(sb, "labid", baseArgs.getLabId());
         addArgumentKeyVal(sb, "proxy", baseArgs.getProxy());
 
         return sb.toString();

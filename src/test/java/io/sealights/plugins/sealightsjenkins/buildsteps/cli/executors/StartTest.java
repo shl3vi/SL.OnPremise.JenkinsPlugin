@@ -1,6 +1,6 @@
 package io.sealights.plugins.sealightsjenkins.buildsteps.cli.executors;
 
-import io.sealights.plugins.sealightsjenkins.buildsteps.cli.CommandMode;
+import hudson.EnvVars;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.BaseCommandArguments;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.StartCommandArguments;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
@@ -25,8 +25,8 @@ public class StartTest {
     public void execute_giveValidStartArguments_shouldExecuteCorrectCommand() throws IOException {
         //Arrange
         BaseCommandArguments baseCommandArguments = createBaseCommandArguments();
-        StartCommandArguments startArguments = new StartCommandArguments(baseCommandArguments, "newEnv");
-        StartCommandExecutor startExecutor = new StartCommandExecutor(nullLogger, startArguments);
+        StartCommandArguments startArguments = new StartCommandArguments("newEnv");
+        StartCommandExecutor startExecutor = new StartCommandExecutor(nullLogger, baseCommandArguments, startArguments);
 
         Runtime runtimeMock = mock(Runtime.class);
 
@@ -37,7 +37,7 @@ public class StartTest {
         startExecutor.execute();
         verify(runtimeMock).exec(captor.capture());
         final String actualCommandLine = captor.getValue();
-        String expectedCommandLine = "path/to/java -jar agent.jar start -token \"fake-token\" -buildsessionidfile \"/path/to/buildsessionid.txt\" -appname \"demoApp\" -buildname \"1\" -branchname \"branchy\" -environment \"someEnv\" -testStage \"newEnv\"";
+        String expectedCommandLine = "path/to/java -jar agent.jar start -token \"fake-token\" -buildsessionidfile \"/path/to/buildsessionid.txt\" -appname \"demoApp\" -buildname \"1\" -branchname \"branchy\" -labid \"someEnv\" -testStage \"newEnv\"";
 
         // Assert
         Assert.assertEquals(
@@ -49,8 +49,8 @@ public class StartTest {
     public void execute_runtimeProcessThrowsException_shouldEndQuietly() throws IOException {
         //Arrange
         BaseCommandArguments baseCommandArguments = createBaseCommandArguments();
-        StartCommandArguments startArguments = new StartCommandArguments(baseCommandArguments, "newEnv");
-        StartCommandExecutor startExecutor = new StartCommandExecutor(nullLogger, startArguments);
+        StartCommandArguments startArguments = new StartCommandArguments("newEnv");
+        StartCommandExecutor startExecutor = new StartCommandExecutor(nullLogger, baseCommandArguments, startArguments);
 
         Runtime runtimeMock = mock(Runtime.class);
         when(runtimeMock.exec(any(String.class))).thenThrow(new IOException());
@@ -67,7 +67,6 @@ public class StartTest {
 
     private BaseCommandArguments createBaseCommandArguments(){
         BaseCommandArguments baseCommandArguments = new BaseCommandArguments();
-        baseCommandArguments.setMode(createStartViewCommandMode());
         baseCommandArguments.setJavaPath("path/to/java");
         baseCommandArguments.setAgentPath("agent.jar");
         baseCommandArguments.setToken("fake-token");
@@ -75,12 +74,9 @@ public class StartTest {
         baseCommandArguments.setBuildName("1");
         baseCommandArguments.setBranchName("branchy");
         baseCommandArguments.setBuildSessionIdFile("/path/to/buildsessionid.txt");
-        baseCommandArguments.setEnvironment("someEnv");
+        baseCommandArguments.setLabId("someEnv");
+        baseCommandArguments.setEnvVars(new EnvVars());
         return baseCommandArguments;
     }
 
-    private CommandMode.StartView createStartViewCommandMode(){
-        CommandMode.StartView startView = new CommandMode.StartView("newEnv");
-        return startView;
-    }
 }

@@ -1,6 +1,6 @@
 package io.sealights.plugins.sealightsjenkins.buildsteps.cli.executors;
 
-import io.sealights.plugins.sealightsjenkins.buildsteps.cli.CommandMode;
+import hudson.EnvVars;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.BaseCommandArguments;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.ExternalReportArguments;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
@@ -22,8 +22,8 @@ public class SendExternalReportTest {
     public void execute_giveValidExternalReportArguments_shouldExecuteCorrectCommand() throws IOException {
         //Arrange
         BaseCommandArguments baseCommandArguments = createBaseCommandArguments();
-        ExternalReportArguments externalReportArguments = createExternalReportArguments(baseCommandArguments);
-        ExternalReportExecutor externalReportExecutor = new ExternalReportExecutor(nullLogger, externalReportArguments);
+        ExternalReportArguments externalReportArguments = createExternalReportArguments();
+        ExternalReportExecutor externalReportExecutor = new ExternalReportExecutor(nullLogger, baseCommandArguments, externalReportArguments);
 
 
         Runtime runtimeMock = mock(Runtime.class);
@@ -47,8 +47,8 @@ public class SendExternalReportTest {
     public void execute_runtimeProcessThrowsException_shouldEndQuietly() throws IOException {
         //Arrange
         BaseCommandArguments baseCommandArguments = createBaseCommandArguments();
-        ExternalReportArguments externalReportArguments = createExternalReportArguments(baseCommandArguments);
-        ExternalReportExecutor externalReportExecutor = new ExternalReportExecutor(nullLogger, externalReportArguments);
+        ExternalReportArguments externalReportArguments = createExternalReportArguments();
+        ExternalReportExecutor externalReportExecutor = new ExternalReportExecutor(nullLogger, baseCommandArguments, externalReportArguments);
 
         Runtime runtimeMock = mock(Runtime.class);
         when(runtimeMock.exec(any(String.class))).thenThrow(new IOException());
@@ -63,9 +63,8 @@ public class SendExternalReportTest {
         }
     }
 
-    private ExternalReportArguments createExternalReportArguments(BaseCommandArguments baseCommandArguments) {
+    private ExternalReportArguments createExternalReportArguments() {
         ExternalReportArguments externalReportArguments = new ExternalReportArguments(
-                baseCommandArguments,
                 "fake-report"
         );
 
@@ -74,20 +73,14 @@ public class SendExternalReportTest {
 
     private BaseCommandArguments createBaseCommandArguments(){
         BaseCommandArguments baseCommandArguments = new BaseCommandArguments();
-        baseCommandArguments.setMode(createExternalReportViewCommandMode());
         baseCommandArguments.setJavaPath("path/to/java");
         baseCommandArguments.setAgentPath("agent.jar");
         baseCommandArguments.setToken("fake-token");
         baseCommandArguments.setAppName("demoApp");
         baseCommandArguments.setBuildName("1");
         baseCommandArguments.setBranchName("branchy");
+        baseCommandArguments.setEnvVars(new EnvVars());
         return baseCommandArguments;
-    }
-
-    private CommandMode.ExternalReportView createExternalReportViewCommandMode(){
-        CommandMode.ExternalReportView externalReportView = new CommandMode.ExternalReportView();
-        externalReportView.setReport("fakeReport.json");
-        return externalReportView;
     }
 
 }

@@ -21,7 +21,7 @@ public class BaseCommandArguments {
     private String customerId;
     private String url;
     private String proxy;
-    private String environment;
+    private String labId;
     private String agentPath;
     private String javaPath;
 
@@ -88,12 +88,12 @@ public class BaseCommandArguments {
         this.proxy = proxy;
     }
 
-    public String getEnvironment() {
-        return environment;
+    public String getLabId() {
+        return labId;
     }
 
-    public void setEnvironment(String environment) {
-        this.environment = environment;
+    public void setLabId(String labId) {
+        this.labId = labId;
     }
 
     public String getAgentPath() {
@@ -180,7 +180,7 @@ public class BaseCommandArguments {
                 ", customerId='" + customerId + '\'' +
                 ", url='" + url + '\'' +
                 ", proxy='" + proxy + '\'' +
-                ", environment='" + environment + '\'' +
+                ", labId='" + labId + '\'' +
                 ", agentPath='" + agentPath + '\'' +
                 ", javaPath='" + javaPath + '\'' +
                 ", buildSessionId='" + buildSessionId + '\'' +
