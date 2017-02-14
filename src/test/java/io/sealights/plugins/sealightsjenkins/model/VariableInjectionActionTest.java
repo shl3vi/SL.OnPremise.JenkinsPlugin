@@ -77,7 +77,7 @@ public class VariableInjectionActionTest {
 
     private void assertEnvVarsMaps(EnvVars expectedEnvVars, EnvVars actualEnvVars) {
         Assert.assertEquals("The EnvVars map size is not as expected", expectedEnvVars.size(), actualEnvVars.size());
-        Assert.assertEquals("The EnvVars map size is not as expected", expectedEnvVars, actualEnvVars);
+        Assert.assertEquals("The EnvVars map content is not as expected", expectedEnvVars, actualEnvVars);
     }
 
     private EnvVars createEnvVars() {
