@@ -454,7 +454,7 @@ public class BeginAnalysis extends Builder {
 
             SeaLightsPluginInfo slInfo = createSeaLightsPluginInfo(build, envVars, metadata, ws, additionalProps, logger);
             SlInfoValidator slInfoValidator = new SlInfoValidator(logger);
-            if (!slInfoValidator.validate(slInfo)){
+            if (!slInfoValidator.validate(slInfo)) {
                 return true;
             }
 
@@ -545,16 +545,18 @@ public class BeginAnalysis extends Builder {
         return insertedBuildName;
     }
 
-    private String getFinalBuildName(AbstractBuild<?, ?> build, Logger logger) throws IllegalStateException {
+    private String getFinalBuildName(AbstractBuild<?, ?> build, SeaLightsPluginInfo slInfo, Logger logger) throws IllegalStateException {
 
         String finalBuildName = null;
-        if (BuildNamingStrategy.LATEST_BUILD.equals(buildName.getBuildNamingStrategy())) {
+
+        boolean hasBuildSessionId = !StringUtils.isNullOrEmpty(slInfo.getBuildSessionId());
+        boolean useNullBuildName = BuildNamingStrategy.LATEST_BUILD.equals(buildName.getBuildNamingStrategy()) ||
+                BuildNamingStrategy.EMPTY_BUILD.equals(buildName.getBuildNamingStrategy());
+        if (!hasBuildSessionId && useNullBuildName) {
             if (!ExecutionType.TESTS_ONLY.equals(executionType)) {
-                throw new SeaLightsIllegalStateException("The '"
-                        + BuildNamingStrategy.LATEST_BUILD.getDisplayName()
-                        + "' option is set. This option is allowed only with execution type of '"
-                        + ExecutionType.TESTS_ONLY.getDisplayName()
-                        + "'.");
+                throw new SeaLightsIllegalStateException(
+                        "Trying to report 'null' as 'Build Name'. This option is allowed only with execution type of '"
+                                + ExecutionType.TESTS_ONLY.getDisplayName() + "'.");
             }
             return null;
         }
@@ -583,12 +585,14 @@ public class BeginAnalysis extends Builder {
         SeaLightsPluginInfo slInfo = new SeaLightsPluginInfo();
         setGlobalConfiguration(logger, slInfo, additionalProps, envVars);
 
+        slInfo.setBuildSessionId(resolveBuildSessionId(logger, slInfo, additionalProps));
+
         slInfo.setMetadata(metadata);
 
         String workingDir = ws.getRemote();
         slInfo.setEnabled(true);
 
-        slInfo.setBuildName(getFinalBuildName(build, logger));
+        slInfo.setBuildName(getFinalBuildName(build, slInfo, logger));
 
         if (workspacepath != null && !"".equals(workspacepath))
             slInfo.setWorkspacepath(workspacepath);
@@ -629,11 +633,10 @@ public class BeginAnalysis extends Builder {
         slInfo.setBuildFilesFolders(foldersToSearch);
         slInfo.setBuildFilesPatterns(patternsToSearch);
 
-        setSlInfoWithAdditionalProps(logger, slInfo, additionalProps);
         return slInfo;
     }
 
-    private void setSlInfoWithAdditionalProps(Logger logger, SeaLightsPluginInfo slInfo, Properties additionalProps) {
+    private String resolveBuildSessionId(Logger logger, SeaLightsPluginInfo slInfo, Properties additionalProps) {
 
         resolveCreateBuildSessionIdProperty(slInfo, additionalProps);
 
@@ -643,21 +646,19 @@ public class BeginAnalysis extends Builder {
         ArgumentFileResolver argumentFileResolver = new ArgumentFileResolver();
         buildSessionId = argumentFileResolver.resolve(logger, buildSessionId, buildSessionIdFile);
 
-        if (!StringUtils.isNullOrEmpty(buildSessionId)){
-            slInfo.setBuildSessionId(buildSessionId);
-        }
+        return buildSessionId;
     }
 
     private void resolveCreateBuildSessionIdProperty(
-            SeaLightsPluginInfo slInfo, Properties additionalProps){
+            SeaLightsPluginInfo slInfo, Properties additionalProps) {
 
-        String createBuildSessionIdString = (String)additionalProps.get("createbuildsessionid");
+        String createBuildSessionIdString = (String) additionalProps.get("createbuildsessionid");
         boolean globalCreateBuildSessionId = getDescriptor().isCreateBuildSessionId();
 
-        if (StringUtils.isNullOrEmpty(createBuildSessionIdString)){
+        if (StringUtils.isNullOrEmpty(createBuildSessionIdString)) {
             // use createBuildSessionId checkbox from global settings
             slInfo.setCreateBuildSessionId(globalCreateBuildSessionId);
-        }else{
+        } else {
             // use override value for this step
             boolean shouldUseCreateBuildSessionId = Boolean.valueOf(createBuildSessionIdString);
             slInfo.setCreateBuildSessionId(shouldUseCreateBuildSessionId);
@@ -705,9 +706,9 @@ public class BeginAnalysis extends Builder {
 
         // set proxy
         String proxy = (String) additionalProps.get("proxy");
-        if (StringUtils.isNullOrEmpty(proxy)){
+        if (StringUtils.isNullOrEmpty(proxy)) {
             proxy = override_proxy;
-            if (StringUtils.isNullOrEmpty(proxy)){
+            if (StringUtils.isNullOrEmpty(proxy)) {
                 proxy = getDescriptor().getProxy();
             }
         }
@@ -999,6 +1000,28 @@ public class BeginAnalysis extends Builder {
             this.createBuildSessionId = createBuildSessionId;
         }
 
+        public FormValidation doCheckPackagesIncluded(@QueryParameter String packagesIncluded, @QueryParameter String additionalArguments) {
+
+            boolean buildSessionIdProvided = isBuildSessionIdProvided(additionalArguments);
+            if (!buildSessionIdProvided && StringUtils.isNullOrEmpty(packagesIncluded))
+                return FormValidation.error("Monitored Application Packages is mandatory when Build Session Id is not provided.");
+            return FormValidation.ok();
+        }
+
+        public FormValidation doCheckAppName(@QueryParameter String appName, @QueryParameter String additionalArguments) {
+            boolean buildSessionIdProvided = isBuildSessionIdProvided(additionalArguments);
+            if (!buildSessionIdProvided && StringUtils.isNullOrEmpty(appName))
+                return FormValidation.error("App Name is mandatory when Build Session Id is not provided.");
+            return FormValidation.ok();
+        }
+
+        public FormValidation doCheckBranch(@QueryParameter String branch, @QueryParameter String additionalArguments) {
+            boolean buildSessionIdProvided = isBuildSessionIdProvided(additionalArguments);
+            if (!buildSessionIdProvided && StringUtils.isNullOrEmpty(branch))
+                return FormValidation.error("Branch Name is mandatory when Build Session Id is not provided.");
+            return FormValidation.ok();
+        }
+
         public FormValidation doCheckSlMvnPluginVersion(@QueryParameter String slMvnPluginVersion) {
             if (!StringUtils.isNullOrEmpty(slMvnPluginVersion) && !isValidVersion(slMvnPluginVersion))
                 return FormValidation.error("Version should be in the format of 'X.X.X'. e.g. '1.2.124'");
@@ -1019,6 +1042,14 @@ public class BeginAnalysis extends Builder {
 
         public void setToolsPathOnMaster(String toolsPathOnMaster) {
             this.toolsPathOnMaster = toolsPathOnMaster;
+        }
+
+        public boolean isBuildSessionIdProvided(String additionalArguments) {
+            Properties additionalProps = PropertiesUtils.toProperties(additionalArguments);
+
+            return !StringUtils.isNullOrEmpty((String) additionalProps.get("buildsessionid"))
+                    ||
+                    !StringUtils.isNullOrEmpty((String) additionalProps.get("buildsessionidfile"));
         }
     }
 }

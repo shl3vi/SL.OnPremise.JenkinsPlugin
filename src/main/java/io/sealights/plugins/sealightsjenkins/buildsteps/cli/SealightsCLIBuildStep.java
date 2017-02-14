@@ -8,6 +8,7 @@ import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
+import io.sealights.plugins.sealightsjenkins.exceptions.SeaLightsIllegalStateException;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
@@ -78,6 +79,10 @@ public class SealightsCLIBuildStep extends Builder {
             CLIHandler cliHandler = new CLIHandler(logger);
             isStepSuccessful = cliRunner.perform(build, launcher, listener, commandMode, cliHandler, logger);
         } catch (Exception e) {
+            // for cases when property fields setup is invalid.
+            if (e instanceof SeaLightsIllegalStateException) {
+                throw e;
+            }
             logger.error("Error occurred while performing 'Sealights CLI Build Step'. Error: ", e);
         }
 

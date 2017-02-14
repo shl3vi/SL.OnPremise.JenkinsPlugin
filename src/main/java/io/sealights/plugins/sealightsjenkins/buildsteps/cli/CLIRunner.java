@@ -12,10 +12,13 @@ import hudson.tasks.Builder;
 import io.sealights.plugins.sealightsjenkins.BeginAnalysis;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.AbstractCommandArgument;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.BaseCommandArguments;
+import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.CommandBuildNamingStrategy;
+import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.CommandModes;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.utils.BuildNameResolver;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.utils.ModeToArgumentsConverter;
 import io.sealights.plugins.sealightsjenkins.entities.TokenData;
 import io.sealights.plugins.sealightsjenkins.entities.ValidationError;
+import io.sealights.plugins.sealightsjenkins.exceptions.SeaLightsIllegalStateException;
 import io.sealights.plugins.sealightsjenkins.utils.*;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
@@ -130,6 +133,8 @@ public class CLIRunner extends Builder {
             throws IOException, InterruptedException {
 
         try {
+            setupValidation(commandMode);
+
             // This step must be first
             setDefaultValues();
 
@@ -152,10 +157,39 @@ public class CLIRunner extends Builder {
 
             return cliHandler.handle();
         } catch (Exception e) {
+            // for cases when property fields setup is invalid.
+            if (e instanceof SeaLightsIllegalStateException) {
+                throw e;
+            }
             logger.error("Error occurred while performing 'Sealights CLI'. Error: ", e);
         }
 
         return false;
+    }
+
+    private void setupValidation(CommandMode commandMode) {
+        if (CommandModes.Config.equals(commandMode.getCurrentMode())) {
+            configCommandSetupValidation();
+            return;
+        }
+        if (!StringUtils.isNullOrEmpty(buildSessionId)){
+            return;
+        }
+        if (StringUtils.isNullOrEmpty(appName) || StringUtils.isNullOrEmpty(branchName) ||
+                CommandBuildNamingStrategy.EMPTY_BUILD.equals(buildName.getBuildNamingStrategy()) ||
+                CommandBuildNamingStrategy.LATEST_BUILD.equals(buildName.getBuildNamingStrategy())) {
+            throw new SeaLightsIllegalStateException(
+                    "'App Name', 'Branch Name' and 'Build Name' are mandatory when 'Build Session Id' is not provided");
+        }
+    }
+
+    private void configCommandSetupValidation() {
+        if (StringUtils.isNullOrEmpty(appName) || StringUtils.isNullOrEmpty(branchName) ||
+                CommandBuildNamingStrategy.EMPTY_BUILD.equals(buildName.getBuildNamingStrategy()) ||
+                CommandBuildNamingStrategy.LATEST_BUILD.equals(buildName.getBuildNamingStrategy())) {
+            throw new SeaLightsIllegalStateException(
+                    "'App Name', 'Branch Name' and 'Build Name' are mandatory for the SeaLights 'config' command");
+        }
     }
 
     private BaseCommandArguments createBaseCommandArguments(
@@ -276,7 +310,7 @@ public class CLIRunner extends Builder {
     }
 
     private void setConfiguration(Logger logger, AbstractBuild<?, ?> build, EnvVars envVars,
-                                    BaseCommandArguments baseArgs, Properties additionalProps) {
+                                  BaseCommandArguments baseArgs, Properties additionalProps) {
 
         String buildSession = resolveBuildSessionId(logger, additionalProps);
         baseArgs.setBuildSessionId(resolveEnvVar(envVars, buildSession));

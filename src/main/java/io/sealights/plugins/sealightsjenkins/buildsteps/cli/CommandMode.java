@@ -6,9 +6,12 @@ import hudson.ExtensionPoint;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.Hudson;
+import hudson.util.FormValidation;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.CommandModes;
+import io.sealights.plugins.sealightsjenkins.utils.StringUtils;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.export.Exported;
 
 import java.io.Serializable;
@@ -219,6 +222,12 @@ public class CommandMode implements Describable<CommandMode>, ExtensionPoint, Se
 
         @Extension
         public static class ConfigDescriptor extends CommandModeDescriptor {
+
+            public FormValidation doCheckPackagesIncluded(@QueryParameter String packagesIncluded) {
+                if (StringUtils.isNullOrEmpty(packagesIncluded))
+                    return FormValidation.error("Monitored Packages is mandatory.");
+                return FormValidation.ok();
+            }
 
             @Override
             public boolean isDefault() {

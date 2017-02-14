@@ -19,10 +19,10 @@ public class CommandExecutorTest {
     @Test
     public void createExecutionCommand_startCommandExecutor_withoutToken_shouldCreateGoodExecutionLine() {
         //Arrange
-        String newEnvironment = "Integration";
-        CommandMode mode = new CommandMode.StartView(newEnvironment);
+        String testStage = "Integration";
+        CommandMode mode = new CommandMode.StartView(testStage);
         BaseCommandArguments baseArguments = createBaseCommandArgumentsWithoutToken(mode);
-        StartCommandArguments startArguments = new StartCommandArguments(baseArguments, newEnvironment);
+        StartCommandArguments startArguments = new StartCommandArguments(baseArguments, testStage);
         AbstractCommandExecutor commandExecutor = new StartCommandExecutor(nullLogger, startArguments);
         //Act
         String actualCommand = commandExecutor.createExecutionCommand();
@@ -62,10 +62,10 @@ public class CommandExecutorTest {
     @Test
     public void createExecutionCommand_setJavaPath_withoutToken_shouldUseGivenJavaPath() {
         //Arrange
-        String newEnvironment = "Integration";
-        CommandMode mode = new CommandMode.StartView(newEnvironment);
+        String testStage = "Integration";
+        CommandMode mode = new CommandMode.StartView(testStage);
         BaseCommandArguments baseArguments = createBaseCommandArgumentsWithoutToken(mode, "override/path/to/java");
-        StartCommandArguments startArguments = new StartCommandArguments(baseArguments, newEnvironment);
+        StartCommandArguments startArguments = new StartCommandArguments(baseArguments, testStage);
         AbstractCommandExecutor commandExecutor = new StartCommandExecutor(nullLogger, startArguments);
         //Act
         String actualCommand = commandExecutor.createExecutionCommand();
@@ -78,10 +78,10 @@ public class CommandExecutorTest {
     @Test
     public void createExecutionCommand_startCommandExecutor_shouldCreateGoodExecutionLine() {
         //Arrange
-        String newEnvironment = "Integration";
-        CommandMode mode = new CommandMode.StartView(newEnvironment);
+        String testStage = "Integration";
+        CommandMode mode = new CommandMode.StartView(testStage);
         BaseCommandArguments baseArguments = createBaseCommandArguments(mode);
-        StartCommandArguments startArguments = new StartCommandArguments(baseArguments, newEnvironment);
+        StartCommandArguments startArguments = new StartCommandArguments(baseArguments, testStage);
         AbstractCommandExecutor commandExecutor = new StartCommandExecutor(nullLogger, startArguments);
         //Act
         String actualCommand = commandExecutor.createExecutionCommand();
@@ -121,10 +121,10 @@ public class CommandExecutorTest {
     @Test
     public void createExecutionCommand_setJavaPath_shouldUseGivenJavaPath() {
         //Arrange
-        String newEnvironment = "Integration";
-        CommandMode mode = new CommandMode.StartView(newEnvironment);
+        String testStage = "Integration";
+        CommandMode mode = new CommandMode.StartView(testStage);
         BaseCommandArguments baseArguments = createBaseCommandArguments(mode, "override/path/to/java");
-        StartCommandArguments startArguments = new StartCommandArguments(baseArguments, newEnvironment);
+        StartCommandArguments startArguments = new StartCommandArguments(baseArguments, testStage);
         AbstractCommandExecutor commandExecutor = new StartCommandExecutor(nullLogger, startArguments);
         //Act
         String actualCommand = commandExecutor.createExecutionCommand();
