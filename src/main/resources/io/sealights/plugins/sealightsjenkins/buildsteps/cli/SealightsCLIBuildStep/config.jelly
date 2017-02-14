@@ -1,0 +1,29 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+
+    <f:entry field="enabled" title="Enable This Step">
+        <f:checkbox checked="${it.enabled}" default="true"/>
+    </f:entry>
+
+    <f:entry field="failBuildIfStepFail" title="Fail the build if this step fails">
+        <f:checkbox checked="${it.failBuildIfStepFail}" />
+    </f:entry>
+
+    <f:dropdownList name="commandMode" title="Action">
+        <j:forEach var="currentDescriptor" items="${descriptor.commandModeDescriptorList}" varStatus="loop">
+            <f:dropdownListBlock title="${currentDescriptor.displayName}" value="${loop.index}"
+                                 selected="${currentDescriptor == instance.commandMode.descriptor || (instance.commandMode.descriptor == null &amp;&amp; currentDescriptor.default)}"
+                                 staplerClass="${currentDescriptor.clazz.name}">
+                <j:set var="instance" value="${instance.commandMode}"/>
+                <j:set var="descriptor" value="${instance.descriptor}"/>
+                <st:include page="${currentDescriptor.configPage}" from="${currentDescriptor}"/>
+            </f:dropdownListBlock>
+        </j:forEach>
+    </f:dropdownList>
+
+    <f:advanced title="SeaLights">
+        <f:entry>
+            <f:property field="cliRunner"/>
+        </f:entry>
+    </f:advanced>
+</j:jelly>

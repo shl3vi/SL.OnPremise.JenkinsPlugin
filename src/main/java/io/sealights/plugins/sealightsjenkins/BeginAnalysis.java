@@ -453,6 +453,10 @@ public class BeginAnalysis extends Builder {
             }
 
             SeaLightsPluginInfo slInfo = createSeaLightsPluginInfo(build, envVars, metadata, ws, additionalProps, logger);
+            SlInfoValidator slInfoValidator = new SlInfoValidator(logger);
+            if (!slInfoValidator.validate(slInfo)) {
+                return true;
+            }
 
             printFields(slInfo, logger);
 
@@ -541,16 +545,18 @@ public class BeginAnalysis extends Builder {
         return insertedBuildName;
     }
 
-    private String getFinalBuildName(AbstractBuild<?, ?> build, Logger logger) throws IllegalStateException {
+    private String getFinalBuildName(AbstractBuild<?, ?> build, SeaLightsPluginInfo slInfo, Logger logger) throws IllegalStateException {
 
         String finalBuildName = null;
-        if (BuildNamingStrategy.LATEST_BUILD.equals(buildName.getBuildNamingStrategy())) {
+
+        boolean hasBuildSessionId = !StringUtils.isNullOrEmpty(slInfo.getBuildSessionId());
+        boolean useNullBuildName = BuildNamingStrategy.LATEST_BUILD.equals(buildName.getBuildNamingStrategy()) ||
+                BuildNamingStrategy.EMPTY_BUILD.equals(buildName.getBuildNamingStrategy());
+        if (!hasBuildSessionId && useNullBuildName) {
             if (!ExecutionType.TESTS_ONLY.equals(executionType)) {
-                throw new SeaLightsIllegalStateException("The '"
-                        + BuildNamingStrategy.LATEST_BUILD.getDisplayName()
-                        + "' option is set. This option is allowed only with execution type of '"
-                        + ExecutionType.TESTS_ONLY.getDisplayName()
-                        + "'.");
+                throw new SeaLightsIllegalStateException(
+                        "Trying to report 'null' as 'Build Name'. This option is allowed only with execution type of '"
+                                + ExecutionType.TESTS_ONLY.getDisplayName() + "'.");
             }
             return null;
         }
@@ -579,21 +585,23 @@ public class BeginAnalysis extends Builder {
         SeaLightsPluginInfo slInfo = new SeaLightsPluginInfo();
         setGlobalConfiguration(logger, slInfo, additionalProps, envVars);
 
+        slInfo.setBuildSessionId(resolveBuildSessionId(logger, slInfo, additionalProps));
+
         slInfo.setMetadata(metadata);
 
         String workingDir = ws.getRemote();
         slInfo.setEnabled(true);
 
-        slInfo.setBuildName(getFinalBuildName(build, logger));
+        slInfo.setBuildName(getFinalBuildName(build, slInfo, logger));
 
         if (workspacepath != null && !"".equals(workspacepath))
             slInfo.setWorkspacepath(workspacepath);
         else
             slInfo.setWorkspacepath(workingDir);
 
-        slInfo.setAppName(JenkinsUtils.tryGetEnvVariable(envVars, appName));
+        slInfo.setAppName(JenkinsUtils.resolveEnvVarsInString(envVars, appName));
         slInfo.setModuleName(moduleName);
-        slInfo.setBranchName(JenkinsUtils.tryGetEnvVariable(envVars, branch));
+        slInfo.setBranchName(JenkinsUtils.resolveEnvVarsInString(envVars, branch));
         slInfo.setFilesIncluded(filesIncluded);
         slInfo.setFilesExcluded(filesExcluded);
         slInfo.setRecursive(recursive);
@@ -604,7 +612,7 @@ public class BeginAnalysis extends Builder {
         slInfo.setListenerConfigFile(testListenerConfigFile);
         slInfo.setScannerJar(buildScannerJar);
         slInfo.setBuildStrategy(buildStrategy);
-        slInfo.setEnvironment(JenkinsUtils.tryGetEnvVariable(envVars, environment));
+        slInfo.setEnvironment(JenkinsUtils.resolveEnvVarsInString(envVars, environment));
         slInfo.setLogEnabled(!(LogLevel.OFF.equals(logLevel)));
         slInfo.setLogLevel(logLevel);
         slInfo.setLogDestination(logDestination);
@@ -628,11 +636,43 @@ public class BeginAnalysis extends Builder {
         return slInfo;
     }
 
+    private String resolveBuildSessionId(Logger logger, SeaLightsPluginInfo slInfo, Properties additionalProps) {
+
+        resolveCreateBuildSessionIdProperty(slInfo, additionalProps);
+
+        String buildSessionId = (String) additionalProps.get("buildsessionid");
+        String buildSessionIdFile = (String) additionalProps.get("buildsessionidfile");
+
+        ArgumentFileResolver argumentFileResolver = new ArgumentFileResolver();
+        buildSessionId = argumentFileResolver.resolve(logger, buildSessionId, buildSessionIdFile);
+
+        return buildSessionId;
+    }
+
+    private void resolveCreateBuildSessionIdProperty(
+            SeaLightsPluginInfo slInfo, Properties additionalProps) {
+
+        String createBuildSessionIdString = (String) additionalProps.get("createbuildsessionid");
+        boolean globalCreateBuildSessionId = getDescriptor().isCreateBuildSessionId();
+
+        if (StringUtils.isNullOrEmpty(createBuildSessionIdString)) {
+            // use createBuildSessionId checkbox from global settings
+            slInfo.setCreateBuildSessionId(globalCreateBuildSessionId);
+        } else {
+            // use override value for this step
+            boolean shouldUseCreateBuildSessionId = Boolean.valueOf(createBuildSessionIdString);
+            slInfo.setCreateBuildSessionId(shouldUseCreateBuildSessionId);
+        }
+    }
 
     private void setGlobalConfiguration(Logger logger, SeaLightsPluginInfo slInfo, Properties additionalProps, EnvVars envVars) {
 
-        String tokenPropertyValue = JenkinsUtils.tryGetEnvVariable(envVars, (String) additionalProps.get("token"));
-        boolean usingToken = tryUseToken(logger, slInfo, tokenPropertyValue);
+        String tokenPropertyValue = JenkinsUtils.resolveEnvVarsInString(envVars, (String) additionalProps.get("token"));
+        String tokenFilePropertyFile = JenkinsUtils.resolveEnvVarsInString(envVars, (String) additionalProps.get("tokenfile"));
+        ArgumentFileResolver argumentFileResolver = new ArgumentFileResolver();
+
+        String token = argumentFileResolver.resolve(logger, tokenPropertyValue, tokenFilePropertyFile);
+        boolean usingToken = tryUseToken(logger, slInfo, token);
 
         if (!usingToken) {
             // set customerId
@@ -643,7 +683,7 @@ public class BeginAnalysis extends Builder {
                     customer = getDescriptor().getCustomerId();
                 }
             }
-            slInfo.setCustomerId(JenkinsUtils.tryGetEnvVariable(envVars, customer));
+            slInfo.setCustomerId(JenkinsUtils.resolveEnvVarsInString(envVars, customer));
 
             // set url
             String server = (String) additionalProps.get("server");
@@ -653,14 +693,22 @@ public class BeginAnalysis extends Builder {
                     server = getDescriptor().getUrl();
                 }
             }
-            slInfo.setServerUrl(JenkinsUtils.tryGetEnvVariable(envVars, server));
+            slInfo.setServerUrl(JenkinsUtils.resolveEnvVarsInString(envVars, server));
+
+            boolean noCustomerOrServer = StringUtils.isNullOrEmpty(customer) || StringUtils.isNullOrEmpty(server);
+            if (noCustomerOrServer) {
+                throw new RuntimeException(
+                        "Invalid configuration. " +
+                                "Should provide 'server url' and 'customer id' when token is not provided. " +
+                                "'customerId': '" + customer + "', 'server': '" + server + "'");
+            }
         }
 
         // set proxy
         String proxy = (String) additionalProps.get("proxy");
-        if (StringUtils.isNullOrEmpty(proxy)){
+        if (StringUtils.isNullOrEmpty(proxy)) {
             proxy = override_proxy;
-            if (StringUtils.isNullOrEmpty(proxy)){
+            if (StringUtils.isNullOrEmpty(proxy)) {
                 proxy = getDescriptor().getProxy();
             }
         }
@@ -673,7 +721,7 @@ public class BeginAnalysis extends Builder {
     private String resolveFilesStorage(Properties additionalProps, EnvVars envVars) {
         String filesStorage = (String) additionalProps.get("filesstorage");
         if (!StringUtils.isNullOrEmpty(filesStorage)) {
-            return JenkinsUtils.tryGetEnvVariable(envVars, filesStorage);
+            return JenkinsUtils.resolveEnvVarsInString(envVars, filesStorage);
         }
 
         filesStorage = getDescriptor().getFilesStorage();
@@ -844,6 +892,7 @@ public class BeginAnalysis extends Builder {
         private String url;
         private String proxy;
         private String filesStorage;
+        private boolean createBuildSessionId;
         private String toolsPathOnMaster;
         private final String DEFAULT_TOOLS_PATH = "/var/lib/jenkins/tools";
 
@@ -897,6 +946,7 @@ public class BeginAnalysis extends Builder {
             url = json.getString("url");
             proxy = json.getString("proxy");
             filesStorage = json.getString("filesStorage");
+            createBuildSessionId = json.getBoolean("createBuildSessionId");
             toolsPathOnMaster = json.getString("toolsPathOnMaster");
             save();
             return super.configure(req, json);
@@ -942,22 +992,32 @@ public class BeginAnalysis extends Builder {
             this.filesStorage = filesStorage;
         }
 
-        public FormValidation doCheckPackagesIncluded(@QueryParameter String packagesIncluded) {
-            if (StringUtils.isNullOrEmpty(packagesIncluded))
-                return FormValidation.error("Monitored Application Packages is mandatory.");
-            return FormValidation.ok();
+        public boolean isCreateBuildSessionId() {
+            return createBuildSessionId;
         }
 
-        public FormValidation doCheckAppName(@QueryParameter String appName) {
-            if (StringUtils.isNullOrEmpty(appName))
-                return FormValidation.error("App Name is mandatory.");
-            return FormValidation.ok();
+        public void setCreateBuildSessionId(boolean createBuildSessionId) {
+            this.createBuildSessionId = createBuildSessionId;
         }
 
-        public FormValidation doCheckBranch(@QueryParameter String branch) {
-            if (StringUtils.isNullOrEmpty(branch))
-                return FormValidation.error("Branch Name is mandatory.");
-            return FormValidation.ok();
+        public FormValidation doCheckPackagesIncluded(@QueryParameter String packagesIncluded, @QueryParameter String additionalArguments) {
+            return validateBuildSessionDataParameter("Monitored Application Packages", packagesIncluded, additionalArguments);
+        }
+
+        public FormValidation doCheckAppName(@QueryParameter String appName, @QueryParameter String additionalArguments) {
+            return validateBuildSessionDataParameter("App Name", appName, additionalArguments);
+        }
+
+        public FormValidation doCheckBranch(@QueryParameter String branch, @QueryParameter String additionalArguments) {
+            return validateBuildSessionDataParameter("Branch Name", branch, additionalArguments);
+        }
+
+        private FormValidation validateBuildSessionDataParameter(
+                String parameterName, String parameterValue, String additionalArguments){
+            boolean buildSessionIdProvided = isBuildSessionIdProvided(additionalArguments);
+            if (buildSessionIdProvided || !StringUtils.isNullOrEmpty(parameterValue))
+                return FormValidation.ok();
+            return FormValidation.error(parameterName + " is mandatory when Build Session Id is not provided.");
         }
 
         public FormValidation doCheckSlMvnPluginVersion(@QueryParameter String slMvnPluginVersion) {
@@ -980,6 +1040,14 @@ public class BeginAnalysis extends Builder {
 
         public void setToolsPathOnMaster(String toolsPathOnMaster) {
             this.toolsPathOnMaster = toolsPathOnMaster;
+        }
+
+        public boolean isBuildSessionIdProvided(String additionalArguments) {
+            Properties additionalProps = PropertiesUtils.toProperties(additionalArguments);
+            boolean hasBuildSessionId = !StringUtils.isNullOrEmpty((String) additionalProps.get("buildsessionid"));
+            boolean hasBuildSessionIdFile = !StringUtils.isNullOrEmpty((String) additionalProps.get("buildsessionidfile"));
+
+            return hasBuildSessionId || hasBuildSessionIdFile;
         }
     }
 }

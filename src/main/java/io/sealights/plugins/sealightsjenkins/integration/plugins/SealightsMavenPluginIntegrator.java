@@ -62,9 +62,10 @@ public class SealightsMavenPluginIntegrator extends PluginIntegrator {
             tryAppendValue(plugin, pluginInfo.getServerUrl(), "server");
         }
 
-
         tryAppendValue(plugin, pluginInfo.getProxy(), "proxy");
 
+        tryAppendValue(plugin, pluginInfo.getBuildSessionId(), "buildSessionId");
+        tryAppendValue(plugin, String.valueOf(pluginInfo.isCreateBuildSessionId()), "createBuildSessionId");
 
         String appName = pluginInfo.getAppName();
         if ("Build Per Module".equalsIgnoreCase(pluginInfo.getBuildStrategy().getDisplayName())) {

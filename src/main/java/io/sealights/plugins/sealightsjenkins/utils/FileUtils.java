@@ -8,13 +8,8 @@ import jenkins.model.Jenkins;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 /**
  * Created by Nadav on 4/26/2016.
@@ -52,7 +47,25 @@ public class FileUtils {
 
         return returnedFiles;
     }
-    public static boolean tryCopyFileFromLocalToSlave(Logger logger, String fileOnMaster, String fileOnSlave) throws IOException, InterruptedException {
+
+    public static boolean tryCopyFolderFromSlaveToLocal(
+            Logger logger, String folderOnMaster, String folderOnSlave) throws IOException, InterruptedException{
+        return tryCopyFromSlaveToLocal(logger, folderOnMaster, folderOnSlave, true);
+    }
+
+    public static boolean tryCopyFileFromSlaveToLocal(
+            Logger logger, String fileOnMaster, String fileOnSlave) throws IOException, InterruptedException{
+        return tryCopyFromSlaveToLocal(logger, fileOnMaster, fileOnSlave, false);
+    }
+
+    public static boolean tryCopyFromSlaveToLocal(
+            Logger logger, String fileOnMaster, String fileOnSlave, boolean isFolder) throws IOException, InterruptedException {
+        boolean toMaster = false;
+        return copyFilesBetweenMasterAndSlave(logger, fileOnMaster, fileOnSlave, toMaster, isFolder);
+    }
+
+    public static boolean copyFilesBetweenMasterAndSlave(
+            Logger logger, String fileOnMaster, String fileOnSlave, boolean toSlave, boolean isFolder) throws IOException, InterruptedException {
         if (StringUtils.isNullOrEmpty(fileOnSlave)) {
             logger.warning("fileOnSlave is null. Skipping the copy.");
             return false;
@@ -72,17 +85,32 @@ public class FileUtils {
             FilePath fpOnMaster = new FilePath(new File(fileOnMaster));
             logger.debug("fpOnMaster.getChannel(): " + fpOnMaster.getChannel());
             logger.debug("fpOnRemote: " + fpOnRemote.absolutize() + ", fpOnMaster:" + fpOnMaster.absolutize());
-            fpOnMaster.copyTo(fpOnRemote);
+
+            if (toSlave) {
+                fpOnMaster.copyTo(fpOnRemote);
+            }else {
+                if (isFolder){
+                    fpOnRemote.copyRecursiveTo(fpOnMaster);
+                }else{
+                    fpOnRemote.copyTo(fpOnMaster);
+                }
+
+            }
             return true;
-        }
-        else{
-            logger.debug("There is no need to copy '" + fileOnSlave+ "' since the current machine is a master Jenkins machine.");
+        } else {
+            logger.debug("There is no need to copy '" + fileOnSlave + "' since the current machine is a master Jenkins machine.");
             return false;
         }
     }
 
+    public static boolean tryCopyFileFromLocalToSlave(Logger logger, String fileOnMaster, String fileOnSlave)
+            throws IOException, InterruptedException {
+        boolean toSlave = true, isFolder = false;
+        return copyFilesBetweenMasterAndSlave(logger, fileOnMaster, fileOnSlave, toSlave, isFolder);
+    }
+
     public static void tryDeleteFile(Logger logger, String filename) throws IOException, InterruptedException {
-        logger.info("Try deleting temp file: " + filename );
+        logger.info("Try deleting file: " + filename);
         FilePath fpOnMaster = new FilePath(new File(filename));
         if (fpOnMaster.exists()) {
             fpOnMaster.delete();
@@ -93,7 +121,7 @@ public class FileUtils {
             logger.debug("Current computer is: " + Computer.currentComputer().getName());
             logger.debug("Jenkins current computer is: " + Jenkins.MasterComputer.currentComputer().getName());
             FilePath filePathOnSlave = new FilePath(channel, filename);
-            if (filePathOnSlave.exists()){
+            if (filePathOnSlave.exists()) {
                 filePathOnSlave.delete();
             }
         }

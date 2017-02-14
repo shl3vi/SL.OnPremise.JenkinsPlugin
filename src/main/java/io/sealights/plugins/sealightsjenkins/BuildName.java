@@ -179,4 +179,20 @@ public class BuildName implements Describable<BuildName>, ExtensionPoint, Serial
             }
         }
     }
+
+    public static class EmptyBuildName extends BuildName {
+
+        @DataBoundConstructor
+        public EmptyBuildName() {
+            super(BuildNamingStrategy.EMPTY_BUILD);
+        }
+
+        @Extension
+        public static class EmptyBuildNameDescriptor extends BuildNameDescriptor {
+
+            public EmptyBuildNameDescriptor() {
+                super(EmptyBuildName.class, BuildNamingStrategy.EMPTY_BUILD.getDisplayName());
+            }
+        }
+    }
 }

@@ -50,6 +50,9 @@ public class SeaLightsPluginInfo {
     private String overrideTestListenerPath;
     private String overrideMetaJsonPath;
 
+    private String buildSessionId;
+    private boolean createBuildSessionId;
+
     public boolean isRecursiveOnBuildFilesFolders() {
         return recursiveOnBuildFilesFolders;
     }
@@ -312,6 +315,22 @@ public class SeaLightsPluginInfo {
 
     public void setTokenData(TokenData tokenData) {
         this.tokenData = tokenData;
+    }
+
+    public String getBuildSessionId() {
+        return buildSessionId;
+    }
+
+    public void setBuildSessionId(String buildSessionId) {
+        this.buildSessionId = buildSessionId;
+    }
+
+    public boolean isCreateBuildSessionId() {
+        return createBuildSessionId;
+    }
+
+    public void setCreateBuildSessionId(boolean createBuildSessionId) {
+        this.createBuildSessionId = createBuildSessionId;
     }
 }
 

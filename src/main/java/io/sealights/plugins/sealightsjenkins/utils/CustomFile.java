@@ -9,14 +9,20 @@ import java.io.IOException;
  */
 public class CustomFile {
 
-    Logger logger;
-    String name;
-    CleanupManager cleanupManager;
+    private Logger logger;
+    private String name;
+    private CleanupManager cleanupManager;
+    private boolean isFolder;
 
     public CustomFile(Logger logger, CleanupManager cleanupManager, String name) {
+        this(logger, cleanupManager, name, false);
+    }
+
+    public CustomFile(Logger logger, CleanupManager cleanupManager, String name, boolean isFolder) {
         this.logger = logger;
         this.cleanupManager = cleanupManager;
         this.name = name;
+        this.isFolder = isFolder;
     }
 
     public void copyToSlave() throws IOException, InterruptedException {
@@ -39,5 +45,14 @@ public class CustomFile {
 
         if (deleteTargetFile && !targetFile.equals(name) &&copySuccess)
             cleanupManager.addFile(targetFile);
+    }
+
+    public void copyToMaster(String targetFile) throws IOException, InterruptedException {
+        if (this.isFolder) {
+            FileUtils.tryCopyFolderFromSlaveToLocal(logger, targetFile, name);
+        }else{
+            FileUtils.tryCopyFileFromSlaveToLocal(logger, targetFile, name);
+        }
+        cleanupManager.addFile(targetFile);
     }
 }

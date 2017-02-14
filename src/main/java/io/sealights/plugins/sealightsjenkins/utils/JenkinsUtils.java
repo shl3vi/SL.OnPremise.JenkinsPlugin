@@ -1,6 +1,7 @@
 package io.sealights.plugins.sealightsjenkins.utils;
 
 import hudson.EnvVars;
+import hudson.FilePath;
 import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.Cause;
@@ -15,10 +16,9 @@ import java.util.regex.Pattern;
  * Created by Nadav on 6/7/2016.
  */
 public class JenkinsUtils {
-    public String expandPathVariable(AbstractBuild<?, ?> build, String path)
-    {
+    public String expandPathVariable(AbstractBuild<?, ?> build, String path) {
         String[] tokens = path.split(Pattern.quote(File.separator.toString()));
-        for(int i=0; i< tokens.length; i++){
+        for (int i = 0; i < tokens.length; i++) {
             tokens[i] = expandVariable(build, tokens[i]);
         }
         path = StringUtils.join(tokens, File.separatorChar);
@@ -30,47 +30,30 @@ public class JenkinsUtils {
         return Util.replaceMacro(variable, build.getBuildVariables());
     }
 
-    public static Map<String, String> createMetadataFromEnvVars(EnvVars envVars){
-        Map <String, String> metadata = new HashMap<>();
+    public static Map<String, String> createMetadataFromEnvVars(EnvVars envVars) {
+        Map<String, String> metadata = new HashMap<>();
 
         String logsUrl = envVars.get("PROMOTED_URL");
-        if (StringUtils.isNullOrEmpty(logsUrl)){
+        if (StringUtils.isNullOrEmpty(logsUrl)) {
             logsUrl = envVars.get("BUILD_URL");
         }
         metadata.put("logsUrl", logsUrl + "console");
 
 
-        if (!StringUtils.isNullOrEmpty(envVars.get("PROMOTED_JOB_NAME"))){
+        if (!StringUtils.isNullOrEmpty(envVars.get("PROMOTED_JOB_NAME"))) {
             metadata.put("jobName", envVars.get("PROMOTED_JOB_NAME"));
-        }else{
+        } else {
             metadata.put("jobName", envVars.get("JOB_NAME"));
         }
 
         return metadata;
     }
 
-    /**
-     * @param envVarKey a potential environment variable
-     * @return true if its jenkins environment variable in the format of '${<some_key>}'
-     */
-    private static boolean isEnvVariable(String envVarKey){
-        return envVarKey != null && envVarKey.startsWith("${") && envVarKey.endsWith("}");
-    }
-
-    public static String tryGetEnvVariable(EnvVars envVars, String envVarKey){
-        if (envVarKey == null)
+    public static String resolveEnvVarsInString(EnvVars envVars, String envVarKey) {
+        if (envVarKey == null || envVars == null){
             return "";
-
-        if (isEnvVariable(envVarKey)){
-            // get '<some_key>' from '${<some_key>}'
-            String resolvedEnvKey = envVarKey.substring(2, envVarKey.length()-1);
-
-            resolvedEnvKey = envVars.get(resolvedEnvKey);
-            if (!StringUtils.isNullOrEmpty(resolvedEnvKey)){
-                return resolvedEnvKey;
-            }
         }
-        return envVarKey;
+        return envVars.expand(envVarKey);
     }
 
     public static String getUpstreamBuildName(AbstractBuild<?, ?> build, String upstreamProjectName, Logger logger) {
@@ -105,4 +88,12 @@ public class JenkinsUtils {
         return getBuildNumberFromUpstreamBuild(cause.getUpstreamCauses(), trigger);
     }
 
+    public String getWorkspace(AbstractBuild<?, ?> build) {
+        FilePath ws = build.getWorkspace();
+        if (ws == null) {
+            throw new RuntimeException("Got 'null' as this build workspace");
+        }
+        String workingDir = ws.getRemote();
+        return workingDir;
+    }
 }

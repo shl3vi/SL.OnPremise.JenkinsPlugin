@@ -3,6 +3,7 @@ package io.sealights.plugins.sealightsjenkins.integration.upgrade.entities;
 public class UpgradeConfiguration {
     private String token;
     private String customerId;
+    private String buildSessionId;
     private String appName;
     private String environmentName;
     private String branchName;
@@ -10,11 +11,12 @@ public class UpgradeConfiguration {
     private String proxy;
     private String filesStorage;
 
-    public UpgradeConfiguration(String token, String customerId, String appName,
+    public UpgradeConfiguration(String token, String customerId, String buildSessionId, String appName,
                                 String environmentName, String branchName, String server,
                                 String proxy, String filesStorage) {
         this.token = token;
         this.customerId = customerId;
+        this.buildSessionId = buildSessionId;
         this.appName = appName;
         this.environmentName = environmentName;
         this.branchName = branchName;
@@ -33,6 +35,10 @@ public class UpgradeConfiguration {
 
     public String getAppName() {
         return appName;
+    }
+
+    public String getBuildSessionId() {
+        return buildSessionId;
     }
 
     public String getEnvironmentName() {

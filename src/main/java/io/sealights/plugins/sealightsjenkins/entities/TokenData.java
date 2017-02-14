@@ -113,4 +113,12 @@ public class TokenData {
         }
 
     }
+
+    @Override
+    public String toString() {
+        return "TokenData{" +
+                "customerId='" + customerId + '\'' +
+                ", server='" + server + '\'' +
+                '}';
+    }
 }

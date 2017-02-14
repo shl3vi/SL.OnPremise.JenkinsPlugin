@@ -23,6 +23,11 @@ public enum BuildNamingStrategy {
         @Override public String getDisplayName() {
             return "Report on latest build. This option should be used only with execution type of 'Test Only'.";
         }
+    },
+    EMPTY_BUILD() {
+        @Override public String getDisplayName() {
+            return "Leave build name field empty.";
+        }
     };
     public abstract String getDisplayName();
 }

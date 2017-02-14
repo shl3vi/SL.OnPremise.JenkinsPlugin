@@ -1,0 +1,14 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+
+    <f:entry title="Monitored Application Packages" field="packagesIncluded"
+             description="Java packages that will be analyzed by SeaLights. Supports wildcards (* = any string, ? = any character). Should start with '*'. For example: '*org.eclipse.*'">
+        <f:textbox value="${packagesIncluded}"/>
+    </f:entry>
+
+    <f:entry title="Unmonitored Application Packages" field="packagesExcluded"
+             description="Java packages to exclude from SeaLights' analysis. Supports wildcards (* = any string, ? = any character).">
+        <f:textbox value="${packagesExcluded}"/>
+    </f:entry>
+
+</j:jelly>
