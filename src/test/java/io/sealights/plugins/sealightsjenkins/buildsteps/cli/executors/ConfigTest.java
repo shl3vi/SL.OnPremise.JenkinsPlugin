@@ -11,6 +11,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.io.File;
 import java.io.IOException;
 
 import static org.mockito.Matchers.any;
@@ -41,7 +42,7 @@ public class ConfigTest {
         configExecutor.execute();
         verify(runtimeMock).exec(captor.capture());
         final String actualCommandLine = captor.getValue();
-        String expectedCommandLine = "path/to/java -jar agent.jar -config -token \"fake-token\" -buildsessionidfile \"/path/to/buildsessionid.txt\" -appname \"demoApp\" -buildname \"1\" -branchname \"branchy\" -buildsessionidfile \"/path/to/workspace\\buildSessionId.txt\" -packagesincluded \"io.include.*\" -packagesexcluded \"io.exclude.*\" -enableNoneZeroErrorCode";
+        String expectedCommandLine = "path/to/java -jar agent.jar -config -token \"fake-token\" -buildsessionidfile \"/path/to/buildsessionid.txt\" -appname \"demoApp\" -buildname \"1\" -branchname \"branchy\" -buildsessionidfile \"/path/to/workspace" + File.separator + "buildSessionId.txt\" -packagesincluded \"io.include.*\" -packagesexcluded \"io.exclude.*\" -enableNoneZeroErrorCode";
 
         // Assert
         Assert.assertEquals(
@@ -70,7 +71,7 @@ public class ConfigTest {
         try {
             boolean result = configExecutor.execute();
             Assert.assertFalse("configExecutor.execute() should be false!", result);
-        }catch (Exception e){
+        } catch (Exception e) {
             Assert.fail("configExecutor.execute() should not throw exception!");
         }
     }
