@@ -2,7 +2,7 @@ package io.sealights.plugins.sealightsjenkins.buildsteps.cli.executors;
 
 import hudson.EnvVars;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.BaseCommandArguments;
-import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.ExternalReportArguments;
+import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.ExternalReportCommandArguments;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import io.sealights.plugins.sealightsjenkins.utils.NullLogger;
 import org.junit.Assert;
@@ -22,8 +22,8 @@ public class SendExternalReportTest {
     public void execute_giveValidExternalReportArguments_shouldExecuteCorrectCommand() throws IOException {
         //Arrange
         BaseCommandArguments baseCommandArguments = createBaseCommandArguments();
-        ExternalReportArguments externalReportArguments = createExternalReportArguments();
-        ExternalReportExecutor externalReportExecutor = new ExternalReportExecutor(nullLogger, baseCommandArguments, externalReportArguments);
+        ExternalReportCommandArguments externalReportArguments = createExternalReportArguments();
+        ExternalReportCommandExecutor externalReportExecutor = new ExternalReportCommandExecutor(nullLogger, baseCommandArguments, externalReportArguments);
 
 
         Runtime runtimeMock = mock(Runtime.class);
@@ -47,8 +47,8 @@ public class SendExternalReportTest {
     public void execute_runtimeProcessThrowsException_shouldEndQuietly() throws IOException {
         //Arrange
         BaseCommandArguments baseCommandArguments = createBaseCommandArguments();
-        ExternalReportArguments externalReportArguments = createExternalReportArguments();
-        ExternalReportExecutor externalReportExecutor = new ExternalReportExecutor(nullLogger, baseCommandArguments, externalReportArguments);
+        ExternalReportCommandArguments externalReportArguments = createExternalReportArguments();
+        ExternalReportCommandExecutor externalReportExecutor = new ExternalReportCommandExecutor(nullLogger, baseCommandArguments, externalReportArguments);
 
         Runtime runtimeMock = mock(Runtime.class);
         when(runtimeMock.exec(any(String.class))).thenThrow(new IOException());
@@ -63,8 +63,8 @@ public class SendExternalReportTest {
         }
     }
 
-    private ExternalReportArguments createExternalReportArguments() {
-        ExternalReportArguments externalReportArguments = new ExternalReportArguments(
+    private ExternalReportCommandArguments createExternalReportArguments() {
+        ExternalReportCommandArguments externalReportArguments = new ExternalReportCommandArguments(
                 "fake-report"
         );
 

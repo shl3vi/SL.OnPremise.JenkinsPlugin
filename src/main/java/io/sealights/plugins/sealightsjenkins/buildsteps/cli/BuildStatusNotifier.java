@@ -12,7 +12,7 @@ import hudson.tasks.Publisher;
 import io.sealights.plugins.sealightsjenkins.BeginAnalysis;
 import io.sealights.plugins.sealightsjenkins.CleanupManager;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.BaseCommandArguments;
-import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.ExternalReportArguments;
+import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.ExternalReportCommandArguments;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.SealightsBuildStatus;
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.utils.BuildNameResolver;
 import io.sealights.plugins.sealightsjenkins.entities.TokenData;
@@ -91,7 +91,7 @@ public class BuildStatusNotifier extends Notifier {
             logger.info("About to report build status.");
 
             // we sends the created report file to the server using SeaLights cli
-            ExternalReportArguments externalReportArguments = new ExternalReportArguments(reportFilePath);
+            ExternalReportCommandArguments externalReportArguments = new ExternalReportCommandArguments(reportFilePath);
             CLIHandler cliHandler =
                     new CLIHandler(baseCommandArguments, externalReportArguments, filesStorage, logger);
 

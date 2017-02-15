@@ -1,19 +1,19 @@
 package io.sealights.plugins.sealightsjenkins.buildsteps.cli.executors;
 
 import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.BaseCommandArguments;
-import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.ExternalReportArguments;
+import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.ExternalReportCommandArguments;
 import io.sealights.plugins.sealightsjenkins.utils.JenkinsUtils;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 
 /**
  * Executor for the 'externalReport' command.
  */
-public class ExternalReportExecutor extends AbstractCommandExecutor {
+public class ExternalReportCommandExecutor extends AbstractCommandExecutor {
 
-    private ExternalReportArguments externalReportArguments;
+    private ExternalReportCommandArguments externalReportArguments;
 
-    public ExternalReportExecutor(
-            Logger logger, BaseCommandArguments baseCommandArguments, ExternalReportArguments externalReportArguments) {
+    public ExternalReportCommandExecutor(
+            Logger logger, BaseCommandArguments baseCommandArguments, ExternalReportCommandArguments externalReportArguments) {
         super(logger, baseCommandArguments);
         this.externalReportArguments = externalReportArguments;
     }

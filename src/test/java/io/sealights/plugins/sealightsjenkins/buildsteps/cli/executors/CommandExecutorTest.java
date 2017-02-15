@@ -1,10 +1,7 @@
 package io.sealights.plugins.sealightsjenkins.buildsteps.cli.executors;
 
 import hudson.EnvVars;
-import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.BaseCommandArguments;
-import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.EndCommandArguments;
-import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.StartCommandArguments;
-import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.UploadReportsCommandArguments;
+import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.*;
 import io.sealights.plugins.sealightsjenkins.entities.TokenData;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 import io.sealights.plugins.sealightsjenkins.utils.NullLogger;
@@ -60,6 +57,32 @@ public class CommandExecutorTest {
     }
 
     @Test
+    public void createExecutionCommand_externalReportCommandExecutor_withoutToken_shouldCreateGoodExecutionLine() {
+        //Arrange
+        BaseCommandArguments baseArguments = createBaseCommandArgumentsWithoutToken();
+        ExternalReportCommandArguments externalReportArguments = new ExternalReportCommandArguments("fake-report");
+        AbstractCommandExecutor commandExecutor = new ExternalReportCommandExecutor(nullLogger, baseArguments, externalReportArguments);
+        //Act
+        String actualCommand = commandExecutor.createExecutionCommand();
+        //Assert
+        String expectedCommand = "path/to/java -jar /fake/path/to/agent.jar externalReport -customerid \"fake-customer\" -server \"https://fake-url/api\" -appname \"fake-app\" -buildname \"fake-build\" -branchname \"fake-branch\" -labid \"fake-env\" -report \"fake-report\"";
+        Assert.assertEquals("execution command is not as expected", expectedCommand, actualCommand);
+    }
+
+    @Test
+    public void createExecutionCommand_configCommandExecutor_withoutToken_shouldCreateGoodExecutionLine() {
+        //Arrange
+        BaseCommandArguments baseArguments = createBaseCommandArgumentsWithoutToken();
+        ConfigCommandArguments configCommandArguments = new ConfigCommandArguments("io.included.package", "io.excluded.package");
+        AbstractCommandExecutor commandExecutor = new ConfigCommandExecutor(nullLogger, baseArguments, configCommandArguments);
+        //Act
+        String actualCommand = commandExecutor.createExecutionCommand();
+        //Assert
+        String expectedCommand = "path/to/java -jar /fake/path/to/agent.jar -config -customerid \"fake-customer\" -server \"https://fake-url/api\" -appname \"fake-app\" -buildname \"fake-build\" -branchname \"fake-branch\" -packagesincluded \"io.included.package\" -packagesexcluded \"io.excluded.package\" -enableNoneZeroErrorCode";
+        Assert.assertEquals("execution command is not as expected", expectedCommand, actualCommand);
+    }
+
+    @Test
     public void createExecutionCommand_setJavaPath_withoutToken_shouldUseGivenJavaPath() {
         //Arrange
         String testStage = "Integration";
@@ -110,7 +133,33 @@ public class CommandExecutorTest {
         //Act
         String actualCommand = commandExecutor.createExecutionCommand();
         //Assert
-        String expectedCommand = "path/to/java -jar /fake/path/to/agent.jar uploadReports -token \"eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL0RFVi1BOTkuYXV0aC5zZWFsaWdodHMuaW8vIiwiand0aWQiOiJERVYtQTk5LGktNTZiMDI0ZGQsdHhJZCwxNDc4NDUwNzUxODEyIiwic3ViamVjdCI6ImFnZW50c0BDdXN0b21lcklkIiwiYXVkaWVuY2UiOlsiYWdlbnRzIl0sIngtc2wtcm9sZSI6ImFnZW50Iiwic2xfaW1wZXJfc3ViamVjdCI6IiIsIngtc2wtc2VydmVyIjoiaHR0cDovL3d3dy5nb29nbGUuY29tL3NlYWxpZ2h0cyIsImlhdCI6MTQ3ODQ1MDc1M30.awtipSFsTcRCT6sUBWaFv2GKaXXZ7gCSBRXorar1nOpOkzUPQqPB9xz0rOOHY7Kb7vFnZUjsOOTob_ui2OZe430O7MJmdFkxrbpXQcUndvWHfi63STsGepI1q61tOejjrs7WiyInsUCMV00Tr25F2NRdf70PGloK8BBs9BdOhldJcEvTYnF8LPw5trAnE8YA-TuIxgjocR0a0QdF_JOibD2mpNQwIfvOsmNrrfArTOoZS2W1XZ_pXa-n1VuWDSgRZF9yVaPMwmqcLoNsydEURgtzuQj8cP5sUg6XjSLoAyfA6guTfZ4rIdJwxJ4GdC8k24yqzhV6X0c_mJ5yrlB9HNTBdIc651SrcMyd4UIM_-zMMEL-1ItKE-txdFijv9jeyr6mQxhbvkCeh6BRRJZqNti4dRrLeztAUbfsAayBEeTnAuMXXsMzSccS-pO0aU2zQMuZaVIzCHqIV9ex7vjwXNKGw4TspFkxw2w85QssHYvIUpPoQ7bzu8sFCKJY-phTRr7i6KCPBCez-Zlu_zL0txsZgwIcXE5rNZvRRC2imjrWVzGFb6IAGVHU3lbJuGocnl4Z-td1tf1mDZqZN9_NL8mltddUugeo7emJNU1UZiHN4lHEKxcayj4LFIgeTyE1R_d8EOi9WMieuEwpRB7r_qXMUDKci07su9UR6XpKS2I\" -appname \"fake-app\" -buildname \"fake-build\" -branchname \"fake-branch\" -labid \"fake-env\" -reportFile \"file1\" -reportFile \"file2\" -reportFilesFolder \"folder1\" -reportFilesFolder \"folder2\" -hasMoreRequests \"false\" -source \"theSource\"";
+        String expectedCommand = "path/to/java -jar /fake/path/to/agent.jar uploadReports -token \"" + validToken + "\" -appname \"fake-app\" -buildname \"fake-build\" -branchname \"fake-branch\" -labid \"fake-env\" -reportFile \"file1\" -reportFile \"file2\" -reportFilesFolder \"folder1\" -reportFilesFolder \"folder2\" -hasMoreRequests \"false\" -source \"theSource\"";
+        Assert.assertEquals("execution command is not as expected", expectedCommand, actualCommand);
+    }
+
+    @Test
+    public void createExecutionCommand_externalReportCommandExecutor_shouldCreateGoodExecutionLine() {
+        //Arrange
+        BaseCommandArguments baseArguments = createBaseCommandArguments();
+        ExternalReportCommandArguments externalReportArguments = new ExternalReportCommandArguments("fake-report");
+        AbstractCommandExecutor commandExecutor = new ExternalReportCommandExecutor(nullLogger, baseArguments, externalReportArguments);
+        //Act
+        String actualCommand = commandExecutor.createExecutionCommand();
+        //Assert
+        String expectedCommand = "path/to/java -jar /fake/path/to/agent.jar externalReport -token \"" + validToken + "\" -appname \"fake-app\" -buildname \"fake-build\" -branchname \"fake-branch\" -labid \"fake-env\" -report \"fake-report\"";
+        Assert.assertEquals("execution command is not as expected", expectedCommand, actualCommand);
+    }
+
+    @Test
+    public void createExecutionCommand_configCommandExecutor_shouldCreateGoodExecutionLine() {
+        //Arrange
+        BaseCommandArguments baseArguments = createBaseCommandArguments();
+        ConfigCommandArguments configCommandArguments = new ConfigCommandArguments("io.included.package", "io.excluded.package");
+        AbstractCommandExecutor commandExecutor = new ConfigCommandExecutor(nullLogger, baseArguments, configCommandArguments);
+        //Act
+        String actualCommand = commandExecutor.createExecutionCommand();
+        //Assert
+        String expectedCommand = "path/to/java -jar /fake/path/to/agent.jar -config -token \"" + validToken + "\" -appname \"fake-app\" -buildname \"fake-build\" -branchname \"fake-branch\" -packagesincluded \"io.included.package\" -packagesexcluded \"io.excluded.package\" -enableNoneZeroErrorCode";
         Assert.assertEquals("execution command is not as expected", expectedCommand, actualCommand);
     }
 
