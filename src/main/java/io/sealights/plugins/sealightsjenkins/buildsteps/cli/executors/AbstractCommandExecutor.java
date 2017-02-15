@@ -66,7 +66,7 @@ public abstract class AbstractCommandExecutor implements ICommandExecutor {
 
 
     public String createExecutionCommand() {
-        String arguments = getBaseArgumentsLine() + getAdditionalArguments();
+        String arguments = createBaseArgumentsLine() + getAdditionalArguments();
         String execCommand = resolvedJavaPath() + " -jar " + baseArgs.getAgentPath() + " " + getCommandName() + " " + arguments;
         return execCommand.trim();
     }
@@ -75,7 +75,7 @@ public abstract class AbstractCommandExecutor implements ICommandExecutor {
 
     public abstract String getAdditionalArguments();
 
-    protected String getBaseArgumentsLine() {
+    protected String createBaseArgumentsLine() {
         StringBuilder sb = new StringBuilder();
 
         if (baseArgs.getTokenData() != null) {

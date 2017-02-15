@@ -126,14 +126,14 @@ public class ConfigCommandExecutor extends AbstractCommandExecutor {
     }
 
     @Override
-    protected String getBaseArgumentsLine() {
-        // the 'config' command does not accept 'labid' arguments
+    protected String createBaseArgumentsLine() {
+        // the 'config' command does not accept 'labid' arguments.
         // in order to avoid unrecognizedArgumentException, we make sure to NOT set this value.
         // this value is currently showed in the UI even in config mode,
         // so there is possibility for it to be set.
         baseArgs.setLabId(null);
 
-        return super.getBaseArgumentsLine();
+        return super.createBaseArgumentsLine();
     }
 
     @Override
