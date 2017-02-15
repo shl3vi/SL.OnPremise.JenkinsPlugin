@@ -25,7 +25,7 @@ public class CLIRunnerTest {
 
     @Test
     public void perform_overrideTokenFromAdditionalArgs_useInvalidToken_executionShouldReturnFalse() throws IOException, InterruptedException {
-        //Arrange & Act
+        // Arrange
         String additionalArguments = "token=invalid-token";
 
         CLIRunner cliRunner = createCLIRunner(additionalArguments);
@@ -34,17 +34,17 @@ public class CLIRunnerTest {
         BuildListener listener = mock(BuildListener.class);
         CommandMode commandMode = new CommandMode.EndView();
 
-        //Act
+        // Act
         boolean successfulExecution = cliRunner.perform(build, null, listener, commandMode, cliHandler, nullLogger);
 
-        //Assert
+        // Assert
         Assert.assertFalse("Execution should return 'false' when providing invalid token", successfulExecution);
     }
 
-    @Test
+    @Test(expected = SeaLightsIllegalStateException.class)
     public void perform_withoutBuildSessionIdAndAppName_shouldThrowSeaLightsIllegalStateException()
             throws IOException, InterruptedException {
-        //Arrange & Act
+        // Arrange
         String additionalArguments = "token=invalid-token";
 
         CLIRunner cliRunner = createCLIRunner(additionalArguments);
@@ -58,19 +58,16 @@ public class CLIRunnerTest {
         BuildListener listener = mock(BuildListener.class);
         CommandMode commandMode = new CommandMode.EndView();
 
-        //Act && Assert
-        try {
-            cliRunner.perform(build, null, listener, commandMode, cliHandler, nullLogger);
-            Assert.fail("SeaLightsIllegalStateException wasn't thrown");
-        } catch (SeaLightsIllegalStateException e) {
-            // Ok to be here
-        }
+        // Act & Assert
+        cliRunner.perform(build, null, listener, commandMode, cliHandler, nullLogger);
+        Assert.fail("SeaLightsIllegalStateException wasn't thrown");
+
     }
 
-    @Test
+    @Test(expected = SeaLightsIllegalStateException.class)
     public void perform_withoutBuildSessionIdAndEmptyBuildName_shouldThrowSeaLightsIllegalStateException()
             throws IOException, InterruptedException {
-        //Arrange & Act
+        // Arrange
         String additionalArguments = "token=invalid-token";
 
         CLIRunner cliRunner = createCLIRunner(additionalArguments);
@@ -84,19 +81,16 @@ public class CLIRunnerTest {
         BuildListener listener = mock(BuildListener.class);
         CommandMode commandMode = new CommandMode.EndView();
 
-        //Act && Assert
-        try {
-            cliRunner.perform(build, null, listener, commandMode, cliHandler, nullLogger);
-            Assert.fail("SeaLightsIllegalStateException wasn't thrown");
-        } catch (SeaLightsIllegalStateException e) {
-            // Ok to be here
-        }
+        // Act & Assert
+        cliRunner.perform(build, null, listener, commandMode, cliHandler, nullLogger);
+        Assert.fail("SeaLightsIllegalStateException wasn't thrown");
+
     }
 
-    @Test
+    @Test(expected = SeaLightsIllegalStateException.class)
     public void perform_withoutBuildSessionIdAndReportOnLatestBuildName_shouldThrowSeaLightsIllegalStateException()
             throws IOException, InterruptedException {
-        //Arrange & Act
+        // Arrange
         String additionalArguments = "token=invalid-token";
 
         CLIRunner cliRunner = createCLIRunner(additionalArguments);
@@ -110,19 +104,15 @@ public class CLIRunnerTest {
         BuildListener listener = mock(BuildListener.class);
         CommandMode commandMode = new CommandMode.EndView();
 
-        //Act && Assert
-        try {
-            cliRunner.perform(build, null, listener, commandMode, cliHandler, nullLogger);
-            Assert.fail("SeaLightsIllegalStateException wasn't thrown");
-        } catch (SeaLightsIllegalStateException e) {
-            // Ok to be here
-        }
+        // Act & Assert
+        cliRunner.perform(build, null, listener, commandMode, cliHandler, nullLogger);
+        Assert.fail("SeaLightsIllegalStateException wasn't thrown");
     }
 
-    @Test
+    @Test(expected = SeaLightsIllegalStateException.class)
     public void perform_withoutBuildSessionIdAndBranchName_shouldThrowSeaLightsIllegalStateException()
             throws IOException, InterruptedException {
-        //Arrange & Act
+        // Arrange
         String additionalArguments = "token=invalid-token";
 
         CLIRunner cliRunner = createCLIRunner(additionalArguments);
@@ -136,19 +126,16 @@ public class CLIRunnerTest {
         BuildListener listener = mock(BuildListener.class);
         CommandMode commandMode = new CommandMode.EndView();
 
-        //Act && Assert
-        try {
-            cliRunner.perform(build, null, listener, commandMode, cliHandler, nullLogger);
-            Assert.fail("SeaLightsIllegalStateException wasn't thrown");
-        } catch (SeaLightsIllegalStateException e) {
-            // Ok to be here
-        }
+        // Act & Assert
+        cliRunner.perform(build, null, listener, commandMode, cliHandler, nullLogger);
+        Assert.fail("SeaLightsIllegalStateException wasn't thrown");
+
     }
 
     @Test
     public void perform_withOnlyBuildSessionId_shouldNotThrowException()
             throws IOException, InterruptedException {
-        //Arrange & Act
+        // Arrange
         String additionalArguments = "token=invalid-token";
 
         CLIRunner cliRunner = createCLIRunner(additionalArguments);
@@ -162,28 +149,28 @@ public class CLIRunnerTest {
         BuildListener listener = mock(BuildListener.class);
         CommandMode commandMode = new CommandMode.EndView();
 
-        //Act
-        try{
+        // Act & Assert
+        try {
             cliRunner.perform(build, null, listener, commandMode, cliHandler, nullLogger);
-        }catch (SeaLightsIllegalStateException e){
-            //Assert
+        } catch (SeaLightsIllegalStateException e) {
             Assert.fail("SeaLightsIllegalStateException should not be thrown when build session id is provided");
         }
     }
 
     @Test
     public void perform_overrideTokenWithInvalidToken_shouldPassCustomerIdAndServer() throws IOException, InterruptedException {
-        //Arrange & Act
+        // Arrange
         String additionalArguments = "token=invalid-token\ncustomerid=fake-customer\nserver=fake-server";
 
         CLIRunner cliRunner = createCLIRunner(additionalArguments);
         CLIHandler cliHandler = runPerformOverrideTest(cliRunner);
 
-        //Assert
+        // Act
         TokenData actualToken = cliHandler.getBaseArgs().getTokenData();
         String actualCustomerId = cliHandler.getBaseArgs().getCustomerId();
         String actualServer = cliHandler.getBaseArgs().getUrl();
 
+        // Assert
         Assert.assertNull("token should be 'null' as the provided token is invalid", actualToken);
         Assert.assertNotNull("customerId should be passed due to invalid token", actualCustomerId);
         Assert.assertNotNull("server should be passed due to invalid token", actualServer);
@@ -191,18 +178,19 @@ public class CLIRunnerTest {
 
     @Test
     public void perform_overrideTokenWithValidToken_shouldNotPassCustomerIdAndServer() throws IOException, InterruptedException {
-        //Arrange & Act
+        // Arrange
         String additionalArguments = "token=" + validToken + "\ncustomerid=fake-customer\nserver=fake-server";
 
         CLIRunner cliRunner = createCLIRunner(additionalArguments);
         CLIHandler cliHandler = runPerformOverrideTest(cliRunner);
 
-        //Assert
+        // Act
         String expectedToken = validToken;
         String actualToken = cliHandler.getBaseArgs().getTokenData().getToken();
         String actualCustomerId = cliHandler.getBaseArgs().getCustomerId();
         String actualServer = cliHandler.getBaseArgs().getUrl();
 
+        // Assert
         Assert.assertEquals("token should be override by the additional arguments", expectedToken, actualToken);
         Assert.assertNull("customerId should be 'null' because valid token has been provided", actualCustomerId);
         Assert.assertNull("server should be 'null' because valid token has been provided", actualServer);
@@ -210,22 +198,23 @@ public class CLIRunnerTest {
 
     @Test
     public void perform_overrideTokenFromAdditionalArgs_shouldOverride() throws IOException, InterruptedException {
-        //Arrange & Act
+        // Arrange
         String additionalArguments = "token=" + validToken;
 
         CLIRunner cliRunner = createCLIRunner(additionalArguments);
         CLIHandler cliHandler = runPerformOverrideTest(cliRunner);
 
-        //Assert
+        // Act
         String expectedToken = validToken;
         String actualToken = cliHandler.getBaseArgs().getTokenData().getToken();
 
+        // Assert
         Assert.assertEquals("token should be override by the additional arguments", expectedToken, actualToken);
     }
 
     @Test
     public void perform_overrideTokenWithEnvVar_shouldOverride() throws IOException, InterruptedException {
-        //Arrange & Act
+        // Arrange
         String additionalArguments = "token=${SL_TOKEN}";
         EnvVars envVars = new EnvVars();
         envVars.put("SL_TOKEN", validToken);
@@ -233,9 +222,11 @@ public class CLIRunnerTest {
         CLIRunner cliRunner = createCLIRunner(additionalArguments);
         BeginAnalysis.DescriptorImpl globalConfiguration = cliRunner.getBeginAnalysis().getDescriptor();
         globalConfiguration.setToken("some-global-token");
+
+        // Act
         CLIHandler cliHandler = runPerformOverrideTest(cliRunner, envVars);
 
-        //Assert
+        // Assert
         String expectedToken = validToken;
         String actualToken = cliHandler.getBaseArgs().getTokenData().getToken();
 
@@ -244,16 +235,18 @@ public class CLIRunnerTest {
 
     @Test
     public void perform_overrideCustomerIdFromAdditionalArgs_shouldOverride() throws IOException, InterruptedException {
-        //Arrange & Act
+        // Arrange
         String additionalArguments = "customerid=fake-customer";
 
         CLIRunner cliRunner = createCLIRunner(additionalArguments);
         BeginAnalysis.DescriptorImpl globalConfiguration = cliRunner.getBeginAnalysis().getDescriptor();
         globalConfiguration.setUrl("url");
         globalConfiguration.setCustomerId("customer");
+
+        // Act
         CLIHandler cliHandler = runPerformOverrideTest(cliRunner);
 
-        //Assert
+        // Assert
         String expectedCustomerId = "fake-customer";
         String actualCustomerId = cliHandler.getBaseArgs().getCustomerId();
 
@@ -262,7 +255,7 @@ public class CLIRunnerTest {
 
     @Test
     public void perform_overrideCustomerIdWithEnvVar_shouldResolveAndOverride() throws IOException, InterruptedException {
-        //Arrange & Act
+        // Arrange
         String additionalArguments = "customerid=${TEST_CUSTOMER}";
         EnvVars envVars = new EnvVars();
         envVars.put("TEST_CUSTOMER", "fake-customer");
@@ -271,9 +264,11 @@ public class CLIRunnerTest {
         BeginAnalysis.DescriptorImpl globalConfiguration = cliRunner.getBeginAnalysis().getDescriptor();
         globalConfiguration.setUrl("url");
         globalConfiguration.setCustomerId("customer");
+
+        // Act
         CLIHandler cliHandler = runPerformOverrideTest(cliRunner, envVars);
 
-        //Assert
+        // Assert
         String expectedCustomerId = "fake-customer";
         String actualCustomerId = cliHandler.getBaseArgs().getCustomerId();
 
@@ -282,16 +277,18 @@ public class CLIRunnerTest {
 
     @Test
     public void perform_overrideServerFromAdditionalArgs_shouldOverride() throws IOException, InterruptedException {
-        //Arrange & Act
+        // Arrange
         String additionalArguments = "server=fake-server";
 
         CLIRunner cliRunner = createCLIRunner(additionalArguments);
         BeginAnalysis.DescriptorImpl globalConfiguration = cliRunner.getBeginAnalysis().getDescriptor();
         globalConfiguration.setUrl("url");
         globalConfiguration.setCustomerId("customer");
+
+        // Act
         CLIHandler cliHandler = runPerformOverrideTest(cliRunner);
 
-        //Assert
+        // Assert
         String expectedServer = "fake-server";
         String actualServer = cliHandler.getBaseArgs().getUrl();
 
@@ -300,7 +297,7 @@ public class CLIRunnerTest {
 
     @Test
     public void perform_overrideServerWithEnvVar_shouldResolveAndOverride() throws IOException, InterruptedException {
-        //Arrange & Act
+        // Arrange
         String additionalArguments = "server=${SERVER}";
 
         EnvVars envVars = new EnvVars();
@@ -310,6 +307,8 @@ public class CLIRunnerTest {
         BeginAnalysis.DescriptorImpl globalConfiguration = cliRunner.getBeginAnalysis().getDescriptor();
         globalConfiguration.setUrl("url");
         globalConfiguration.setCustomerId("customer");
+
+        // Act
         CLIHandler cliHandler = runPerformOverrideTest(cliRunner, envVars);
 
         //Assert
@@ -321,11 +320,13 @@ public class CLIRunnerTest {
 
     @Test
     public void perform_overrideProxyFromAdditionalArgs_shouldOverride() throws IOException, InterruptedException {
-        //Arrange & Act
+        // Arrange
         String additionalArguments = "proxy=fake-proxy";
         additionalArguments += "\ntoken=" + validToken;
 
         CLIRunner cliRunner = createCLIRunner(additionalArguments);
+
+        // Act
         CLIHandler cliHandler = runPerformOverrideTest(cliRunner);
 
         //Assert
@@ -337,7 +338,7 @@ public class CLIRunnerTest {
 
     @Test
     public void perform_overrideProxyWithEnvVars_shouldOverride() throws IOException, InterruptedException {
-        //Arrange & Act
+        // Arrange
         String additionalArguments = "proxy=${PROXY}";
         additionalArguments += "\ntoken=" + validToken;
 
@@ -345,9 +346,11 @@ public class CLIRunnerTest {
         envVars.put("PROXY", "fake-proxy");
 
         CLIRunner cliRunner = createCLIRunner(additionalArguments);
+
+        // Act
         CLIHandler cliHandler = runPerformOverrideTest(cliRunner, envVars);
 
-        //Assert
+        // Assert
         String expectedProxy = "fake-proxy";
         String actualProxy = cliHandler.getBaseArgs().getProxy();
 
@@ -356,14 +359,16 @@ public class CLIRunnerTest {
 
     @Test
     public void perform_overrideAgentPathFromAdditionalArgs_shouldOverride() throws IOException, InterruptedException {
-        //Arrange & Act
+        // Arrange
         String additionalArguments = "agentpath=fake-agent-path";
         additionalArguments += "\ntoken=" + validToken;
 
         CLIRunner cliRunner = createCLIRunner(additionalArguments);
+
+        // Act
         CLIHandler cliHandler = runPerformOverrideTest(cliRunner);
 
-        //Assert
+        // Assert
         String expectedAgentPath = "fake-agent-path";
         String actualAgentPath = cliHandler.getBaseArgs().getAgentPath();
 
@@ -372,7 +377,7 @@ public class CLIRunnerTest {
 
     @Test
     public void perform_overrideAgentPathWithEnvVars_shouldOverride() throws IOException, InterruptedException {
-        //Arrange & Act
+        // Arrange
         String additionalArguments = "agentpath=${AGENT_PATH}";
         additionalArguments += "\ntoken=" + validToken;
 
@@ -380,9 +385,11 @@ public class CLIRunnerTest {
         envVars.put("AGENT_PATH", "fake-agent-path");
 
         CLIRunner cliRunner = createCLIRunner(additionalArguments);
+
+        // Act
         CLIHandler cliHandler = runPerformOverrideTest(cliRunner, envVars);
 
-        //Assert
+        // Assert
         String expectedAgentPath = "fake-agent-path";
         String actualAgentPath = cliHandler.getBaseArgs().getAgentPath();
 
@@ -391,14 +398,16 @@ public class CLIRunnerTest {
 
     @Test
     public void perform_overrideJavaPathFromAdditionalArgs_shouldOverride() throws IOException, InterruptedException {
-        //Arrange & Act
+        // Arrange
         String additionalArguments = "javapath=fake-java-path";
         additionalArguments += "\ntoken=" + validToken;
 
         CLIRunner cliRunner = createCLIRunner(additionalArguments);
+
+        // Act
         CLIHandler cliHandler = runPerformOverrideTest(cliRunner);
 
-        //Assert
+        // Assert
         String expectedJavaPath = "fake-java-path";
         String actualJavaPath = cliHandler.getBaseArgs().getJavaPath();
 
@@ -407,7 +416,7 @@ public class CLIRunnerTest {
 
     @Test
     public void perform_overrideJavaPathWithEnvVars_shouldOverride() throws IOException, InterruptedException {
-        //Arrange & Act
+        // Arrange
         String additionalArguments = "javapath=${JAVA_PATH}";
         additionalArguments += "\ntoken=" + validToken;
 
@@ -415,9 +424,11 @@ public class CLIRunnerTest {
         envVars.put("JAVA_PATH", "fake-java-path");
 
         CLIRunner cliRunner = createCLIRunner(additionalArguments);
+
+        // Act
         CLIHandler cliHandler = runPerformOverrideTest(cliRunner, envVars);
 
-        //Assert
+        // Assert
         String expectedJavaPath = "fake-java-path";
         String actualJavaPath = cliHandler.getBaseArgs().getJavaPath();
 
@@ -426,14 +437,16 @@ public class CLIRunnerTest {
 
     @Test
     public void perform_overrideFilesStorageFromAdditionalArgs_shouldOverride() throws IOException, InterruptedException {
-        //Arrange & Act
+        //Arrange
         String additionalArguments = "filesstorage=fake-files-storage";
         additionalArguments += "\ntoken=" + validToken;
 
         CLIRunner cliRunner = createCLIRunner(additionalArguments);
+
+        // Act
         CLIHandler cliHandler = runPerformOverrideTest(cliRunner);
 
-        //Assert
+        // Assert
         String expectedFilesStorage = "fake-files-storage";
         String actualFilesStorage = cliHandler.getFilesStorage();
 
@@ -442,7 +455,7 @@ public class CLIRunnerTest {
 
     @Test
     public void perform_overrideFilesStorageWithEnvVars_shouldOverride() throws IOException, InterruptedException {
-        //Arrange & Act
+        // Arrange
         String additionalArguments = "filesstorage=${FILES_STORAGE}";
         additionalArguments += "\ntoken=" + validToken;
 
@@ -450,9 +463,11 @@ public class CLIRunnerTest {
         envVars.put("FILES_STORAGE", "fake-files-storage");
 
         CLIRunner cliRunner = createCLIRunner(additionalArguments);
+
+        // Act
         CLIHandler cliHandler = runPerformOverrideTest(cliRunner, envVars);
 
-        //Assert
+        // Assert
         String expectedFilesStorage = "fake-files-storage";
         String actualFilesStorage = cliHandler.getFilesStorage();
 
