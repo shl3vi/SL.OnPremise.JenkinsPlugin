@@ -51,6 +51,10 @@ public class BuildName implements Describable<BuildName>, ExtensionPoint, Serial
             return false;
         }
 
+        public boolean isEmptyBuild(){
+            return false;
+        }
+
         @Override
         public String getDisplayName() {
             return buildNameSelection;
@@ -192,6 +196,10 @@ public class BuildName implements Describable<BuildName>, ExtensionPoint, Serial
 
             public EmptyBuildNameDescriptor() {
                 super(EmptyBuildName.class, BuildNamingStrategy.EMPTY_BUILD.getDisplayName());
+            }
+
+            public boolean isEmptyBuild(){
+                return true;
             }
         }
     }

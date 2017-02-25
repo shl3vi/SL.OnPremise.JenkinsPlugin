@@ -45,6 +45,7 @@ import java.util.logging.Level;
 @ExportedBean
 public class BeginAnalysis extends Builder {
 
+    private String buildSessionId;
     private String appName;
     private String moduleName;
     private String branch;
@@ -86,7 +87,7 @@ public class BeginAnalysis extends Builder {
     }
 
     @DataBoundConstructor
-    public BeginAnalysis(LogLevel logLevel,
+    public BeginAnalysis(LogLevel logLevel, String buildSessionId,
                          String appName, String moduleName, String branch, boolean enableMultipleBuildFiles,
                          boolean overrideJars, boolean multipleBuildFiles, String environment,
                          String packagesIncluded, String packagesExcluded, String filesIncluded,
@@ -101,6 +102,7 @@ public class BeginAnalysis extends Builder {
                          String override_url, String override_proxy, String additionalArguments)
             throws IOException {
 
+        this.buildSessionId = buildSessionId;
         this.override_customerId = override_customerId;
         this.override_url = override_url;
         this.override_proxy = override_proxy;
@@ -172,6 +174,16 @@ public class BeginAnalysis extends Builder {
             this.executionType = ExecutionType.FULL;
 
         setDefaultValuesForStrings(logger);
+    }
+
+    @Exported
+    public String getBuildSessionId() {
+        return buildSessionId;
+    }
+
+    @Exported
+    public void setBuildSessionId(String buildSessionId) {
+        this.buildSessionId = buildSessionId;
     }
 
     @Exported
@@ -640,7 +652,6 @@ public class BeginAnalysis extends Builder {
 
         resolveCreateBuildSessionIdProperty(slInfo, additionalProps);
 
-        String buildSessionId = (String) additionalProps.get("buildsessionid");
         String buildSessionIdFile = (String) additionalProps.get("buildsessionidfile");
 
         ArgumentFileResolver argumentFileResolver = new ArgumentFileResolver();
@@ -1000,21 +1011,22 @@ public class BeginAnalysis extends Builder {
             this.createBuildSessionId = createBuildSessionId;
         }
 
-        public FormValidation doCheckPackagesIncluded(@QueryParameter String packagesIncluded, @QueryParameter String additionalArguments) {
-            return validateBuildSessionDataParameter("Monitored Application Packages", packagesIncluded, additionalArguments);
+        public FormValidation doCheckPackagesIncluded(@QueryParameter String packagesIncluded, @QueryParameter String buildSessionId,@QueryParameter String additionalArguments) {
+            return validateBuildSessionDataParameter("Monitored Application Packages", packagesIncluded, buildSessionId, additionalArguments);
         }
 
-        public FormValidation doCheckAppName(@QueryParameter String appName, @QueryParameter String additionalArguments) {
-            return validateBuildSessionDataParameter("App Name", appName, additionalArguments);
+        public FormValidation doCheckAppName(
+                @QueryParameter String appName, @QueryParameter String buildSessionId, @QueryParameter String additionalArguments) {
+            return validateBuildSessionDataParameter("App Name", appName, buildSessionId, additionalArguments);
         }
 
-        public FormValidation doCheckBranch(@QueryParameter String branch, @QueryParameter String additionalArguments) {
-            return validateBuildSessionDataParameter("Branch Name", branch, additionalArguments);
+        public FormValidation doCheckBranch(@QueryParameter String branch, @QueryParameter String buildSessionId, @QueryParameter String additionalArguments) {
+            return validateBuildSessionDataParameter("Branch Name", branch, buildSessionId, additionalArguments);
         }
 
         private FormValidation validateBuildSessionDataParameter(
-                String parameterName, String parameterValue, String additionalArguments){
-            boolean buildSessionIdProvided = isBuildSessionIdProvided(additionalArguments);
+                String parameterName, String parameterValue, String buildSessionId, String additionalArguments){
+            boolean buildSessionIdProvided = isBuildSessionIdProvided(buildSessionId, additionalArguments);
             if (buildSessionIdProvided || !StringUtils.isNullOrEmpty(parameterValue))
                 return FormValidation.ok();
             return FormValidation.error(parameterName + " is mandatory when Build Session Id is not provided.");
@@ -1042,9 +1054,9 @@ public class BeginAnalysis extends Builder {
             this.toolsPathOnMaster = toolsPathOnMaster;
         }
 
-        public boolean isBuildSessionIdProvided(String additionalArguments) {
+        public boolean isBuildSessionIdProvided(String buildSessionId, String additionalArguments) {
             Properties additionalProps = PropertiesUtils.toProperties(additionalArguments);
-            boolean hasBuildSessionId = !StringUtils.isNullOrEmpty((String) additionalProps.get("buildsessionid"));
+            boolean hasBuildSessionId = !StringUtils.isNullOrEmpty(buildSessionId);
             boolean hasBuildSessionIdFile = !StringUtils.isNullOrEmpty((String) additionalProps.get("buildsessionidfile"));
 
             return hasBuildSessionId || hasBuildSessionIdFile;
