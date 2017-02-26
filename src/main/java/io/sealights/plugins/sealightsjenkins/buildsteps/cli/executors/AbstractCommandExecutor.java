@@ -8,6 +8,8 @@ import io.sealights.plugins.sealightsjenkins.utils.StreamUtils;
 import io.sealights.plugins.sealightsjenkins.utils.StringUtils;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Abstract class for command executors.
@@ -26,7 +28,7 @@ public abstract class AbstractCommandExecutor implements ICommandExecutor {
 
     public boolean execute() {
         try {
-            String execCommand = createExecutionCommand();
+            String[] execCommand = createExecutionCommand();
 
             // Run a java app in a separate system process
             logger.info("About to execute command: " + execCommand);
@@ -65,49 +67,53 @@ public abstract class AbstractCommandExecutor implements ICommandExecutor {
     }
 
 
-    public String createExecutionCommand() {
-        String arguments = createBaseArgumentsLine() + getAdditionalArguments();
-        String execCommand = resolvedJavaPath() + " -jar " + baseArgs.getAgentPath() + " " + getCommandName() + " " + arguments;
-        return execCommand.trim();
+    public String[] createExecutionCommand() {
+        List<String> commands = new ArrayList<>();
+
+        String javaPath = resolvedJavaPath();
+        commands.add(javaPath);
+        commands.add("-jar");
+        commands.add(baseArgs.getAgentPath());
+        commands.add(getCommandName());
+
+        addBaseArgumentsLine(commands);
+        addAdditionalArguments(commands);
+
+        String[] commandsArray = new String[commands.size()];
+        commandsArray = commands.toArray(commandsArray);
+        return commandsArray;
     }
 
     protected abstract String getCommandName();
 
-    public abstract String getAdditionalArguments();
+    public abstract void addAdditionalArguments(List<String> commands);
 
-    protected String createBaseArgumentsLine() {
-        StringBuilder sb = new StringBuilder();
-
+    protected void addBaseArgumentsLine(List<String> commandsList) {
         if (baseArgs.getTokenData() != null) {
-            addArgumentKeyVal(sb, "token", baseArgs.getTokenData().getToken());
+            addArgumentKeyVal("token", baseArgs.getTokenData().getToken(), commandsList);
         } else {
-            addArgumentKeyVal(sb, "token", baseArgs.getToken());
-            addArgumentKeyVal(sb, "tokenfile", baseArgs.getTokenFile());
-            addArgumentKeyVal(sb, "customerid", baseArgs.getCustomerId());
-            addArgumentKeyVal(sb, "server", baseArgs.getUrl());
+            addArgumentKeyVal("token", baseArgs.getToken(), commandsList);
+            addArgumentKeyVal("tokenfile", baseArgs.getTokenFile(), commandsList);
+            addArgumentKeyVal("customerid", baseArgs.getCustomerId(), commandsList);
+            addArgumentKeyVal("server", baseArgs.getUrl(), commandsList);
         }
 
-        addArgumentKeyVal(sb, "buildsessionid", baseArgs.getBuildSessionId());
-        addArgumentKeyVal(sb, "buildsessionidfile", baseArgs.getBuildSessionIdFile());
-        addArgumentKeyVal(sb, "appname", baseArgs.getAppName());
-        addArgumentKeyVal(sb, "buildname", baseArgs.getBuildName());
-        addArgumentKeyVal(sb, "branchname", baseArgs.getBranchName());
+        addArgumentKeyVal("buildsessionid", baseArgs.getBuildSessionId(), commandsList);
+        addArgumentKeyVal("buildsessionidfile", baseArgs.getBuildSessionIdFile(), commandsList);
+        addArgumentKeyVal("appname", baseArgs.getAppName(), commandsList);
+        addArgumentKeyVal("buildname", baseArgs.getBuildName(), commandsList);
+        addArgumentKeyVal("branchname", baseArgs.getBranchName(), commandsList);
 
-        addArgumentKeyVal(sb, "labid", baseArgs.getLabId());
-        addArgumentKeyVal(sb, "proxy", baseArgs.getProxy());
-
-        return sb.toString();
+        addArgumentKeyVal("labid", baseArgs.getLabId(), commandsList);
+        addArgumentKeyVal("proxy", baseArgs.getProxy(), commandsList);
     }
 
-    protected void addArgumentKeyVal(StringBuilder sb, String key, String val) {
+    protected void addArgumentKeyVal(String key, String val, List<String> commandsList) {
         if (StringUtils.isNullOrEmpty(val)) {
             return;
         }
-        sb.append("-");
-        sb.append(key);
-        sb.append(" ");
-        sb.append("\"" + val + "\"");
-        sb.append(" ");
+        commandsList.add("-" + key);
+        commandsList.add(val);
     }
 
     protected String resolvedJavaPath() {
