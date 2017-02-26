@@ -28,17 +28,17 @@ public class SendExternalReportTest {
 
         Runtime runtimeMock = mock(Runtime.class);
 
-        final ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        final ArgumentCaptor<String[]> captor = ArgumentCaptor.forClass(String[].class);
 
         //Act
         externalReportExecutor.setRuntime(runtimeMock);
         externalReportExecutor.execute();
         verify(runtimeMock).exec(captor.capture());
-        final String actualCommandLine = captor.getValue();
-        String expectedCommandLine = "path/to/java -jar agent.jar externalReport -token \"fake-token\" -appname \"demoApp\" -buildname \"1\" -branchname \"branchy\" -report \"fake-report\"";
+        final String[] actualCommandLine = captor.getValue();
+        String[] expectedCommandLine = {"path/to/java", "-jar", "agent.jar", "externalReport", "-token", "fake-token", "-appname", "demoApp", "-buildname", "1", "-branchname", "branchy", "-report", "fake-report"};
 
         // Assert
-        Assert.assertEquals(
+        Assert.assertArrayEquals(
                 "The command line that was executed for the 'external report' executor is not as expected",
                 expectedCommandLine, actualCommandLine);
     }
@@ -58,7 +58,7 @@ public class SendExternalReportTest {
         try {
             boolean result = externalReportExecutor.execute();
             Assert.assertFalse("externalReportExecutor.execute() should be false!", result);
-        }catch (Exception e){
+        } catch (Exception e) {
             Assert.fail("externalReportExecutor.execute() should not throw exception!");
         }
     }
@@ -71,7 +71,7 @@ public class SendExternalReportTest {
         return externalReportArguments;
     }
 
-    private BaseCommandArguments createBaseCommandArguments(){
+    private BaseCommandArguments createBaseCommandArguments() {
         BaseCommandArguments baseCommandArguments = new BaseCommandArguments();
         baseCommandArguments.setJavaPath("path/to/java");
         baseCommandArguments.setAgentPath("agent.jar");
