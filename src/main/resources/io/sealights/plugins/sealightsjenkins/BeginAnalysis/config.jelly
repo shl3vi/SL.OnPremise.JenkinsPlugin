@@ -4,7 +4,7 @@
 
 
     <f:entry title="Build Session Id" field="buildSessionId">
-        <f:textbox value="${appName}"/>
+        <f:textbox value="${buildSessionId}"/>
     </f:entry>
 
     <f:advanced>
