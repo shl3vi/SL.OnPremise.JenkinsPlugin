@@ -35,17 +35,17 @@ public class ConfigTest {
 
         Runtime runtimeMock = mock(Runtime.class);
 
-        final ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        final ArgumentCaptor<String[]> captor = ArgumentCaptor.forClass(String[].class);
 
         //Act
         configExecutor.setRuntime(runtimeMock);
         configExecutor.execute();
         verify(runtimeMock).exec(captor.capture());
-        final String actualCommandLine = captor.getValue();
-        String expectedCommandLine = "path/to/java -jar agent.jar -config -token \"fake-token\" -buildsessionidfile \"/path/to/buildsessionid.txt\" -appname \"demoApp\" -buildname \"1\" -branchname \"branchy\" -buildsessionidfile \"/path/to/workspace" + File.separator + "buildSessionId.txt\" -packagesincluded \"io.include.*\" -packagesexcluded \"io.exclude.*\" -enableNoneZeroErrorCode";
+        final String[] actualCommandLine = captor.getValue();
+        String[] expectedCommandLine = {"path/to/java", "-jar", "agent.jar", "-config", "-token", "fake-token", "-buildsessionidfile", "/path/to/buildsessionid.txt", "-appname", "demoApp", "-buildname", "1", "-branchname", "branchy", "-buildsessionidfile", "/path/to/workspace" + File.separator + "buildSessionId.txt", "-packagesincluded", "io.include.*", "-packagesexcluded", "io.exclude.*", "-enableNoneZeroErrorCode"};
 
         // Assert
-        Assert.assertEquals(
+        Assert.assertArrayEquals(
                 "The command line that was executed for the 'start' executor is not as expected",
                 expectedCommandLine, actualCommandLine);
     }

@@ -8,6 +8,7 @@ import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.ConfigComma
 import io.sealights.plugins.sealightsjenkins.utils.*;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -126,25 +127,22 @@ public class ConfigCommandExecutor extends AbstractCommandExecutor {
     }
 
     @Override
-    protected String createBaseArgumentsLine() {
+    protected void addBaseArgumentsLine(List<String> commandsList) {
         // the 'config' command does not accept 'labid' arguments.
         // in order to avoid unrecognizedArgumentException, we make sure to NOT set this value.
         // this value is currently showed in the UI even in config mode,
         // so there is possibility for it to be set.
         baseArgs.setLabId(null);
 
-        return super.createBaseArgumentsLine();
+        super.addBaseArgumentsLine(commandsList);
     }
 
     @Override
-    public String getAdditionalArguments() {
-        StringBuilder sb = new StringBuilder();
-        addArgumentKeyVal(sb, "buildsessionidfile", this.buildSessionIdFileOnMaster);
-        addArgumentKeyVal(sb, "packagesincluded", configCommandArguments.getPackagesIncluded());
-        addArgumentKeyVal(sb, "packagesexcluded", configCommandArguments.getPackagesExcluded());
-        sb.append("-enableNoneZeroErrorCode");
-
-        return sb.toString();
+    public void addAdditionalArguments(List<String> commandsList) {
+        addArgumentKeyVal("buildsessionidfile", this.buildSessionIdFileOnMaster, commandsList);
+        addArgumentKeyVal("packagesincluded", configCommandArguments.getPackagesIncluded(), commandsList);
+        addArgumentKeyVal("packagesexcluded", configCommandArguments.getPackagesExcluded(), commandsList);
+        commandsList.add("-enableNoneZeroErrorCode");
     }
 
     @Override

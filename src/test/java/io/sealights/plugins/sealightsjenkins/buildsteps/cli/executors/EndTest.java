@@ -31,17 +31,17 @@ public class EndTest {
 
         Runtime runtimeMock = mock(Runtime.class);
 
-        final ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        final ArgumentCaptor<String[]> captor = ArgumentCaptor.forClass(String[].class);
 
         //Act
         endExecutor.setRuntime(runtimeMock);
         endExecutor.execute();
         verify(runtimeMock).exec(captor.capture());
-        final String actualCommandLine = captor.getValue();
-        String expectedCommandLine = "path/to/java -jar agent.jar end -token \"fake-token\" -buildsessionidfile \"/path/to/buildsessionid.txt\" -appname \"demoApp\" -buildname \"1\" -branchname \"branchy\" -labid \"someEnv\"";
+        final String[] actualCommandLine = captor.getValue();
+        String[] expectedCommandLine = {"path/to/java", "-jar", "agent.jar", "end", "-token", "fake-token", "-buildsessionidfile", "/path/to/buildsessionid.txt", "-appname", "demoApp", "-buildname", "1", "-branchname", "branchy", "-labid", "someEnv"};
 
         // Assert
-        Assert.assertEquals(
+        Assert.assertArrayEquals(
                 "The command line that was executed for the 'end' executor is not as expected",
                 expectedCommandLine, actualCommandLine);
     }
@@ -61,12 +61,12 @@ public class EndTest {
         try {
             boolean result = endExecutor.execute();
             Assert.assertFalse("endExecutor.execute() should be false!", result);
-        }catch (Exception e){
+        } catch (Exception e) {
             Assert.fail("endExecutor.execute() should not throw exception!");
         }
     }
 
-    private BaseCommandArguments createBaseCommandArguments(){
+    private BaseCommandArguments createBaseCommandArguments() {
         BaseCommandArguments baseCommandArguments = new BaseCommandArguments();
         baseCommandArguments.setJavaPath("path/to/java");
         baseCommandArguments.setAgentPath("agent.jar");

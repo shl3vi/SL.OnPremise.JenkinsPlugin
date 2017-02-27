@@ -5,6 +5,8 @@ import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.StartComman
 import io.sealights.plugins.sealightsjenkins.utils.JenkinsUtils;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 
+import java.util.List;
+
 /**
  * Executor for the 'start' command.
  */
@@ -19,10 +21,8 @@ public class StartCommandExecutor extends AbstractCommandExecutor {
     }
 
     @Override
-    public String getAdditionalArguments() {
-        StringBuilder sb = new StringBuilder();
-        addArgumentKeyVal(sb, "testStage", JenkinsUtils.resolveEnvVarsInString(baseArgs.getEnvVars(), startCommandArguments.getTestStage()));
-        return sb.toString();
+    public void addAdditionalArguments(List<String> commandsList) {
+        addArgumentKeyVal("testStage", JenkinsUtils.resolveEnvVarsInString(baseArgs.getEnvVars(), startCommandArguments.getTestStage()), commandsList);
     }
 
     @Override

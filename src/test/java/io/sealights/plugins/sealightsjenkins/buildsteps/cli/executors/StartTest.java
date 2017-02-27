@@ -30,17 +30,17 @@ public class StartTest {
 
         Runtime runtimeMock = mock(Runtime.class);
 
-        final ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        final ArgumentCaptor<String[]> captor = ArgumentCaptor.forClass(String[].class);
 
         //Act
         startExecutor.setRuntime(runtimeMock);
         startExecutor.execute();
         verify(runtimeMock).exec(captor.capture());
-        final String actualCommandLine = captor.getValue();
-        String expectedCommandLine = "path/to/java -jar agent.jar start -token \"fake-token\" -buildsessionidfile \"/path/to/buildsessionid.txt\" -appname \"demoApp\" -buildname \"1\" -branchname \"branchy\" -labid \"someEnv\" -testStage \"newEnv\"";
+        final String[] actualCommandLine = captor.getValue();
+        String[] expectedCommandLine = {"path/to/java", "-jar", "agent.jar", "start", "-token", "fake-token", "-buildsessionidfile", "/path/to/buildsessionid.txt", "-appname", "demoApp", "-buildname", "1", "-branchname", "branchy", "-labid", "someEnv", "-testStage", "newEnv"};
 
         // Assert
-        Assert.assertEquals(
+        Assert.assertArrayEquals(
                 "The command line that was executed for the 'start' executor is not as expected",
                 expectedCommandLine, actualCommandLine);
     }
@@ -60,12 +60,12 @@ public class StartTest {
         try {
             boolean result = startExecutor.execute();
             Assert.assertFalse("startExecutor.execute() should be false!", result);
-        }catch (Exception e){
+        } catch (Exception e) {
             Assert.fail("startExecutor.execute() should not throw exception!");
         }
     }
 
-    private BaseCommandArguments createBaseCommandArguments(){
+    private BaseCommandArguments createBaseCommandArguments() {
         BaseCommandArguments baseCommandArguments = new BaseCommandArguments();
         baseCommandArguments.setJavaPath("path/to/java");
         baseCommandArguments.setAgentPath("agent.jar");

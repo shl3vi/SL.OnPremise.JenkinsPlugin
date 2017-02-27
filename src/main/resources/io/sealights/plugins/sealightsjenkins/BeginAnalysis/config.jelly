@@ -1,30 +1,37 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
+         xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 
-    <f:entry title="App Name" field="appName">
-        <f:textbox value="${appName}" default="$${JOB_NAME}"/>
-    </f:entry>
 
-    <f:entry title="Branch Name" field="branch">
-        <f:textbox default="$${GIT_BRANCH}" value="${branch}"/>
-    </f:entry>
-
-    <f:entry title="Monitored Application Packages" field="packagesIncluded"
-             description="Java packages that will be analyzed by SeaLights. Supports wildcards (* = any string, ? = any character). Should start with '*'. For example: '*org.eclipse.*'">
-        <f:textbox value="${packagesIncluded}"/>
+    <f:entry title="Build Session Id" field="buildSessionId">
+        <f:textbox value="${buildSessionId}"/>
     </f:entry>
 
     <f:advanced>
+        <f:entry title="App Name" field="appName">
+            <f:textbox value="${appName}"/>
+        </f:entry>
 
-        <f:entry title="Execution Type" field="executionType" >
+        <f:entry title="Branch Name" field="branch">
+            <f:textbox value="${branch}"/>
+        </f:entry>
+
+        <f:entry title="Monitored Application Packages" field="packagesIncluded"
+                 description="Java packages that will be analyzed by SeaLights. Supports wildcards (* = any string, ? = any character). Should start with '*'. For example: '*org.eclipse.*'">
+            <f:textbox value="${packagesIncluded}"/>
+        </f:entry>
+
+        <f:entry title="Execution Type" field="executionType">
             <f:enum>${it.displayName}</f:enum>
         </f:entry>
 
         <f:dropdownList name="buildName" title="Build Name">
             <j:forEach var="currentDescriptor" items="${descriptor.buildNameDescriptorList}" varStatus="loop">
-                <f:dropdownListBlock title="${currentDescriptor.displayName}" value="${loop.index}" selected="${currentDescriptor == instance.buildName.descriptor || (instance.buildName.descriptor == null &amp;&amp; currentDescriptor.default)}" staplerClass="${currentDescriptor.clazz.name}">
-                    <j:set var="instance" value="${instance.buildName}" />
-                    <j:set var="descriptor" value="${instance.descriptor}" />
+                <f:dropdownListBlock title="${currentDescriptor.displayName}" value="${loop.index}"
+                                     selected="${currentDescriptor == instance.buildName.descriptor || (instance.buildName.descriptor == null &amp;&amp; currentDescriptor.emptyBuild)}"
+                                     staplerClass="${currentDescriptor.clazz.name}">
+                    <j:set var="instance" value="${instance.buildName}"/>
+                    <j:set var="descriptor" value="${instance.descriptor}"/>
                     <st:include page="${currentDescriptor.configPage}" from="${currentDescriptor}"/>
                 </f:dropdownListBlock>
             </j:forEach>
@@ -65,7 +72,8 @@
             <f:checkbox default="true"/>
         </f:entry>
 
-        <f:entry title="SeaLights Additional configuration file (for advanced configuration)" field="testListenerConfigFile">
+        <f:entry title="SeaLights Additional configuration file (for advanced configuration)"
+                 field="testListenerConfigFile">
             <f:textbox value="${testListenerConfigFile}"/>
         </f:entry>
 
@@ -99,11 +107,13 @@
                 <f:checkbox default="true"/>
             </f:entry>
 
-            <f:entry title="Folders" field="buildFilesFolders" description="Comma separated list of root folders that contains the build files. The default is the working directory">
+            <f:entry title="Folders" field="buildFilesFolders"
+                     description="Comma separated list of root folders that contains the build files. The default is the working directory">
                 <f:textbox value="${instance.buildFilesFolders}"/>
             </f:entry>
 
-            <f:entry title="Files Pattern" field="buildFilesPatterns" description="Comma separated list of Wild cards for the files names (e.g 'a?.pom, a_*b.pom'). The default is '*pom.xml'">
+            <f:entry title="Files Pattern" field="buildFilesPatterns"
+                     description="Comma separated list of Wild cards for the files names (e.g 'a?.pom, a_*b.pom'). The default is '*pom.xml'">
                 <f:textbox value="${instance.buildFilesPatterns}"/>
             </f:entry>
 
@@ -121,7 +131,7 @@
             </f:entry>
         </f:advanced>
 
-        <f:advanced title="Logs" >
+        <f:advanced title="Logs">
 
             <f:entry field="logLevel" title="Log Level">
                 <f:enum>${it.displayName}</f:enum>

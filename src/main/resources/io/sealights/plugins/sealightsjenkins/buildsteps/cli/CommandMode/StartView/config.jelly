@@ -1,7 +1,7 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 
-    <f:entry title="Test Stage (i.e, Integration Tests, Functional Tests)">
+    <f:entry title="Test Stage (i.e, Integration Tests, Functional Tests)" field="testStage">
         <f:textbox value="${testStage}" default="Unit Tests"/>
     </f:entry>
 

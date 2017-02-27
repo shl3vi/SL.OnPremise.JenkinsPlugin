@@ -36,17 +36,17 @@ public class UploadsReportsTest {
 
         Runtime runtimeMock = mock(Runtime.class);
 
-        final ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        final ArgumentCaptor<String[]> captor = ArgumentCaptor.forClass(String[].class);
 
         //Act
         uploadReportsExecutor.setRuntime(runtimeMock);
         uploadReportsExecutor.execute();
         verify(runtimeMock).exec(captor.capture());
-        final String actualCommandLine = captor.getValue();
-        String expectedCommandLine = "path/to/java -jar agent.jar uploadReports -token \"fake-token\" -buildsessionidfile \"/path/to/buildsessionid.txt\" -appname \"demoApp\" -buildname \"1\" -branchname \"branchy\" -labid \"someEnv\" -reportFile \"report1.txt\" -reportFile \"report2.txt\" -reportFilesFolder \"folders\" -hasMoreRequests \"false\" -source \"someSource\"";
+        final String[] actualCommandLine = captor.getValue();
+        String[] expectedCommandLine = {"path/to/java", "-jar", "agent.jar", "uploadReports", "-token", "fake-token", "-buildsessionidfile", "/path/to/buildsessionid.txt", "-appname", "demoApp", "-buildname", "1", "-branchname", "branchy", "-labid", "someEnv", "-reportFile", "report1.txt", "-reportFile", "report2.txt", "-reportFilesFolder", "folders", "-hasMoreRequests", "false", "-source", "someSource"};
 
         // Assert
-        Assert.assertEquals(
+        Assert.assertArrayEquals(
                 "The command line that was executed for the 'upload reports' executor is not as expected",
                 expectedCommandLine, actualCommandLine);
     }

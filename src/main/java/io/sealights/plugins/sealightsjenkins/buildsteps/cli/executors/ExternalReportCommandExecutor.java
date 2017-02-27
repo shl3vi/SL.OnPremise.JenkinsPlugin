@@ -5,6 +5,8 @@ import io.sealights.plugins.sealightsjenkins.buildsteps.cli.entities.ExternalRep
 import io.sealights.plugins.sealightsjenkins.utils.JenkinsUtils;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
 
+import java.util.List;
+
 /**
  * Executor for the 'externalReport' command.
  */
@@ -19,10 +21,8 @@ public class ExternalReportCommandExecutor extends AbstractCommandExecutor {
     }
 
     @Override
-    public String getAdditionalArguments() {
-        StringBuilder sb = new StringBuilder();
-        addArgumentKeyVal(sb, "report", JenkinsUtils.resolveEnvVarsInString(baseArgs.getEnvVars(), externalReportArguments.getReport()));
-        return sb.toString();
+    public void addAdditionalArguments(List<String> commandsList) {
+        addArgumentKeyVal("report", JenkinsUtils.resolveEnvVarsInString(baseArgs.getEnvVars(), externalReportArguments.getReport()), commandsList);
     }
 
     @Override

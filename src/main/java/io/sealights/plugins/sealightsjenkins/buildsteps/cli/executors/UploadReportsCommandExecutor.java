@@ -115,22 +115,17 @@ public class UploadReportsCommandExecutor extends AbstractCommandExecutor {
     }
 
     @Override
-    public String getAdditionalArguments() {
-        StringBuilder sb = new StringBuilder();
-
+    public void addAdditionalArguments(List<String> commandsList) {
         for (String reportFile : reportFiles) {
-            addArgumentKeyVal(sb, "reportFile", reportFile);
+            addArgumentKeyVal("reportFile", reportFile, commandsList);
         }
-
 
         for (String reportFolder : reportFilesFolders) {
-            addArgumentKeyVal(sb, "reportFilesFolder", JenkinsUtils.resolveEnvVarsInString(baseArgs.getEnvVars(), reportFolder));
+            addArgumentKeyVal("reportFilesFolder", JenkinsUtils.resolveEnvVarsInString(baseArgs.getEnvVars(), reportFolder), commandsList);
         }
 
-        addArgumentKeyVal(sb, "hasMoreRequests", String.valueOf(uploadReportsCommandArguments.isHasMoreRequests()));
-        addArgumentKeyVal(sb, "source", uploadReportsCommandArguments.getSource());
-
-        return sb.toString();
+        addArgumentKeyVal("hasMoreRequests", String.valueOf(uploadReportsCommandArguments.isHasMoreRequests()), commandsList);
+        addArgumentKeyVal("source", uploadReportsCommandArguments.getSource(), commandsList);
     }
 
     @Override
