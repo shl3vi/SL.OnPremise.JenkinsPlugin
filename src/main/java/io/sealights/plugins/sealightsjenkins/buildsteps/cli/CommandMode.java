@@ -179,8 +179,9 @@ public class CommandMode implements Describable<CommandMode>, ExtensionPoint, Se
         }
 
         @DataBoundConstructor
-        public ExternalReportView() {
+        public ExternalReportView(String report) {
             super(CommandModes.ExternalReport);
+            this.report = report;
         }
 
         @Extension

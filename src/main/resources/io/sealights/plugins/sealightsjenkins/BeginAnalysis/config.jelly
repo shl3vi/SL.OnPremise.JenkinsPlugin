@@ -7,7 +7,7 @@
         <f:textbox value="${buildSessionId}"/>
     </f:entry>
 
-    <f:advanced>
+    <f:advanced title="SeaLights Advanced">
         <f:entry title="App Name" field="appName">
             <f:textbox value="${appName}"/>
         </f:entry>
