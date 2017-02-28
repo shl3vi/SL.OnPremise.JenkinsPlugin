@@ -53,7 +53,7 @@ public class CommandExecutorsFactoryTest {
     public void createExecutor_withExternalReportMode_shouldGetUploadReportCommandExecutor() {
         //Arrange
         CommandExecutorsFactory factory = new CommandExecutorsFactory();
-        CommandMode mode = new CommandMode.ExternalReportView();
+        CommandMode mode = new CommandMode.ExternalReportView("fake-report");
         //Act
         ICommandExecutor executor = factory.createExecutor(nullLogger, createBaseCommandArguments(), createAbstractCommandArguments(mode));
         //Assert

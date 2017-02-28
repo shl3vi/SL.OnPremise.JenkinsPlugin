@@ -9,6 +9,7 @@ import io.sealights.plugins.sealightsjenkins.utils.StringUtils;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -31,7 +32,7 @@ public abstract class AbstractCommandExecutor implements ICommandExecutor {
             String[] execCommand = createExecutionCommand();
 
             // Run a java app in a separate system process
-            logger.info("About to execute command: " + execCommand);
+            logger.info("About to execute command: " + Arrays.toString(execCommand));
 
             Process process = runtime.exec(execCommand);
             process.waitFor();
