@@ -57,9 +57,12 @@
             <f:textbox value="${filesExcluded}" default="*test-classes*"/>
         </f:entry>
 
-        <f:entry title="Environment" field="labId"
-                 description="By default is 'Unit Tests'">
-            <f:textbox value="${labId}" default="Unit Tests"/>
+        <f:entry title="Test Stage" field="testStage" description="By default is 'Unit Tests'">
+            <f:textbox value="${testStage}" default="Unit Tests"/>
+        </f:entry>
+
+        <f:entry title="Lab Id" field="labId">
+            <f:textbox value="${labId}"/>
         </f:entry>
 
         <f:entry field="workspacepath" title="Project's Output Folder"

@@ -93,6 +93,8 @@ public class SealightsMavenPluginIntegrator extends PluginIntegrator {
         tryAppendValue(plugin, pluginInfo.getFilesStorage(), "filesStorage");
         tryAppendValue(plugin, pluginInfo.getListenerConfigFile(), "testListenerConfigFile");
         tryAppendValue(plugin, pluginInfo.getEnvironment(), "environment");
+        tryAppendValue(plugin, pluginInfo.getTestStage(), "testStage");
+        tryAppendValue(plugin, pluginInfo.getLabId(), "labId");
         tryAppendValue(plugin, pluginInfo.getFilesExcluded(), "filesexcluded");
 
         tryAppendValue(plugin, pluginInfo.getOverrideMetaJsonPath(), "overrideMetaJsonPath");
