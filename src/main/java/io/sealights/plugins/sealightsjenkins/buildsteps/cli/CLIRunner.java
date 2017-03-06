@@ -306,6 +306,7 @@ public class CLIRunner extends Builder {
         }
 
         baseArgs.setTokenData(tokenData);
+        baseArgs.setToken(token);
         return true;
     }
 

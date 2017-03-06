@@ -5,6 +5,7 @@ import io.sealights.plugins.sealightsjenkins.ExecutionType;
 import io.sealights.plugins.sealightsjenkins.LogDestination;
 import io.sealights.plugins.sealightsjenkins.LogLevel;
 import io.sealights.plugins.sealightsjenkins.entities.TokenData;
+import io.sealights.plugins.sealightsjenkins.utils.StringUtils;
 
 import java.util.Map;
 
@@ -28,7 +29,12 @@ public class SeaLightsPluginInfo {
     private String workspacepath;
     private String proxy;
     private boolean recursive;
+
+    @Deprecated
     private String environment;
+    private String testStage;
+    private String labId;
+
     private String buildFilesFolders;
     private String buildFilesPatterns;
     private boolean recursiveOnBuildFilesFolders;
@@ -265,12 +271,36 @@ public class SeaLightsPluginInfo {
         this.buildStrategy = buildStrategy;
     }
 
+    @Deprecated
     public void setEnvironment(String environment) {
         this.environment = environment;
     }
 
+    @Deprecated
     public String getEnvironment() {
         return environment;
+    }
+
+    public String getTestStage() {
+        if (!StringUtils.isNullOrEmpty(testStage)){
+            return testStage;
+        }
+        if (!StringUtils.isNullOrEmpty(environment)){
+            testStage = environment;
+        }
+        return testStage;
+    }
+
+    public void setTestStage(String testStage) {
+        this.testStage = testStage;
+    }
+
+    public String getLabId() {
+        return labId;
+    }
+
+    public void setLabId(String labId) {
+        this.labId = labId;
     }
 
     public LogDestination getLogDestination() {

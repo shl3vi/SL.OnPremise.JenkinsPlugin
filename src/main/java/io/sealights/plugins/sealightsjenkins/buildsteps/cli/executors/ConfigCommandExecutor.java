@@ -16,6 +16,7 @@ import java.util.UUID;
  */
 public class ConfigCommandExecutor extends AbstractCommandExecutor {
 
+    private static String TOKEN_ENV_VAR = "SL_TOKEN";
     private static String BUILD_SESSION_ID_ENV_VAR = "SL_BUILD_SESSION_ID";
     private static String BUILD_SESSION_ID_FILE_ENV_VAR = "SL_BUILD_SESSION_ID_FILE";
     private static String BUILD_SESSION_ID_FILE_NAME = "buildSessionId.txt";
@@ -120,6 +121,7 @@ public class ConfigCommandExecutor extends AbstractCommandExecutor {
             EnvVarsInjector envVarsInjector = new EnvVarsInjector(build, logger);
             envVarsInjector.addEnvVariableToBuild(BUILD_SESSION_ID_ENV_VAR, buildSessionId);
             envVarsInjector.addEnvVariableToBuild(BUILD_SESSION_ID_FILE_ENV_VAR, createdFile);
+            envVarsInjector.addEnvVariableToBuild(TOKEN_ENV_VAR, baseArgs.getToken());
             envVarsInjector.inject();
         } catch (Exception e) {
             throw new RuntimeException("Failed during Build Session Id environment variables injection", e);

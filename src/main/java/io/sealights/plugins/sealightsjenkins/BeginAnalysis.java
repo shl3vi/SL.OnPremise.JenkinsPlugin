@@ -52,7 +52,9 @@ public class BeginAnalysis extends Builder {
     private boolean enableMultipleBuildFiles;
     private boolean overrideJars;
     private boolean multipleBuildFiles;
-    private String environment;
+    private transient String environment;
+    private String testStage;
+    private String labId;
     private String packagesIncluded;
     private String packagesExcluded;
     private String filesIncluded;
@@ -89,7 +91,7 @@ public class BeginAnalysis extends Builder {
     @DataBoundConstructor
     public BeginAnalysis(LogLevel logLevel, String buildSessionId,
                          String appName, String moduleName, String branch, boolean enableMultipleBuildFiles,
-                         boolean overrideJars, boolean multipleBuildFiles, String environment,
+                         boolean overrideJars, boolean multipleBuildFiles, String labId, String testStage,
                          String packagesIncluded, String packagesExcluded, String filesIncluded,
                          String filesExcluded, String classLoadersExcluded, boolean recursive,
                          String workspacepath, String buildScannerJar, String testListenerJar,
@@ -121,7 +123,8 @@ public class BeginAnalysis extends Builder {
         this.buildName = buildName;
         this.autoRestoreBuildFile = autoRestoreBuildFile;
         this.sealightsMavenPluginInstallationArguments = sealightsMavenPluginInstallationArguments;
-        this.environment = environment;
+        this.testStage = testStage;
+        this.labId = labId;
         this.executionType = executionType;
         this.multipleBuildFiles = multipleBuildFiles;
         this.overrideJars = overrideJars;
@@ -241,9 +244,28 @@ public class BeginAnalysis extends Builder {
         return multipleBuildFiles;
     }
 
+    @Deprecated
     @Exported
     public String getEnvironment() {
         return environment;
+    }
+
+    @Exported
+    public String getLabId() {
+        return labId;
+    }
+
+    @Exported
+    public String getTestStage() {
+        if (!StringUtils.isNullOrEmpty(testStage)) {
+            return testStage;
+        }
+
+        if (!StringUtils.isNullOrEmpty(environment)) {
+            testStage = environment;
+        }
+
+        return testStage;
     }
 
     @Exported
@@ -624,7 +646,9 @@ public class BeginAnalysis extends Builder {
         slInfo.setListenerConfigFile(testListenerConfigFile);
         slInfo.setScannerJar(buildScannerJar);
         slInfo.setBuildStrategy(buildStrategy);
-        slInfo.setEnvironment(JenkinsUtils.resolveEnvVarsInString(envVars, environment));
+        slInfo.setEnvironment(JenkinsUtils.resolveEnvVarsInString(envVars, testStage));
+        slInfo.setTestStage(JenkinsUtils.resolveEnvVarsInString(envVars, testStage));
+        slInfo.setLabId(JenkinsUtils.resolveEnvVarsInString(envVars, labId));
         slInfo.setLogEnabled(!(LogLevel.OFF.equals(logLevel)));
         slInfo.setLogLevel(logLevel);
         slInfo.setLogDestination(logDestination);
@@ -1011,7 +1035,7 @@ public class BeginAnalysis extends Builder {
             this.createBuildSessionId = createBuildSessionId;
         }
 
-        public FormValidation doCheckPackagesIncluded(@QueryParameter String packagesIncluded, @QueryParameter String buildSessionId,@QueryParameter String additionalArguments) {
+        public FormValidation doCheckPackagesIncluded(@QueryParameter String packagesIncluded, @QueryParameter String buildSessionId, @QueryParameter String additionalArguments) {
             return validateBuildSessionDataParameter("Monitored Application Packages", packagesIncluded, buildSessionId, additionalArguments);
         }
 
@@ -1025,7 +1049,7 @@ public class BeginAnalysis extends Builder {
         }
 
         private FormValidation validateBuildSessionDataParameter(
-                String parameterName, String parameterValue, String buildSessionId, String additionalArguments){
+                String parameterName, String parameterValue, String buildSessionId, String additionalArguments) {
             boolean buildSessionIdProvided = isBuildSessionIdProvided(buildSessionId, additionalArguments);
             if (buildSessionIdProvided || !StringUtils.isNullOrEmpty(parameterValue))
                 return FormValidation.ok();
