@@ -191,7 +191,7 @@ public class BuildStatusNotifier extends Notifier {
     private Map createReportMap(Result result) {
         String status = toSealightsBuildStatus(result);
         String title = "CI Status";
-        String fieldName = "status";
+        String fieldName = "Jenkins status";
         String type = "string";
         String value = result.toString();
 
