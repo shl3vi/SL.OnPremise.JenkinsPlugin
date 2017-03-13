@@ -3,8 +3,8 @@
          xmlns:t="/lib/hudson" xmlns:f="/lib/form">
     <f:advanced title="Java options">
         <f:entry title="Monitored Application Packages" field="packagesIncluded"
-                 description="Java packages that will be analyzed by SeaLights. Supports wildcards (* = any string, ? = any character). Should start with '*'. For example: '*org.eclipse.*'">
-            <f:textbox value="${packagesIncluded}"/>
+                 description="Java packages that will be analyzed by SeaLights. Supports wildcards (* = any string, ? = any character). For example: 'com.example.*'">
+            <f:textbox value="${packagesIncluded}" default="com.example.*"/>
         </f:entry>
 
         <f:entry title="Unmonitored Application Packages" field="packagesExcluded"
