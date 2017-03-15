@@ -12,7 +12,8 @@
 
 
     <groupId>io.sealights.plugins</groupId>
-    <artifactId>sealights-jenkins</artifactId>
+    <artifactId>sealights</artifactId>
+    <name>sealights plugin</name>
     <version>1.0-SNAPSHOT</version>
     <packaging>hpi</packaging>
 
