@@ -12,9 +12,10 @@
 
 
     <groupId>io.sealights.plugins</groupId>
-    <artifactId>sealights-jenkins</artifactId>
+    <artifactId>sealights</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>hpi</packaging>
+    <name>SeaLights Continuous Testing Plugin</name>
 
     <properties>
         <!-- Baseline Jenkins version you use to build the plugin. Users must have this version or newer to run. -->
@@ -36,7 +37,7 @@
         <mockito.version>1.10.19</mockito.version>
     </properties>
 
-    <name>SeaLights Continuous Testing Plugin</name>
+
     <description>SeaLights Continuous Testing Plugin allows for an easy integration of SeaLights to software projects.
     </description>
     <url>https://wiki.jenkins-ci.org/display/JENKINS/TODO+Plugin</url>
