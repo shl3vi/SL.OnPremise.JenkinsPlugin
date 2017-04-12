@@ -1,5 +1,5 @@
 package io.sealights.plugins.sealightsjenkins;
-
+ 
 @Deprecated
 public enum TestingFramework {
     TESTNG() {
