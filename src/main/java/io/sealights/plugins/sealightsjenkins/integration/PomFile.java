@@ -83,7 +83,7 @@ public class PomFile {
     private void modifySurefireArgLine(Element argLine) {
         String currentValue = argLine.getTextContent();
         if (!currentValue.contains("${argLine}")) {
-            currentValue = "${argLine} " + currentValue;
+            currentValue = currentValue + " ${argLine}";
             argLine.setTextContent(currentValue);
         }
     }
