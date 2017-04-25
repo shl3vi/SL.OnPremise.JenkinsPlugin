@@ -4,6 +4,7 @@ import hudson.EnvVars;
 import hudson.model.AbstractBuild;
 import io.sealights.plugins.sealightsjenkins.entities.TokenData;
 import io.sealights.plugins.sealightsjenkins.utils.Logger;
+import io.sealights.plugins.sealightsjenkins.utils.StringUtils;
 
 /**
  * Basic arguments that is needed for the executors
@@ -170,12 +171,11 @@ public class BaseCommandArguments {
 
     @Override
     public String toString() {
-        String tokenHint = "..."+token.substring(token.length() - 10);
         return "BaseCommandArguments{" +
                 "appName='" + appName + '\'' +
                 ", branchName='" + branchName + '\'' +
                 ", buildName='" + buildName + '\'' +
-                ", token='" + tokenHint + '\'' +
+                ", token='" + StringUtils.prettifyToken(token) + '\'' +
                 ", tokenFile='" + tokenFile + '\'' +
                 ", tokenData=" + tokenData +
                 ", customerId='" + customerId + '\'' +

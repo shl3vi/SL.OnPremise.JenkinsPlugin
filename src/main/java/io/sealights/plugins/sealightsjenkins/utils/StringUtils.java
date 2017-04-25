@@ -55,4 +55,8 @@ public class StringUtils {
 
         return str.replace(windows_newline, unix_newline);
     }
+
+    public static String prettifyToken(String token){
+        return "..."+token.substring(token.length()-10);
+    }
 }
