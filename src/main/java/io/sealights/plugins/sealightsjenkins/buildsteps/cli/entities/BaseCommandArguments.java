@@ -170,11 +170,12 @@ public class BaseCommandArguments {
 
     @Override
     public String toString() {
+        String tokenHint = "..."+token.substring(token.length() - 10);
         return "BaseCommandArguments{" +
                 "appName='" + appName + '\'' +
                 ", branchName='" + branchName + '\'' +
                 ", buildName='" + buildName + '\'' +
-                ", token='" + token + '\'' +
+                ", token='" + tokenHint + '\'' +
                 ", tokenFile='" + tokenFile + '\'' +
                 ", tokenData=" + tokenData +
                 ", customerId='" + customerId + '\'' +
