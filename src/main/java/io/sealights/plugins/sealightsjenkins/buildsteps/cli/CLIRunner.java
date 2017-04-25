@@ -133,12 +133,13 @@ public class CLIRunner extends Builder {
             throws IOException, InterruptedException {
 
         try {
-            validateCommandMode(commandMode);
+            Properties additionalProps = PropertiesUtils.toProperties(additionalArguments);
+            validateCommandMode(commandMode, additionalProps);
 
             // This step must be first
             setDefaultValues();
 
-            Properties additionalProps = PropertiesUtils.toProperties(additionalArguments);
+
             EnvVars envVars = build.getEnvironment(listener);
             BaseCommandArguments baseArgs = createBaseCommandArguments(logger, build, additionalProps, envVars);
 
@@ -167,12 +168,16 @@ public class CLIRunner extends Builder {
         return false;
     }
 
-    private void validateCommandMode(CommandMode commandMode) {
+    private void validateCommandMode(CommandMode commandMode, Properties additionalProps) {
+        String buildsessionidfilePath = additionalProps.getProperty("buildsessionidfile");
         if (CommandModes.Config.equals(commandMode.getCurrentMode())) {
             validateConfigMode();
             return;
         }
         if (!StringUtils.isNullOrEmpty(buildSessionId)){
+            return;
+        }
+        if (!StringUtils.isNullOrEmpty(buildsessionidfilePath)){
             return;
         }
         if (StringUtils.isNullOrEmpty(appName) || StringUtils.isNullOrEmpty(branchName) ||
