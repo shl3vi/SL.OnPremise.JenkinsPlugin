@@ -42,10 +42,10 @@ public class ApacheHttpClient {
 
     private void trySetTimeout(HttpGet httpGet) {
 
-        String connectTimeout = System.getenv("sl.httpClient.timeout");
-        if (connectTimeout == null || connectTimeout == "")
+        Integer connectTimeout = Integer.getInteger("sl.httpClient.timeout");
+        if (connectTimeout == null)
             return;
-        int CONNECTION_TIMEOUT_MS = new Integer(connectTimeout) * 1000; // Timeout in millis.
+        int CONNECTION_TIMEOUT_MS = connectTimeout * 1000; // Timeout in millis.
         RequestConfig requestConfig = RequestConfig.custom()
                 .setConnectionRequestTimeout(CONNECTION_TIMEOUT_MS)
                 .setConnectTimeout(CONNECTION_TIMEOUT_MS)
