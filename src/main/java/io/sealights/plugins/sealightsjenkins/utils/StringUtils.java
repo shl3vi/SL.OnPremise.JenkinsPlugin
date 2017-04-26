@@ -57,10 +57,16 @@ public class StringUtils {
     }
 
     public static String trimStart(String str){
-        return "..."+str.substring(str.length()-10);
+        if(isNullOrEmpty(str) || str.length() <= 10 ) {
+            return str;
+        }
+        return trimStart(str, 10);
     }
 
-    public static String trimStart(String str, int wantrdLemgth){
-        return "..."+str.substring(str.length()-wantrdLemgth);
+    public static String trimStart(String str, int wantedLength){
+        if(isNullOrEmpty(str) || str.length() <= wantedLength ) {
+            return str;
+        }
+        return "..."+str.substring(str.length()-wantedLength);
     }
 }
