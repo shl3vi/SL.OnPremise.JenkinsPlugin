@@ -175,7 +175,7 @@ public class BaseCommandArguments {
                 "appName='" + appName + '\'' +
                 ", branchName='" + branchName + '\'' +
                 ", buildName='" + buildName + '\'' +
-                ", token='" + StringUtils.prettifyToken(token) + '\'' +
+                ", token='" + StringUtils.trimStart(token) + '\'' +
                 ", tokenFile='" + tokenFile + '\'' +
                 ", tokenData=" + tokenData +
                 ", customerId='" + customerId + '\'' +
