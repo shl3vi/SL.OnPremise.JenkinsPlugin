@@ -27,6 +27,7 @@ public class UpgradeProxy {
 
     public UpgradeResponse getRecommendedVersion(String componentName) throws IOException {
         String serverUrl = createUrlToGetRecommendedVersion(componentName);
+        logger.info("Trying to get recommended version. Url: '" + serverUrl + "'");
         ApacheHttpClient client = new ApacheHttpClient();
         HttpResponse httpResponse = client.getJson(
                 serverUrl, upgradeConfiguration.getProxy(), upgradeConfiguration.getToken());

@@ -138,7 +138,10 @@ public class CLIRunner extends Builder {
 
             // This step must be first
             setDefaultValues();
-
+            
+            if (additionalProps != null && additionalProps.get("sl.httpClient.timeout") != null && additionalProps.get("sl.httpClient.timeout") != ""){
+                System.setProperty("sl.httpClient.timeout", additionalProps.get("sl.httpClient.timeout").toString())   ;
+            }
 
             EnvVars envVars = build.getEnvironment(listener);
             BaseCommandArguments baseArgs = createBaseCommandArguments(logger, build, additionalProps, envVars);
