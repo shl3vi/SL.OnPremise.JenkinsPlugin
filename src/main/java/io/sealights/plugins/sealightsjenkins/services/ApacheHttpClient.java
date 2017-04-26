@@ -2,6 +2,7 @@ package io.sealights.plugins.sealightsjenkins.services;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -33,8 +34,25 @@ public class ApacheHttpClient {
             httpGet.setHeader(AUTHORIZATION_HEADER, BEARER + token);
         }
 
+        trySetTimeout(httpGet);
+
         CloseableHttpResponse response = httpClient.execute(httpGet);
         return toHttpResponse(response);
+    }
+
+    private void trySetTimeout(HttpGet httpGet) {
+
+        String connectTimeout = System.getenv("sl.httpClient.timeout");
+        if (connectTimeout == null || connectTimeout == "")
+            return;
+        int CONNECTION_TIMEOUT_MS = new Integer(connectTimeout) * 1000; // Timeout in millis.
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectionRequestTimeout(CONNECTION_TIMEOUT_MS)
+                .setConnectTimeout(CONNECTION_TIMEOUT_MS)
+                .setSocketTimeout(CONNECTION_TIMEOUT_MS)
+                .build();
+
+        httpGet.setConfig(requestConfig);
     }
 
     private HttpResponse toHttpResponse(CloseableHttpResponse response) throws IOException {
