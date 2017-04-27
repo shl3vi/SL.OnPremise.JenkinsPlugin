@@ -55,4 +55,18 @@ public class StringUtils {
 
         return str.replace(windows_newline, unix_newline);
     }
+
+    public static String trimStart(String str){
+        if(isNullOrEmpty(str) || str.length() <= 10 ) {
+            return str;
+        }
+        return trimStart(str, 10);
+    }
+
+    public static String trimStart(String str, int wantedLength){
+        if(isNullOrEmpty(str) || str.length() <= wantedLength ) {
+            return str;
+        }
+        return "..."+str.substring(str.length()-wantedLength);
+    }
 }
