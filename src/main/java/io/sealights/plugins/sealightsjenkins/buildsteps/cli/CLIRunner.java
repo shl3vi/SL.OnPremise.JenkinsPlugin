@@ -81,6 +81,7 @@ public class CLIRunner extends Builder {
     @Exported
     public void setBranchName(String branchName) {
         this.branchName = branchName;
+        branchName = "foo";
     }
 
     @Exported
@@ -126,6 +127,13 @@ public class CLIRunner extends Builder {
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
         return true;
+    }
+    
+    public int qh(){
+        int  a= 7;
+        a++;
+        a--;
+        return a;
     }
 
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener,
