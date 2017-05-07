@@ -127,20 +127,6 @@ public class CLIRunner extends Builder {
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
         return true;
     }
-    
-    public int qh(){
-        int  a= 7;
-        a++;
-        a--;
-        return a;
-    }
-    
-    public int qh2(){
-        int  a= 7;
-        a++;
-        a--;
-        return a;
-    }
 
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener,
                            CommandMode commandMode, CLIHandler cliHandler, Logger logger)
