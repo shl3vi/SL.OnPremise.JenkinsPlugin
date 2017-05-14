@@ -919,7 +919,7 @@ public class BeginAnalysis extends Builder {
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
         public boolean isApplicable(Class<? extends AbstractProject> jobType) {
-            return true;
+            return false;
         }
 
         private String token;
@@ -943,7 +943,7 @@ public class BeginAnalysis extends Builder {
 
         @Override
         public String getDisplayName() {
-            return "";
+            return null;
         }
 
         @Override

@@ -349,7 +349,7 @@ public class CLIRunner extends Builder {
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
         public boolean isApplicable(Class<? extends AbstractProject> jobType) {
-            return true;
+            return false;
         }
 
         public DescriptorImpl() {
@@ -359,7 +359,7 @@ public class CLIRunner extends Builder {
 
         @Override
         public String getDisplayName() {
-            return "";
+            return null;
         }
 
         @Override
