@@ -129,12 +129,13 @@ public abstract class AbstractCommandExecutor implements ICommandExecutor {
         this.runtime = runtime;
     }
     public String[] prettifyToken(String[] commands){
-          for (int i =0;i<=commands.length;i++){
-            if (commands[i].equals("-token")){
-                commands[i+1] = StringUtils.trimStart(commands[i+1]);
+        String[] commandsClone = commands.clone();
+          for (int i =0;i<=commandsClone.length;i++){
+            if (commandsClone[i].equals("-token")){
+                commandsClone[i+1] = StringUtils.trimStart(commandsClone[i+1]);
                 break;
             }
         }
-           return commands;
+           return commandsClone;
        }
 }
